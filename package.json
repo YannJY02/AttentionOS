@@ -1,0 +1,28 @@
+{
+  "name": "attentionos",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Personal Context OS — attention governance and workflow management",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "check": "turbo check",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.8",
+    "@types/node": "^25.5.0",
+    "turbo": "^2.8.20",
+    "typescript": "^5.9.3"
+  }
+}
