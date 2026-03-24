@@ -1,13 +1,13 @@
 import {
-  AttentionObservation,
-  AttentionState,
-  AttentionStateEstimate,
-  ActiveProbeResult,
-  PassiveSignal,
+  type ActiveProbeResult,
+  type AttentionObservation,
+  type AttentionState,
+  type AttentionStateEstimate,
   clamp,
   createId,
-  normalizeLikertToUnit
-} from "@attentionos/core";
+  normalizeLikertToUnit,
+  type PassiveSignal,
+} from '@attentionos/core';
 
 export interface EstimatorInput {
   observation?: AttentionObservation;
@@ -40,9 +40,11 @@ function scorePassive(signal?: PassiveSignal): number {
   const fragmentPenalty = clamp(signal.fragmentedSessionCount / 8);
 
   const circadianBoost = signal.hourOfDay >= 9 && signal.hourOfDay <= 12 ? 0.1 : 0;
-  const categoryPenalty = signal.foregroundCategory === "social" ? 0.15 : 0;
+  const categoryPenalty = signal.foregroundCategory === 'social' ? 0.15 : 0;
 
-  return clamp(1 - 0.45 * switchPenalty - 0.35 * fragmentPenalty - categoryPenalty + circadianBoost);
+  return clamp(
+    1 - 0.45 * switchPenalty - 0.35 * fragmentPenalty - categoryPenalty + circadianBoost,
+  );
 }
 
 function scoreBehavior(probe?: ActiveProbeResult): number {
@@ -61,18 +63,18 @@ function scoreBehavior(probe?: ActiveProbeResult): number {
 
 function classifyState(score: number, subjectiveEnergy?: number): AttentionState {
   if (score >= 0.75) {
-    return "focused";
+    return 'focused';
   }
 
   if (score >= 0.55) {
-    return "drifting";
+    return 'drifting';
   }
 
   if (subjectiveEnergy !== undefined && subjectiveEnergy <= 2) {
-    return "fatigued";
+    return 'fatigued';
   }
 
-  return score >= 0.35 ? "overloaded" : "fatigued";
+  return score >= 0.35 ? 'overloaded' : 'fatigued';
 }
 
 export function estimateAttentionState(input: EstimatorInput): AttentionStateEstimate {
@@ -82,9 +84,11 @@ export function estimateAttentionState(input: EstimatorInput): AttentionStateEst
 
   const score = clamp(0.45 * subjectiveScore + 0.3 * passiveScore + 0.25 * behavioralScore);
 
-  const availableSignals = [input.observation, input.passiveSignal ?? input.observation?.passive, input.probe]
-    .filter(Boolean)
-    .length;
+  const availableSignals = [
+    input.observation,
+    input.passiveSignal ?? input.observation?.passive,
+    input.probe,
+  ].filter(Boolean).length;
 
   const confidence = clamp(0.4 + availableSignals * 0.2);
   const uncertainty = clamp(1 - confidence + Math.abs(subjectiveScore - passiveScore) * 0.2);
@@ -93,23 +97,23 @@ export function estimateAttentionState(input: EstimatorInput): AttentionStateEst
   const reasons: string[] = [];
 
   if (passiveScore < 0.45) {
-    reasons.push("High switching or fragmented sessions detected.");
+    reasons.push('High switching or fragmented sessions detected.');
   }
 
   if (subjectiveScore < 0.45) {
-    reasons.push("Self-report indicates low energy or high distractibility.");
+    reasons.push('Self-report indicates low energy or high distractibility.');
   }
 
   if (behavioralScore < 0.45) {
-    reasons.push("Probe suggests slower reaction or inhibition strain.");
+    reasons.push('Probe suggests slower reaction or inhibition strain.');
   }
 
   if (reasons.length === 0) {
-    reasons.push("Signals are stable and support sustained focus.");
+    reasons.push('Signals are stable and support sustained focus.');
   }
 
   return {
-    id: createId("est"),
+    id: createId('est'),
     timestamp: (input.now ?? new Date()).toISOString(),
     state,
     score,
@@ -119,8 +123,8 @@ export function estimateAttentionState(input: EstimatorInput): AttentionStateEst
     breakdown: {
       subjectiveScore,
       passiveScore,
-      behavioralScore
-    }
+      behavioralScore,
+    },
   };
 }
 
@@ -129,25 +133,25 @@ export function suggestProbeCadence(state: AttentionState): {
   reason: string;
 } {
   switch (state) {
-    case "focused":
+    case 'focused':
       return {
         recommendedInMinutes: 180,
-        reason: "User is stable; keep probe cadence low to avoid interruptions."
+        reason: 'User is stable; keep probe cadence low to avoid interruptions.',
       };
-    case "drifting":
+    case 'drifting':
       return {
         recommendedInMinutes: 90,
-        reason: "Mild drift detected; medium cadence helps early correction."
+        reason: 'Mild drift detected; medium cadence helps early correction.',
       };
-    case "overloaded":
+    case 'overloaded':
       return {
         recommendedInMinutes: 60,
-        reason: "Overload risk is elevated; check again after short intervention."
+        reason: 'Overload risk is elevated; check again after short intervention.',
       };
-    case "fatigued":
+    case 'fatigued':
       return {
         recommendedInMinutes: 120,
-        reason: "Fatigue state; avoid over-testing and prioritize recovery."
+        reason: 'Fatigue state; avoid over-testing and prioritize recovery.',
       };
   }
 }

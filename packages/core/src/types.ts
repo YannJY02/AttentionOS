@@ -1,30 +1,30 @@
-export type AttentionState = "focused" | "drifting" | "overloaded" | "fatigued";
+export type AttentionState = 'focused' | 'drifting' | 'overloaded' | 'fatigued';
 
 export type NudgeAction =
-  | "continue_focus"
-  | "shorten_goal"
-  | "switch_single_task"
-  | "short_recovery"
-  | "defer_low_priority";
+  | 'continue_focus'
+  | 'shorten_goal'
+  | 'switch_single_task'
+  | 'short_recovery'
+  | 'defer_low_priority';
 
 export type NudgeType =
-  | "switch_overload"
-  | "overfocus"
-  | "energy_drop"
-  | "deadline_risk"
-  | "stuck_chain";
+  | 'switch_overload'
+  | 'overfocus'
+  | 'energy_drop'
+  | 'deadline_risk'
+  | 'stuck_chain';
 
-export type TriggerType = "time_window" | "event_signal";
+export type TriggerType = 'time_window' | 'event_signal';
 
-export type PluginKind = "source" | "sensor" | "intervention" | "executor";
+export type PluginKind = 'source' | 'sensor' | 'intervention' | 'executor';
 
 export type PluginPermission =
-  | "read_calendar"
-  | "read_tasks"
-  | "read_notes"
-  | "read_messages"
-  | "launch_app"
-  | "network_access";
+  | 'read_calendar'
+  | 'read_tasks'
+  | 'read_notes'
+  | 'read_messages'
+  | 'launch_app'
+  | 'network_access';
 
 export interface SubjectiveEMA {
   clarity: number;
@@ -33,10 +33,10 @@ export interface SubjectiveEMA {
   stress?: number;
 }
 
-export type PassiveForegroundCategory = "work" | "communication" | "social" | "learning" | "other";
+export type PassiveForegroundCategory = 'work' | 'communication' | 'social' | 'learning' | 'other';
 
 export interface TimingIntegrationPayload {
-  source: "timing";
+  source: 'timing';
   activityId?: string;
   project?: string;
   task?: string;
@@ -62,7 +62,7 @@ export interface AttentionObservation {
   timestamp: string;
   subjective: SubjectiveEMA;
   passive?: PassiveSignal;
-  source: "cli" | "integration" | "plugin";
+  source: 'cli' | 'integration' | 'plugin';
 }
 
 export interface ActiveProbeResult {
@@ -98,7 +98,7 @@ export interface NudgeDecisionContext {
   stateEstimate: AttentionStateEstimate;
   minutesInCurrentTask: number;
   switchesInLast30Min: number;
-  deadlineRisk: "low" | "medium" | "high";
+  deadlineRisk: 'low' | 'medium' | 'high';
   highPriorityTaskAvailable: boolean;
 }
 
@@ -193,13 +193,13 @@ export interface PrivacySettings {
   consent: PrivacyConsentState;
 }
 
-export type DataGovernancePreset = "long_term" | "balanced" | "minimal";
+export type DataGovernancePreset = 'long_term' | 'balanced' | 'minimal';
 
 export type DataGovernanceDomain =
-  | "core_content"
-  | "sensitive_raw"
-  | "ops_audit"
-  | "metric_rollups_daily";
+  | 'core_content'
+  | 'sensitive_raw'
+  | 'ops_audit'
+  | 'metric_rollups_daily';
 
 export interface RetentionDomainPolicy {
   retentionDays: number | null;
@@ -237,14 +237,14 @@ export interface CaptureEntry {
   id: string;
   timestamp: string;
   text: string;
-  projectTier: "P0" | "P1" | "P2" | "P3";
+  projectTier: 'P0' | 'P1' | 'P2' | 'P3';
   nextStep?: string;
 }
 
-export type CaptureQuadrant = "q1_do_now" | "q2_plan" | "q3_delegate" | "q4_eliminate";
+export type CaptureQuadrant = 'q1_do_now' | 'q2_plan' | 'q3_delegate' | 'q4_eliminate';
 
 export interface CaptureCalendarIntent {
-  intent: "none" | "focus_block" | "timebox" | "deadline" | "meeting";
+  intent: 'none' | 'focus_block' | 'timebox' | 'deadline' | 'meeting';
   startAt?: string;
   endAt?: string;
   timezone?: string;
@@ -254,7 +254,7 @@ export interface CaptureCalendarIntent {
 export interface CaptureHubProject {
   id: string;
   name: string;
-  status: "active" | "paused" | "done";
+  status: 'active' | 'paused' | 'done';
   createdAt: string;
   updatedAt: string;
 }
@@ -279,11 +279,11 @@ export interface CaptureHubState {
   tasks: CaptureHubTask[];
 }
 
-export type ControlMode = "auto" | "manual" | "hybrid";
+export type ControlMode = 'auto' | 'manual' | 'hybrid';
 
-export type WorkItemSource = "capture_hub" | "planner" | "manual" | "timing";
+export type WorkItemSource = 'capture_hub' | 'planner' | 'manual' | 'timing';
 
-export type WorkItemStatus = "pending" | "active" | "completed" | "deferred";
+export type WorkItemStatus = 'pending' | 'active' | 'completed' | 'deferred';
 
 export interface WorkItem {
   id: string;
@@ -307,7 +307,13 @@ export interface CurrentStepSnapshot {
   suggestion: string;
 }
 
-export type WorkflowStage = "ritual" | "capture" | "decompose" | "current_step" | "focus" | "review";
+export type WorkflowStage =
+  | 'ritual'
+  | 'capture'
+  | 'decompose'
+  | 'current_step'
+  | 'focus'
+  | 'review';
 
 export interface WorkflowSession {
   id: string;
@@ -318,13 +324,13 @@ export interface WorkflowSession {
   updatedAt: string;
 }
 
-export type WorkflowSuiteId = "default_familiar";
+export type WorkflowSuiteId = 'default_familiar';
 
-export type WorkflowRoute = "ritual" | "overview" | "execution";
+export type WorkflowRoute = 'ritual' | 'overview' | 'execution';
 
-export type ExecutionMode = "plan" | "focus";
+export type ExecutionMode = 'plan' | 'focus';
 
-export type PlanningLevel = "vision" | "area" | "goal" | "project" | "task";
+export type PlanningLevel = 'vision' | 'area' | 'goal' | 'project' | 'task';
 
 export interface RouteContext {
   id: string;
@@ -342,7 +348,7 @@ export interface OverviewMetricCard {
   title: string;
   valueText: string;
   trendText?: string;
-  status: "good" | "neutral" | "warning";
+  status: 'good' | 'neutral' | 'warning';
 }
 
 export interface OverviewBridgeAction {
@@ -363,7 +369,7 @@ export interface OverviewPageModel {
 export interface PlanningActionItem {
   id: string;
   title: string;
-  kind: "create" | "update" | "split" | "prioritize";
+  kind: 'create' | 'update' | 'split' | 'prioritize';
 }
 
 export interface PlanningEntitySummary {
@@ -388,9 +394,9 @@ export interface ExecutionPageModel {
 }
 
 export type ConstraintViolationCode =
-  | "task_duration_exceeded"
-  | "current_step_limit_exceeded"
-  | "candidate_limit_exceeded";
+  | 'task_duration_exceeded'
+  | 'current_step_limit_exceeded'
+  | 'candidate_limit_exceeded';
 
 export interface ConstraintViolation {
   code: ConstraintViolationCode;
@@ -416,9 +422,12 @@ export interface UsabilityReport {
   };
 }
 
-export type ReleaseGateRecommendationSource = "historical_window" | "derived_from_current" | "seed_defaults";
+export type ReleaseGateRecommendationSource =
+  | 'historical_window'
+  | 'derived_from_current'
+  | 'seed_defaults';
 
-export type ReleaseGateRecommendationConfidence = "high" | "medium" | "low";
+export type ReleaseGateRecommendationConfidence = 'high' | 'medium' | 'low';
 
 export interface ReleaseGateUsabilityEvidencePoint {
   steps: number;
@@ -439,7 +448,7 @@ export interface ReleaseGateEvidenceRecommendation {
   generatedAt: string;
 }
 
-export type WorkflowUsabilityRuleKey = "steps" | "durationMs" | "misTapRate";
+export type WorkflowUsabilityRuleKey = 'steps' | 'durationMs' | 'misTapRate';
 
 export interface WorkflowUsabilityReviewBurden {
   stepsMedian: number;
@@ -500,20 +509,20 @@ export interface ActivityAggregate {
   until: string;
 }
 
-export type ActionRiskLevel = "low" | "medium" | "high" | "critical";
-export type ActionRollbackStrategy = "none" | "direct_undo" | "compensating_action";
+export type ActionRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+export type ActionRollbackStrategy = 'none' | 'direct_undo' | 'compensating_action';
 
 export type ActionExecutionState =
-  | "draft"
-  | "pending_confirmation"
-  | "confirmed"
-  | "running"
-  | "succeeded"
-  | "failed"
-  | "rolled_back";
+  | 'draft'
+  | 'pending_confirmation'
+  | 'confirmed'
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'rolled_back';
 
 export interface ActionActorRef {
-  type: "user" | "system" | "agent" | "plugin";
+  type: 'user' | 'system' | 'agent' | 'plugin';
   id: string;
 }
 
@@ -554,20 +563,20 @@ export interface ActionAuditEnvelope {
   correlationId: string;
   actor: ActionActorRef;
   resource?: ActionResourceRef;
-  result?: "allowed" | "blocked" | "succeeded" | "failed" | "rolled_back";
+  result?: 'allowed' | 'blocked' | 'succeeded' | 'failed' | 'rolled_back';
   decisionReason?: string;
   payload?: Record<string, unknown>;
 }
 
-export type ActionExecutionOutcome = "succeeded" | "failed" | "rolled_back";
+export type ActionExecutionOutcome = 'succeeded' | 'failed' | 'rolled_back';
 
 export type ActionRollbackOutcome =
-  | "not_needed"
-  | "rolled_back"
-  | "compensated"
-  | "skipped"
-  | "missing_handler"
-  | "failed";
+  | 'not_needed'
+  | 'rolled_back'
+  | 'compensated'
+  | 'skipped'
+  | 'missing_handler'
+  | 'failed';
 
 export interface ActionExecutionAttempt {
   id: string;
@@ -583,13 +592,13 @@ export interface ActionExecutionAttempt {
   payload?: Record<string, unknown>;
 }
 
-export type PlannerMode = "rule" | "placeholder_llm";
+export type PlannerMode = 'rule' | 'placeholder_llm';
 
 export interface PlannerTask {
   id: string;
   title: string;
   estimateMinutes: number;
-  status: "todo" | "in_progress" | "done";
+  status: 'todo' | 'in_progress' | 'done';
   projectId?: string;
   quadrant?: CaptureQuadrant;
   calendarIntent?: CaptureCalendarIntent;
@@ -618,7 +627,7 @@ export interface PlannerPlan {
 }
 
 export interface PlannerPatchOperation {
-  op: "add" | "update" | "remove";
+  op: 'add' | 'update' | 'remove';
   taskId?: string;
   task?: Partial<PlannerTask>;
 }
@@ -670,9 +679,9 @@ export interface AppleIntegrationStatus {
   lastTasksSync?: IntegrationSyncStatus;
 }
 
-export type ExtensionStatus = "built" | "installed" | "failed";
+export type ExtensionStatus = 'built' | 'installed' | 'failed';
 
-export type ExtensionCircuitState = "closed" | "open" | "half_open";
+export type ExtensionCircuitState = 'closed' | 'open' | 'half_open';
 
 export interface ExtensionRuntimePolicy {
   maxRequestsPerMinute: number;
@@ -696,7 +705,7 @@ export interface ExtensionRecord {
   name: string;
   version: string;
   status: ExtensionStatus;
-  source: "generated" | "local";
+  source: 'generated' | 'local';
   prompt?: string;
   permissions?: PluginPermission[];
   runtimePolicy?: ExtensionRuntimePolicy;
@@ -711,8 +720,8 @@ export interface ExtensionAuditEntry {
   id: string;
   extensionId?: string;
   timestamp: string;
-  action: "chat" | "build" | "install";
-  actor: "cli" | "daemon";
+  action: 'chat' | 'build' | 'install';
+  actor: 'cli' | 'daemon';
   requestSummary: string;
   responseSummary: string;
   payload?: Record<string, unknown>;
@@ -724,9 +733,9 @@ export interface AttentionSnapshot {
   latestEstimate?: AttentionStateEstimate;
 }
 
-export type FocusEventType = "interruption" | "recovery";
+export type FocusEventType = 'interruption' | 'recovery';
 
-export type FocusEventSource = "cli" | "integration" | "plugin" | "daemon";
+export type FocusEventSource = 'cli' | 'integration' | 'plugin' | 'daemon';
 
 export interface FocusEvent {
   id: string;
@@ -739,7 +748,16 @@ export interface FocusEvent {
 }
 
 export interface MetricPoint {
-  metricId: "NS_001" | "OUT_001" | "OUT_002" | "OUT_003" | "OUT_004" | "GR_001" | "GR_002" | "GR_003" | "GR_004";
+  metricId:
+    | 'NS_001'
+    | 'OUT_001'
+    | 'OUT_002'
+    | 'OUT_003'
+    | 'OUT_004'
+    | 'GR_001'
+    | 'GR_002'
+    | 'GR_003'
+    | 'GR_004';
   value: number;
   unit: string;
   windowDays: number;
