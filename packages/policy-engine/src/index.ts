@@ -172,6 +172,7 @@ export function assignMRTIntervention(
 
   let draw = random() * totalWeight;
   // Safe: weights.length > 0 guaranteed by the guard above
+  // biome-ignore lint/style/noNonNullAssertion: length checked above
   let selected: MRTProbability = weights[weights.length - 1]!;
 
   for (const item of weights) {
