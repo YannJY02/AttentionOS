@@ -1,8 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -30,6 +28,13 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", "dist", "build", ".turbo", "src-tauri/target"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.turbo",
+      "!**/src-tauri/target"
+    ]
   }
 }
