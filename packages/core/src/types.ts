@@ -307,6 +307,10 @@ export interface CurrentStepSnapshot {
   suggestion: string;
 }
 
+/**
+ * @deprecated V1 WorkflowStage — 与 V2 的 `V2WorkflowStage` ('ritual'|'overview'|'execution') 不同。
+ * 请使用 V2WorkflowStage。此类型仅用于 V1 遗留代码，不应在新代码中引用。
+ */
 export type WorkflowStage =
   | 'ritual'
   | 'capture'
@@ -326,10 +330,12 @@ export interface WorkflowSession {
 
 export type WorkflowSuiteId = 'default_familiar';
 
+/** @deprecated V1 — 请使用 V2WorkflowStage */
 export type WorkflowRoute = 'ritual' | 'overview' | 'execution';
 
 export type ExecutionMode = 'plan' | 'focus';
 
+/** @deprecated V1 — 请使用 HierarchyLayer */
 export type PlanningLevel = 'vision' | 'area' | 'goal' | 'project' | 'task';
 
 export interface RouteContext {
