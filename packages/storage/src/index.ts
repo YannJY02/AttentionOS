@@ -1,2 +1,5 @@
-// @attentionos/storage — 数据访问层 (Repository Pattern)
-// Phase 1: entity, edge, embedding, suggestion, audit repositories
+export { AuditRepository } from './repositories/audit';
+export { EdgeRepository } from './repositories/edge';
+export type { EntityFilter } from './repositories/entity';
+export { EntityRepository } from './repositories/entity';
+export { getSupabaseClient } from './supabase';
