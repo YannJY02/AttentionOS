@@ -48,7 +48,7 @@ describe('ExecutionPage task workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: /start task/i }));
     expect(screen.getByText(/state: executing/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /add 5 minutes/i }));
-    expect(screen.getByText(/actual: 5 min/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/actual: 5 min/i)).toHaveLength(2);
 
     fireEvent.click(screen.getByRole('button', { name: /submit for review/i }));
     expect(screen.getByText(/state: reviewing/i)).toBeInTheDocument();

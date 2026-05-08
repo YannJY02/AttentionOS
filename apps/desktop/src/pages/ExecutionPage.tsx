@@ -1,4 +1,55 @@
+import { ArrowLeft } from 'lucide-react';
+import { useDailyFlow } from '../hooks/useDailyFlow';
+import { useTaskLifecycle } from '../hooks/useTaskLifecycle';
+import { findHierarchyEntity } from '../storage/hierarchy';
+import { TaskActions } from './execution/TaskActions';
+import { TaskDetail } from './execution/TaskDetail';
+import { TaskTimer } from './execution/TaskTimer';
+
+interface ActiveTaskExecutionProps {
+  readonly estimatedMinutes: number;
+  readonly onDone: () => void;
+  readonly taskId: string;
+  readonly title: string;
+}
+
+function ActiveTaskExecution({
+  estimatedMinutes,
+  onDone,
+  taskId,
+  title,
+}: ActiveTaskExecutionProps) {
+  const task = useTaskLifecycle({ estimatedMinutes, onDone, taskId, title });
+
+  return (
+    <div className="grid gap-4">
+      <TaskDetail task={task} />
+      <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
+        <TaskTimer task={task} />
+        <TaskActions task={task} />
+      </div>
+    </div>
+  );
+}
+
+function getEstimatedMinutes(taskId: string): number {
+  const task = findHierarchyEntity(taskId);
+  const value = task?.properties.estimatedMinutes;
+  return typeof value === 'number' ? value : 30;
+}
+
+function getTaskTitle(taskId: string): string {
+  return findHierarchyEntity(taskId)?.title ?? 'Active task';
+}
+
 export function ExecutionPage() {
+  const dailyFlow = useDailyFlow();
+  const activeTaskId = dailyFlow.activeTaskId;
+
+  function returnToOverview() {
+    dailyFlow.send({ type: 'BACK_TO_OVERVIEW' });
+  }
+
   return (
     <section className="mx-auto max-w-5xl">
       <div className="mb-8">
@@ -10,20 +61,30 @@ export function ExecutionPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-stone-200 bg-white p-5">
-          <p className="font-medium text-stone-950">Plan Mode</p>
-          <p className="mt-2 text-sm text-stone-600">
-            Create, decompose, and order the next concrete action.
+      {activeTaskId ? (
+        <ActiveTaskExecution
+          estimatedMinutes={getEstimatedMinutes(activeTaskId)}
+          key={activeTaskId}
+          onDone={returnToOverview}
+          taskId={activeTaskId}
+          title={getTaskTitle(activeTaskId)}
+        />
+      ) : (
+        <div className="rounded-md border border-stone-200 bg-white p-6">
+          <p className="font-medium text-stone-950">No active task</p>
+          <p className="mt-2 max-w-xl text-sm text-stone-600">
+            Choose a task from Overview before entering execution focus.
           </p>
+          <button
+            className="mt-5 inline-flex items-center gap-2 rounded-md border border-stone-300 px-4 py-2 font-medium text-sm text-stone-800"
+            onClick={returnToOverview}
+            type="button"
+          >
+            <ArrowLeft aria-hidden="true" size={16} />
+            Back to overview
+          </button>
         </div>
-        <div className="rounded-md border border-stone-200 bg-white p-5">
-          <p className="font-medium text-stone-950">Focus Mode</p>
-          <p className="mt-2 text-sm text-stone-600">
-            Keep exactly one active action in front of the user.
-          </p>
-        </div>
-      </div>
+      )}
     </section>
   );
 }
