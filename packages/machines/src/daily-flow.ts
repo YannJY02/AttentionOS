@@ -19,7 +19,8 @@ type DailyFlowEvent =
   | { type: 'RITUAL_COMPLETE' }
   | { type: 'START_EXECUTION'; taskId: string }
   | { type: 'BACK_TO_OVERVIEW' }
-  | { type: 'START_NEW_RITUAL' };
+  | { type: 'START_NEW_RITUAL' }
+  | { type: 'RESTORE_STAGE'; stage: 'ritual' | 'overview' | 'execution' };
 
 // ── Machine ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,25 @@ export const dailyFlowMachine = setup({
     reflectionText: '',
     activeTaskId: null,
     stageStartedAt: null,
+  },
+  on: {
+    RESTORE_STAGE: [
+      {
+        target: '.ritual',
+        guard: ({ event }) => event.stage === 'ritual',
+        actions: ['clearActiveTask', 'markStageStart'],
+      },
+      {
+        target: '.overview',
+        guard: ({ event }) => event.stage === 'overview',
+        actions: ['clearActiveTask', 'markStageStart'],
+      },
+      {
+        target: '.execution',
+        guard: ({ event }) => event.stage === 'execution',
+        actions: 'markStageStart',
+      },
+    ],
   },
   states: {
     ritual: {

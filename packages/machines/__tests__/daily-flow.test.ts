@@ -83,6 +83,18 @@ describe('dailyFlowMachine — stage transitions', () => {
     expect(actor.getSnapshot().value).toMatchObject({ ritual: 'meditation' });
     actor.stop();
   });
+
+  it('restores a persisted workflow stage', () => {
+    const actor = makeActor();
+    actor.start();
+    actor.send({ type: 'RESTORE_STAGE', stage: 'execution' });
+    expect(actor.getSnapshot().value).toBe('execution');
+    actor.send({ type: 'RESTORE_STAGE', stage: 'overview' });
+    expect(actor.getSnapshot().value).toBe('overview');
+    actor.send({ type: 'RESTORE_STAGE', stage: 'ritual' });
+    expect(actor.getSnapshot().value).toMatchObject({ ritual: 'meditation' });
+    actor.stop();
+  });
 });
 
 describe('dailyFlowMachine — invalid transitions are ignored', () => {

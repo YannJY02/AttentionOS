@@ -1,5 +1,7 @@
 import { Focus, ListTree, Sparkles } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
+import { useDailyFlow } from '../../hooks/useDailyFlow';
+import { useRouteSync } from '../../hooks/useRouteSync';
 
 const workflowStages = [
   {
@@ -23,6 +25,9 @@ const workflowStages = [
 ] as const;
 
 export function Shell() {
+  const dailyFlow = useDailyFlow();
+  useRouteSync(dailyFlow);
+
   return (
     <div className="min-h-screen bg-stone-50 text-stone-950">
       <div className="grid min-h-screen grid-cols-[280px_1fr]">

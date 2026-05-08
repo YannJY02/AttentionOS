@@ -24,7 +24,10 @@ function RouteSyncHarness() {
       >
         Finish ritual
       </button>
-      <button onClick={() => dailyFlow.send({ type: 'START_EXECUTION', taskId: 'task-1' })} type="button">
+      <button
+        onClick={() => dailyFlow.send({ type: 'START_EXECUTION', taskId: 'task-1' })}
+        type="button"
+      >
         Start execution
       </button>
     </div>

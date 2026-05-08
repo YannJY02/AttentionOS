@@ -11,6 +11,7 @@
     "test": "vitest run --reporter=verbose"
   },
   "dependencies": {
+    "@attentionos/machines": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
@@ -19,7 +20,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.15.0",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.2.4",
+    "xstate": "^5.28.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
