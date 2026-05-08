@@ -31,7 +31,7 @@ export const hierarchyNavMachine = setup({
         event.type === 'DRILL_DOWN' ? [...context.breadcrumb, event.entityId] : context.breadcrumb,
     }),
     popBreadcrumb: assign({
-      selectedEntityId: ({ context }) => context.breadcrumb.at(-2) ?? null,
+      selectedEntityId: ({ context }) => context.breadcrumb[context.breadcrumb.length - 2] ?? null,
       breadcrumb: ({ context }) => context.breadcrumb.slice(0, -1),
     }),
     resetToRoot: assign({ selectedEntityId: null, breadcrumb: [] }),
