@@ -34,7 +34,10 @@
       "!**/dist",
       "!**/build",
       "!**/.turbo",
-      "!**/src-tauri/target"
+      "!**/src-tauri/target",
+      "!**/coverage",
+      "!**/playwright-report",
+      "!**/test-results"
     ]
   }
 }

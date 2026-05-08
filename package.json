@@ -15,6 +15,7 @@
     "test:filter": "turbo test",
     "coverage": "vitest run --config vitest.config.ts --coverage",
     "check": "turbo check",
+    "e2e": "playwright test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write ."
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.8",
+    "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/node": "^25.5.0",
