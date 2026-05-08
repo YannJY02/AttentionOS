@@ -23,10 +23,7 @@ describe('AttentionOS desktop shell', () => {
 
     expect(screen.getByRole('link', { name: /ritual/i })).toHaveAttribute('href', '/ritual');
     expect(screen.getByRole('link', { name: /overview/i })).toHaveAttribute('href', '/overview');
-    expect(screen.getByRole('link', { name: /execution/i })).toHaveAttribute(
-      'href',
-      '/execution',
-    );
+    expect(screen.getByRole('link', { name: /execution/i })).toHaveAttribute('href', '/execution');
   });
 
   it('renders the overview route as a read-only workflow stage', () => {
@@ -37,6 +34,6 @@ describe('AttentionOS desktop shell', () => {
     );
 
     expect(screen.getByRole('heading', { name: /overview/i })).toBeInTheDocument();
-    expect(screen.getByText(/read-only/i)).toBeInTheDocument();
+    expect(screen.getByText(/A read-only view/i)).toBeInTheDocument();
   });
 });
