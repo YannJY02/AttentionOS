@@ -75,6 +75,24 @@ export class SuggestionRepository {
     return (data ?? []).map((row) => rowToSuggestion<TPayload>(row));
   }
 
+  async findRecent<TPayload extends object = Record<string, unknown>>(
+    filter: SuggestionTargetFilter & { readonly since?: string } = {},
+  ): Promise<AISuggestion<TPayload>[]> {
+    let query = this.db.from('ai_suggestions').select('*');
+
+    if (filter.kind) query = query.eq('kind', filter.kind);
+    if (filter.status) query = query.eq('status', filter.status);
+    if (filter.since) query = query.gte('created_at', filter.since);
+
+    query = query.order('updated_at', { ascending: false });
+    if (filter.limit) query = query.limit(filter.limit);
+
+    const { data, error } = await query;
+
+    if (error) throw new Error(`SuggestionRepository.findRecent: ${error.message}`);
+    return (data ?? []).map((row) => rowToSuggestion<TPayload>(row));
+  }
+
   async create<TPayload extends object = Record<string, unknown>>(
     input: CreateAISuggestionInput<TPayload>,
   ): Promise<AISuggestion<TPayload>> {

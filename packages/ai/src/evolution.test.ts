@@ -109,7 +109,13 @@ const suggestions: AISuggestion[] = [
 
 describe('Phase 3 evolutionary learning', () => {
   it('analyzes attention, task completion, and adoption patterns in one window', () => {
-    const report = analyzeBehaviorPatterns({ attention, audit, suggestions, tasks, window: WINDOW });
+    const report = analyzeBehaviorPatterns({
+      attention,
+      audit,
+      suggestions,
+      tasks,
+      window: WINDOW,
+    });
 
     expect(report.attention.averageScore).toBeCloseTo(0.58);
     expect(report.attention.dominantState).toBe('focused');
@@ -120,7 +126,13 @@ describe('Phase 3 evolutionary learning', () => {
   });
 
   it('creates pending HITL workflow optimization suggestions from weak patterns', () => {
-    const report = analyzeBehaviorPatterns({ attention, audit, suggestions, tasks, window: WINDOW });
+    const report = analyzeBehaviorPatterns({
+      attention,
+      audit,
+      suggestions,
+      tasks,
+      window: WINDOW,
+    });
     const generated = createWorkflowOptimizationSuggestions(report);
 
     expect(generated).toEqual([
@@ -130,9 +142,7 @@ describe('Phase 3 evolutionary learning', () => {
         approvalRequired: true,
         createdBy: 'agent:phase3',
         payload: expect.objectContaining({
-          actions: expect.arrayContaining([
-            expect.objectContaining({ type: 'task.split' }),
-          ]),
+          actions: expect.arrayContaining([expect.objectContaining({ type: 'task.split' })]),
           privacyLevel: 'L1',
         }),
       }),

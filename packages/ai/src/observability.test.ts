@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createBufferedObservabilitySink,
-  recordGenerationObservation,
-} from './observability';
+import { createBufferedObservabilitySink, recordGenerationObservation } from './observability';
 
 describe('Phase 3 observability boundary', () => {
   it('normalizes latency and token usage before writing to a sink', async () => {

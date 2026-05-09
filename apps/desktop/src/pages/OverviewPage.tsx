@@ -4,6 +4,7 @@ import { useDailyFlow } from '../hooks/useDailyFlow';
 import { useHierarchyNav } from '../hooks/useHierarchyNav';
 import { EntityList } from './overview/EntityList';
 import { HierarchyBreadcrumb } from './overview/HierarchyBreadcrumb';
+import { LearningSnapshotPanel } from './overview/LearningSnapshotPanel';
 
 export function OverviewPage() {
   const dailyFlow = useDailyFlow();
@@ -23,6 +24,8 @@ export function OverviewPage() {
           Editing and decomposition belong in the execution stage.
         </p>
       </div>
+
+      <LearningSnapshotPanel />
 
       <div className="mb-6 rounded-md border border-stone-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">

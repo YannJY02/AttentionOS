@@ -2,8 +2,10 @@
 // Phase 2: model router, privacy gateway, tools, agent, embeddings
 export * from './agent.js';
 export * from './eval.js';
+export * from './evolution.js';
 export * from './gateway.js';
 export * from './model-registry.js';
+export * from './observability.js';
 export * from './output.js';
 export * from './privacy.js';
 export * from './prompts.js';

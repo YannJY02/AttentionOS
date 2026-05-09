@@ -71,7 +71,11 @@ export interface ContextSearchResult {
   readonly privacyLevel: PrivacyLevel;
 }
 
-export type AISuggestionKind = 'task_decomposition' | 'context_link' | 'workflow_transition';
+export type AISuggestionKind =
+  | 'task_decomposition'
+  | 'context_link'
+  | 'workflow_transition'
+  | 'workflow_optimization';
 
 export interface TaskDecompositionStep {
   readonly title: string;

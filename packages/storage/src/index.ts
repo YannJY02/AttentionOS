@@ -1,3 +1,4 @@
+export { AttentionObservationRepository } from './repositories/attention-observation';
 export { AuditRepository } from './repositories/audit';
 export { EdgeRepository } from './repositories/edge';
 export type { EmbeddingSearchInput } from './repositories/embedding';

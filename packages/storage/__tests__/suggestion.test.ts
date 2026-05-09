@@ -77,4 +77,34 @@ describe('SuggestionRepository', () => {
       }),
     ]);
   });
+
+  it('finds recent workflow optimization suggestions for learning surfaces', async () => {
+    const workflowOptimization = {
+      ...SAMPLE_ROW,
+      id: 'sug-2',
+      kind: 'workflow_optimization',
+      payload: {
+        actions: [{ label: 'Split oversized tasks', type: 'task.split' }],
+        confidence: 0.7,
+        evidence: ['oversized task'],
+        privacyLevel: 'L1',
+      },
+    };
+    const repo = new SuggestionRepository(
+      asSupabaseClient(createMockSupabaseClient([workflowOptimization])),
+    );
+
+    const results = await repo.findRecent({
+      kind: 'workflow_optimization',
+      limit: 3,
+      since: '2026-05-09T00:00:00Z',
+    });
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        id: 'sug-2',
+        kind: 'workflow_optimization',
+      }),
+    ]);
+  });
 });
