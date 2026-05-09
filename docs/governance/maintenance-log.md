@@ -1,5 +1,14 @@
 # Maintenance Log
 
+## 2026-05-09 19:30 CST
+
+- Task: close Phase 3 merge-readiness gaps after parallel agent review.
+- Files updated: `apps/server/src/learning-runtime.ts`, `packages/storage/src/repositories/audit.ts`, server/storage/desktop regression tests, `docs/plans/2026-05-09-phase-3-evolutionary-learning-ledger.md`, `docs/governance/project-state.md`, `docs/governance/changelog.md`, and this maintenance log.
+- Fix: server-backed learning analysis now reads audit events for the learning window instead of passing an empty audit list into `analyzeBehaviorPatterns`.
+- Coverage added: audit-window ingestion regression, `AuditRepository.findWindow`, workflow optimization storage rejection, and desktop HITL rejection.
+- Verification: targeted affected tests passed with 4 files and 14 tests; full `pnpm check`, `pnpm test:run` (42 files, 190 tests), `pnpm lint`, `pnpm build`, and `pnpm e2e` (2 Chromium tests) passed.
+- Tool note: a failed read of `packages/core/src/audit-types.ts` showed the file does not exist; the real audit types were then located with `rg` in `packages/core/src/v2-types.ts`.
+
 ## 2026-05-09 18:05 CST
 
 - Task: implement Phase 3 evolutionary learning as a deterministic HITL loop.

@@ -94,7 +94,7 @@ describe('AI suggestion browser storage', () => {
     expect(readAISuggestions()).toEqual([applied]);
   });
 
-  it('reviews workflow optimization suggestions without applying workflow changes', () => {
+  it('approves workflow optimization suggestions without applying workflow changes', () => {
     const suggestion = saveWorkflowOptimizationSuggestion(createWorkflowOptimizationSuggestion());
 
     const approved = markWorkflowOptimizationReviewed(suggestion, 'approved', 'user');
@@ -105,5 +105,19 @@ describe('AI suggestion browser storage', () => {
       reviewedBy: 'user',
     });
     expect(readAISuggestions()).toEqual([approved]);
+  });
+
+  it('rejects workflow optimization suggestions without applying workflow changes', () => {
+    const suggestion = saveWorkflowOptimizationSuggestion(createWorkflowOptimizationSuggestion());
+
+    const rejected = markWorkflowOptimizationReviewed(suggestion, 'rejected', 'user');
+
+    expect(rejected).toMatchObject({
+      kind: 'workflow_optimization',
+      status: 'rejected',
+      reviewedBy: 'user',
+    });
+    expect(rejected.reviewedAt).toEqual(expect.any(String));
+    expect(readAISuggestions()).toEqual([rejected]);
   });
 });

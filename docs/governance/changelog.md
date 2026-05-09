@@ -2,6 +2,9 @@
 
 ## 2026-05-09
 
+- Changed: server-backed Phase 3 learning analysis now ingests audit events for the analyzed learning window.
+- Added: `AuditRepository.findWindow` and regression coverage for audit-window ingestion.
+- Added: workflow optimization rejection coverage for browser storage and desktop HITL controls.
 - Added: Phase 3 evolutionary learning implementation ledger, deterministic behavior analysis, workflow optimization suggestion payloads, adoption tracking, observability boundary, storage/server runtime, and desktop HITL review surface.
 - Added: Supabase migration `0005_phase3_learning.sql` for `workflow_optimization` AI suggestions and Phase 3 learning indexes.
 - Added: Playwright coverage for the Phase 3 workflow optimization review path.

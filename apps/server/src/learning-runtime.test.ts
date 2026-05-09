@@ -58,10 +58,23 @@ const priorSuggestions: AISuggestion<object>[] = [
 describe('Phase 3 learning runtime', () => {
   it('creates pending workflow optimization suggestions and logs analysis', async () => {
     const auditEntries: V2AuditLogEntry[] = [];
+    const auditWindowCalls: Array<typeof WINDOW> = [];
     const createdSuggestions: AISuggestion<WorkflowOptimizationPayload>[] = [];
     const runtime = createLearningRuntime({
       audit: {
-        findByTarget: async () => [],
+        findWindow: async (window) => {
+          auditWindowCalls.push(window);
+          return [
+            {
+              id: 'audit-complete-1',
+              actor: 'user',
+              action: 'task.lifecycle.transition',
+              targetId: 'task-1',
+              details: { from: 'reviewing', to: 'done' },
+              createdAt: '2026-05-09T10:00:00.000Z',
+            },
+          ];
+        },
         log: async (input) => {
           const entry: V2AuditLogEntry = {
             id: `audit-${auditEntries.length + 1}`,
@@ -92,6 +105,8 @@ describe('Phase 3 learning runtime', () => {
     const result = await runtime.analyzeWindow(WINDOW);
 
     expect(result.report.tasks.oversizedActiveTaskCount).toBe(1);
+    expect(auditWindowCalls).toEqual([WINDOW]);
+    expect(result.report.evidence).toContain('1 completion transition(s) recorded');
     expect(result.createdSuggestions).toEqual([
       expect.objectContaining({
         kind: 'workflow_optimization',

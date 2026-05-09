@@ -23,7 +23,7 @@ interface EntityRepositoryPort {
 }
 
 interface AuditRepositoryPort {
-  readonly findByTarget?: (targetId: string) => Promise<readonly V2AuditLogEntry[]>;
+  readonly findWindow: (window: LearningWindow) => Promise<readonly V2AuditLogEntry[]>;
   readonly log: (input: CreateAuditLogInput) => Promise<V2AuditLogEntry>;
 }
 
@@ -56,15 +56,16 @@ export interface LearningRuntime {
 export function createLearningRuntime(deps: LearningRuntimeDependencies): LearningRuntime {
   return {
     async analyzeWindow(window) {
-      const [attention, tasks, suggestions] = await Promise.all([
+      const [attention, audit, tasks, suggestions] = await Promise.all([
         deps.attention.findWindow(window),
+        deps.audit.findWindow(window),
         deps.entities.findAll({ entityType: 'task', hierarchyLayer: 'task' }),
         deps.suggestions.findRecent({ since: window.startedAt }),
       ]);
 
       const report = analyzeBehaviorPatterns({
         attention,
-        audit: [],
+        audit,
         suggestions,
         tasks,
         window,

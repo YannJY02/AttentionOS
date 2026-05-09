@@ -1,6 +1,6 @@
 # Phase 3 Evolutionary Learning Ledger
 
-Status: current implementation ledger
+Status: verified implementation ledger
 
 This ledger tracks the first Phase 3 surface for evolutionary learning. Phase 3
 keeps the deterministic core as authority: behavior analysis may create AI
@@ -24,11 +24,11 @@ suggestions, but workflow changes remain human-reviewed.
 | Workflow optimization suggestion payload | Done | `packages/core/src/learning-types.ts`, `packages/core/src/ai-types.ts` | Add more action types only after workflow semantics are accepted. |
 | Adoption tracking | Done | `measureSuggestionAdoption` in `packages/ai/src/evolution.ts` | Add longer-window trend views later. |
 | Observability boundary | Done | `packages/ai/src/observability.ts`, `packages/ai/src/observability.test.ts` | Wire a real Langfuse sink when credentials and deployment choice are configured. |
-| Storage support | Done | `packages/storage/src/repositories/attention-observation.ts`, `SuggestionRepository.findRecent` | Add write repository for attention observations when sensors exist. |
+| Storage support | Done | `packages/storage/src/repositories/attention-observation.ts`, `AuditRepository.findWindow`, `SuggestionRepository.findRecent` | Add write repository for attention observations when sensors exist. |
 | Database migration | Done | `supabase/migrations/0005_phase3_learning.sql` | Apply against a real Supabase project during deployment. |
 | Server runtime | Done | `apps/server/src/learning-runtime.ts`, `apps/server/src/http.ts` | Add auth/rate limiting before non-loopback exposure. |
 | Desktop read-only snapshot | Done | `apps/desktop/src/pages/overview/LearningSnapshotPanel.tsx` | Replace demo attention observations with real local signals. |
-| Desktop HITL review | Done | `apps/desktop/src/pages/execution/EvolutionSuggestionsPanel.tsx` | Add reject-focused UX details after user testing. |
+| Desktop HITL review | Done | `apps/desktop/src/pages/execution/EvolutionSuggestionsPanel.tsx`, `apps/desktop/src/pages/ExecutionPage.test.tsx` | Add reject-focused UX details after user testing. |
 | E2E coverage | Done | `e2e/evolution-learning.spec.ts` | Keep alongside smoke flow as the UI grows. |
 
 ## Runtime Boundaries
@@ -57,3 +57,23 @@ pnpm lint
 pnpm build
 pnpm e2e
 ```
+
+## Closeout Verification
+
+Verified on 2026-05-09 19:30 CST after the merge-readiness patch:
+
+- `pnpm check` passed, including `pnpm docs:check` and Turbo checks for 11
+  packages.
+- `pnpm test:run` passed with 42 test files and 190 tests.
+- `pnpm lint` passed with Biome checking 172 files.
+- `pnpm build` passed with 11 Turbo build tasks.
+- `pnpm e2e` passed with 2 Chromium tests.
+
+Closeout patch evidence:
+
+- Server learning runtime now reads audit events for the analyzed learning
+  window and passes them into `analyzeBehaviorPatterns`.
+- `AuditRepository.findWindow` supports the server-backed learning path.
+- Regression tests now assert audit completion transitions are counted and that
+  workflow optimization suggestions can be rejected through storage and desktop
+  HITL controls.
