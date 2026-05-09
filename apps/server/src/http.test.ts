@@ -10,6 +10,9 @@ describe('AI suggestion HTTP boundary', () => {
       createTaskDecompositionSuggestion: async () => {
         throw new Error('should not call service');
       },
+      analyzeLearningWindow: async () => {
+        throw new Error('should not call service');
+      },
       listLatestTaskDecompositionSuggestion: async () => {
         throw new Error('should not call service');
       },
@@ -27,6 +30,9 @@ describe('AI suggestion HTTP boundary', () => {
           throw new Error('should not call service');
         },
         createTaskDecompositionSuggestion: async () => {
+          throw new Error('should not call service');
+        },
+        analyzeLearningWindow: async () => {
           throw new Error('should not call service');
         },
         listLatestTaskDecompositionSuggestion: async () => {
@@ -62,6 +68,9 @@ describe('AI suggestion HTTP boundary', () => {
           createdTasks: [{ id: 'created-1' }],
         }),
         createTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        analyzeLearningWindow: async () => {
           throw new Error('wrong route');
         },
         listLatestTaskDecompositionSuggestion: async () => {
@@ -108,6 +117,9 @@ describe('AI suggestion HTTP boundary', () => {
           createdAt: '2026-05-09T00:00:00.000Z',
           updatedAt: '2026-05-09T00:00:00.000Z',
         }),
+        analyzeLearningWindow: async () => {
+          throw new Error('wrong route');
+        },
         listLatestTaskDecompositionSuggestion: async () => {
           throw new Error('wrong route');
         },
@@ -128,6 +140,9 @@ describe('AI suggestion HTTP boundary', () => {
           throw new Error('wrong route');
         },
         createTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        analyzeLearningWindow: async () => {
           throw new Error('wrong route');
         },
         listLatestTaskDecompositionSuggestion: async (input) => ({
@@ -159,6 +174,9 @@ describe('AI suggestion HTTP boundary', () => {
       createTaskDecompositionSuggestion: async () => {
         throw new Error('should not call service');
       },
+      analyzeLearningWindow: async () => {
+        throw new Error('should not call service');
+      },
       listLatestTaskDecompositionSuggestion: async () => {
         throw new Error('should not call service');
       },
@@ -181,5 +199,57 @@ describe('AI suggestion HTTP boundary', () => {
     expect(missingTargetResponse.status).toBe(400);
     expect(await malformedResponse.text()).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY|secret/i);
     expect(await missingTargetResponse.text()).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY|secret/i);
+  });
+
+  it('dispatches learning analysis requests through an optional learning runtime', async () => {
+    const response = await handleAISuggestionRequest(
+      new Request('http://127.0.0.1:4317/v1/learning/analyze', {
+        body: JSON.stringify({
+          endedAt: '2026-05-09T12:00:00.000Z',
+          startedAt: '2026-05-09T08:00:00.000Z',
+        }),
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+      }),
+      {
+        applyTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        analyzeLearningWindow: async (input) => ({
+          createdSuggestions: [
+            {
+              approvalRequired: true,
+              context: [],
+              createdAt: input.endedAt,
+              createdBy: 'agent:phase3',
+              id: 'sug-1',
+              kind: 'workflow_optimization',
+              payload: {
+                actions: [{ label: 'Split oversized tasks', type: 'task.split' }],
+                confidence: 0.7,
+                evidence: ['oversized task'],
+                privacyLevel: 'L1',
+              },
+              rationale: 'oversized task',
+              status: 'pending',
+              title: 'Adjust next workflow cycle',
+              updatedAt: input.endedAt,
+            },
+          ],
+          report: { window: input },
+        }),
+        createTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        listLatestTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+      },
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toMatchObject({
+      createdSuggestions: [{ kind: 'workflow_optimization', status: 'pending' }],
+    });
   });
 });

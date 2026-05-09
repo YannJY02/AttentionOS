@@ -4,6 +4,7 @@ import { useDailyFlow } from '../hooks/useDailyFlow';
 import { useTaskLifecycle } from '../hooks/useTaskLifecycle';
 import { findHierarchyEntity } from '../storage/hierarchy';
 import { AiDecompositionPanel } from './execution/AiDecompositionPanel';
+import { EvolutionSuggestionsPanel } from './execution/EvolutionSuggestionsPanel';
 import { TaskActions } from './execution/TaskActions';
 import { TaskDetail } from './execution/TaskDetail';
 import { TaskTimer } from './execution/TaskTimer';
@@ -33,6 +34,7 @@ function ActiveTaskExecution({
         <TaskActions task={task} />
       </div>
       <AiDecompositionPanel task={taskEntity} />
+      <EvolutionSuggestionsPanel />
     </div>
   );
 }

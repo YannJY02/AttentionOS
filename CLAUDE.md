@@ -5,6 +5,8 @@
 个人注意力与上下文管理系统（Personal Context OS）。从 V1 (RSS 目录) 完全重新设计。
 
 - 设计文档: `docs/plans/2026-03-21-attentionos-v2-architecture-design.md` — **开始任何开发前必读此文件**
+- 文档入口: `docs/README.md` — 项目文档索引、权威映射与计划目录规则
+- AI 文档治理: `AGENTS.md` + `docs/governance/ai-generated-doc-workflow.md` — 后续 AI 生成文档必须先归类、规范命名、更新索引并归档已应用产物
 - V1 仓库: `/Users/yann.jy/Desktop/AI/RSS` — 仅用于参考和文件复制
 
 ## 技术栈
@@ -63,7 +65,7 @@
 已复制到 V2 的:
 - `packages/attention-engine/` — 153 行纯函数，注意力状态评估算法
 - `packages/policy-engine/` — 322 行纯函数，JITAI 策略引擎
-- `docs/` — 产品规划、工作流模型、用户需求等文档
+- `docs/` — 文档唯一主入口，包含产品规划、工作流模型、用户需求、计划与应用说明
 
 ## 关键参考项目
 

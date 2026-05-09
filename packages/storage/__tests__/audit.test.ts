@@ -41,4 +41,18 @@ describe('AuditRepository', () => {
     const results = await repo.findByActor('user');
     expect(Array.isArray(results)).toBe(true);
   });
+
+  it('findWindow returns audit entries in a learning window', async () => {
+    const results = await repo.findWindow({
+      endedAt: '2026-03-24T01:00:00Z',
+      startedAt: '2026-03-24T00:00:00Z',
+    });
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        action: 'entity.create',
+        targetId: 'ent-001',
+      }),
+    ]);
+  });
 });

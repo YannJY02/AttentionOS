@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { handleAISuggestionRequest } from './http';
-import { createSupabaseAISuggestionService } from './repositories';
+import { handleAISuggestionRequest, normalizeAttentionOSService } from './http';
+import { createSupabaseAISuggestionService, createSupabaseLearningRuntime } from './repositories';
 
 async function readBody(request: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
@@ -34,7 +34,10 @@ async function writeFetchResponse(response: Response, reply: ServerResponse): Pr
 }
 
 export function createAttentionOSServer() {
-  const service = createSupabaseAISuggestionService();
+  const service = normalizeAttentionOSService(
+    createSupabaseAISuggestionService(),
+    createSupabaseLearningRuntime(),
+  );
 
   return createServer(async (request, reply) => {
     const fetchRequest = await toFetchRequest(request);

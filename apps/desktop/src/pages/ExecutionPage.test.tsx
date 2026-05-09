@@ -5,11 +5,13 @@ import App from '../App';
 import { AI_SUGGESTIONS_STORAGE_KEY } from '../storage/aiSuggestions';
 import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
 import { HIERARCHY_STORAGE_KEY } from '../storage/hierarchy';
+import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../storage/learning';
 
 function renderApp(initialEntry: string) {
   localStorage.removeItem(AI_SUGGESTIONS_STORAGE_KEY);
   localStorage.removeItem(EXECUTION_AUDIT_STORAGE_KEY);
   localStorage.removeItem(HIERARCHY_STORAGE_KEY);
+  localStorage.removeItem(LEARNING_OBSERVATIONS_STORAGE_KEY);
 
   render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -112,6 +114,68 @@ describe('ExecutionPage task workflow', () => {
     expect(suggestions.at(-1)).toMatchObject({
       status: 'applied',
       reviewedBy: 'user',
+    });
+  });
+
+  it('reviews a Phase 3 workflow optimization suggestion through HITL controls', async () => {
+    renderApp('/overview');
+    await startOverviewTask();
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze workflow/i }));
+
+    expect(await screen.findByText(/adjust the next workflow cycle/i)).toBeInTheDocument();
+    expect(screen.getByText(/pending/i)).toBeInTheDocument();
+    expect(screen.getByText(/protect the next execution block/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /approve optimization/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/approved/i)).toBeInTheDocument();
+    });
+
+    const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');
+    expect(suggestions.at(-1)).toMatchObject({
+      kind: 'workflow_optimization',
+      status: 'approved',
+      reviewedBy: 'user',
+    });
+
+    const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries.at(-1)).toMatchObject({
+      action: 'learning.suggestion.approved',
+      details: expect.objectContaining({
+        kind: 'workflow_optimization',
+      }),
+    });
+  });
+
+  it('rejects a Phase 3 workflow optimization suggestion through HITL controls', async () => {
+    renderApp('/overview');
+    await startOverviewTask();
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze workflow/i }));
+
+    expect(await screen.findByText(/adjust the next workflow cycle/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /reject/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/rejected/i)).toBeInTheDocument();
+    });
+
+    const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');
+    expect(suggestions.at(-1)).toMatchObject({
+      kind: 'workflow_optimization',
+      status: 'rejected',
+      reviewedBy: 'user',
+    });
+
+    const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries.at(-1)).toMatchObject({
+      action: 'learning.suggestion.rejected',
+      details: expect.objectContaining({
+        kind: 'workflow_optimization',
+      }),
     });
   });
 });

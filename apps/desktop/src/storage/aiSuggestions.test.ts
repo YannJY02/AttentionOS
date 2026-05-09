@@ -1,11 +1,16 @@
-import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import type {
+  TaskDecompositionSuggestion,
+  WorkflowOptimizationSuggestion,
+} from '@attentionos/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   AI_SUGGESTIONS_STORAGE_KEY,
   findTaskDecompositionSuggestion,
   markTaskDecompositionApplied,
+  markWorkflowOptimizationReviewed,
   readAISuggestions,
   saveTaskDecompositionSuggestion,
+  saveWorkflowOptimizationSuggestion,
 } from './aiSuggestions';
 
 function createSuggestion(
@@ -29,6 +34,28 @@ function createSuggestion(
     createdAt: '2026-05-09T00:00:00.000Z',
     updatedAt: '2026-05-09T00:00:00.000Z',
     ...patch,
+  };
+}
+
+function createWorkflowOptimizationSuggestion(): WorkflowOptimizationSuggestion {
+  return {
+    id: 'sug-workflow-1',
+    kind: 'workflow_optimization',
+    status: 'pending',
+    title: 'Adjust next workflow cycle',
+    rationale: 'Attention is overloaded.',
+    payload: {
+      actions: [{ label: 'Protect a focus block', type: 'schedule.focus_block' }],
+      confidence: 0.72,
+      evidence: ['attention overload'],
+      privacyLevel: 'L1',
+      targetStage: 'execution',
+    },
+    context: [],
+    createdBy: 'agent:phase3',
+    approvalRequired: true,
+    createdAt: '2026-05-09T00:00:00.000Z',
+    updatedAt: '2026-05-09T00:00:00.000Z',
   };
 }
 
@@ -65,5 +92,32 @@ describe('AI suggestion browser storage', () => {
     });
     expect(applied.reviewedAt).toEqual(expect.any(String));
     expect(readAISuggestions()).toEqual([applied]);
+  });
+
+  it('approves workflow optimization suggestions without applying workflow changes', () => {
+    const suggestion = saveWorkflowOptimizationSuggestion(createWorkflowOptimizationSuggestion());
+
+    const approved = markWorkflowOptimizationReviewed(suggestion, 'approved', 'user');
+
+    expect(approved).toMatchObject({
+      kind: 'workflow_optimization',
+      status: 'approved',
+      reviewedBy: 'user',
+    });
+    expect(readAISuggestions()).toEqual([approved]);
+  });
+
+  it('rejects workflow optimization suggestions without applying workflow changes', () => {
+    const suggestion = saveWorkflowOptimizationSuggestion(createWorkflowOptimizationSuggestion());
+
+    const rejected = markWorkflowOptimizationReviewed(suggestion, 'rejected', 'user');
+
+    expect(rejected).toMatchObject({
+      kind: 'workflow_optimization',
+      status: 'rejected',
+      reviewedBy: 'user',
+    });
+    expect(rejected.reviewedAt).toEqual(expect.any(String));
+    expect(readAISuggestions()).toEqual([rejected]);
   });
 });

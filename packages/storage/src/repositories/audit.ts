@@ -1,4 +1,4 @@
-import type { CreateAuditLogInput, V2AuditLogEntry } from '@attentionos/core';
+import type { CreateAuditLogInput, LearningWindow, V2AuditLogEntry } from '@attentionos/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 interface AuditRow {
@@ -59,6 +59,18 @@ export class AuditRepository {
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(`AuditRepository.findByActor: ${error.message}`);
+    return (data ?? []).map(rowToAudit);
+  }
+
+  async findWindow(window: LearningWindow): Promise<V2AuditLogEntry[]> {
+    const { data, error } = await this.db
+      .from('audit_log')
+      .select('*')
+      .gte('created_at', window.startedAt)
+      .lte('created_at', window.endedAt)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`AuditRepository.findWindow: ${error.message}`);
     return (data ?? []).map(rowToAudit);
   }
 }

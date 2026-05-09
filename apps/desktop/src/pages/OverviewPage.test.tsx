@@ -3,9 +3,11 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import App from '../App';
 import { HIERARCHY_STORAGE_KEY } from '../storage/hierarchy';
+import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../storage/learning';
 
 function renderOverviewPage() {
   localStorage.removeItem(HIERARCHY_STORAGE_KEY);
+  localStorage.removeItem(LEARNING_OBSERVATIONS_STORAGE_KEY);
 
   render(
     <MemoryRouter initialEntries={['/overview']}>
@@ -19,6 +21,8 @@ describe('OverviewPage hierarchy workflow', () => {
     renderOverviewPage();
 
     expect(screen.getByRole('heading', { name: /overview/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /learning snapshot/i })).toBeInTheDocument();
+    expect(screen.getByText(/attention trend/i)).toBeInTheDocument();
     expect(screen.getByText(/current layer: vision/i)).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /create|edit|delete|decompose/i })).toBeNull();

@@ -16,6 +16,12 @@ interface AISuggestionApprovedInput {
   readonly targetId: string;
 }
 
+interface WorkflowOptimizationReviewedInput {
+  readonly actionCount: number;
+  readonly status: 'approved' | 'rejected';
+  readonly suggestionId: string;
+}
+
 function createAuditId(): string {
   if (globalThis.crypto && 'randomUUID' in globalThis.crypto) {
     return globalThis.crypto.randomUUID();
@@ -81,6 +87,31 @@ export function logAISuggestionApproved({
       createdTaskIds,
       kind: 'task_decomposition',
       stepCount,
+      suggestionId,
+    },
+    createdAt: new Date().toISOString(),
+  };
+
+  localStorage.setItem(
+    EXECUTION_AUDIT_STORAGE_KEY,
+    JSON.stringify([...readExecutionAuditEntries(), entry]),
+  );
+
+  return entry;
+}
+
+export function logWorkflowOptimizationReviewed({
+  actionCount,
+  status,
+  suggestionId,
+}: WorkflowOptimizationReviewedInput): V2AuditLogEntry {
+  const entry: V2AuditLogEntry = {
+    id: createAuditId(),
+    actor: 'user',
+    action: `learning.suggestion.${status}`,
+    details: {
+      actionCount,
+      kind: 'workflow_optimization',
       suggestionId,
     },
     createdAt: new Date().toISOString(),

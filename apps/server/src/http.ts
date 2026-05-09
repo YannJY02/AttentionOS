@@ -1,7 +1,9 @@
 import type {
   AISuggestion,
   CreateAISuggestionInput,
+  LearningWindow,
   TaskDecompositionPayload,
+  WorkflowOptimizationPayload,
 } from '@attentionos/core';
 import type {
   AISuggestionService,
@@ -9,6 +11,7 @@ import type {
   ApplyTaskDecompositionResult,
   ListLatestTaskDecompositionInput,
 } from './ai-suggestions';
+import type { LearningRuntime } from './learning-runtime';
 
 type JsonValue = unknown;
 
@@ -22,6 +25,13 @@ export interface AISuggestionHttpService {
   readonly listLatestTaskDecompositionSuggestion: (
     input: ListLatestTaskDecompositionInput,
   ) => Promise<AISuggestion<TaskDecompositionPayload> | null | JsonValue>;
+}
+
+export interface AttentionOSHttpService extends AISuggestionHttpService {
+  readonly analyzeLearningWindow?: (input: LearningWindow) => Promise<{
+    readonly createdSuggestions: readonly AISuggestion<WorkflowOptimizationPayload>[];
+    readonly report: unknown;
+  }>;
 }
 
 function jsonResponse(body: JsonValue, init: ResponseInit = {}): Response {
@@ -51,7 +61,7 @@ function normalizeService(service: AISuggestionService): AISuggestionHttpService
 
 export async function handleAISuggestionRequest(
   request: Request,
-  service: AISuggestionHttpService,
+  service: AttentionOSHttpService,
 ): Promise<Response> {
   const url = new URL(request.url);
 
@@ -81,11 +91,34 @@ export async function handleAISuggestionRequest(
       return jsonResponse(await service.applyTaskDecompositionSuggestion(input));
     }
 
+    if (request.method === 'POST' && url.pathname === '/v1/learning/analyze') {
+      if (!service.analyzeLearningWindow) {
+        return jsonResponse({ error: 'learning runtime is not configured' }, { status: 503 });
+      }
+
+      const input = (await readJsonBody(request)) as LearningWindow;
+      if (!input.startedAt || !input.endedAt) {
+        return jsonResponse({ error: 'startedAt and endedAt are required' }, { status: 400 });
+      }
+
+      return jsonResponse(await service.analyzeLearningWindow(input), { status: 201 });
+    }
+
     return new Response('Not found', { status: 404 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected server error';
     return jsonResponse({ error: message }, { status: 400 });
   }
+}
+
+export function normalizeAttentionOSService(
+  aiService: AISuggestionService,
+  learningRuntime?: LearningRuntime,
+): AttentionOSHttpService {
+  return {
+    ...normalizeService(aiService),
+    analyzeLearningWindow: learningRuntime?.analyzeWindow,
+  };
 }
 
 export { normalizeService };

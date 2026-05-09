@@ -69,7 +69,7 @@ export function Shell() {
             </nav>
 
             <div className="mt-auto border-stone-200 border-t pt-5 text-stone-500 text-xs leading-5">
-              Deterministic core first. AI remains out of Phase 1.
+              Deterministic core first. AI suggestions stay human-reviewed.
             </div>
           </div>
         </aside>
