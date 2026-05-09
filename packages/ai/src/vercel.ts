@@ -7,6 +7,7 @@ import {
   stepCountIs,
 } from 'ai';
 import type { TaskDecomposerInput, TaskDecomposerOutput } from './agent';
+import { parseTaskDecomposerOutput } from './output';
 import { buildTaskDecompositionPrompt } from './prompts';
 import type { EmbeddingClient } from './rag';
 
@@ -37,7 +38,7 @@ export function createVercelTaskDecomposer(model: LanguageModel): {
         prompt: prompt.prompt,
       });
 
-      return JSON.parse(result.text) as TaskDecomposerOutput;
+      return parseTaskDecomposerOutput(result.text);
     },
   };
 }
