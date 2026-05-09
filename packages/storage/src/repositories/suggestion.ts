@@ -19,7 +19,7 @@ interface SuggestionRow {
   target_id: string | null;
   title: string;
   rationale: string;
-  payload: Record<string, unknown>;
+  payload: object;
   context: AISuggestion['context'];
   created_by: string;
   model_id: string | null;
@@ -31,7 +31,9 @@ interface SuggestionRow {
   updated_at: string;
 }
 
-function rowToSuggestion(row: SuggestionRow): AISuggestion {
+function rowToSuggestion<TPayload extends object = Record<string, unknown>>(
+  row: SuggestionRow,
+): AISuggestion<TPayload> {
   return {
     id: row.id,
     kind: row.kind,
@@ -39,7 +41,7 @@ function rowToSuggestion(row: SuggestionRow): AISuggestion {
     targetId: row.target_id ?? undefined,
     title: row.title,
     rationale: row.rationale,
-    payload: row.payload ?? {},
+    payload: (row.payload ?? {}) as TPayload,
     context: row.context ?? [],
     createdBy: row.created_by,
     modelId: row.model_id ?? undefined,
@@ -55,10 +57,10 @@ function rowToSuggestion(row: SuggestionRow): AISuggestion {
 export class SuggestionRepository {
   constructor(private readonly db: SupabaseClient) {}
 
-  async findByTarget(
+  async findByTarget<TPayload extends object = Record<string, unknown>>(
     targetId: string,
     filter: SuggestionTargetFilter = {},
-  ): Promise<AISuggestion[]> {
+  ): Promise<AISuggestion<TPayload>[]> {
     let query = this.db.from('ai_suggestions').select('*').eq('target_id', targetId);
 
     if (filter.kind) query = query.eq('kind', filter.kind);
@@ -70,10 +72,12 @@ export class SuggestionRepository {
     const { data, error } = await query;
 
     if (error) throw new Error(`SuggestionRepository.findByTarget: ${error.message}`);
-    return (data ?? []).map(rowToSuggestion);
+    return (data ?? []).map((row) => rowToSuggestion<TPayload>(row));
   }
 
-  async create(input: CreateAISuggestionInput): Promise<AISuggestion> {
+  async create<TPayload extends object = Record<string, unknown>>(
+    input: CreateAISuggestionInput<TPayload>,
+  ): Promise<AISuggestion<TPayload>> {
     const { data, error } = await this.db
       .from('ai_suggestions')
       .insert({
@@ -93,26 +97,35 @@ export class SuggestionRepository {
       .single();
 
     if (error) throw new Error(`SuggestionRepository.create: ${error.message}`);
-    return rowToSuggestion(data);
+    return rowToSuggestion<TPayload>(data);
   }
 
-  async approve(id: string, reviewer: string): Promise<AISuggestion | null> {
+  async approve<TPayload extends object = Record<string, unknown>>(
+    id: string,
+    reviewer: string,
+  ): Promise<AISuggestion<TPayload> | null> {
     return this.review(id, 'approved', reviewer);
   }
 
-  async reject(id: string, reviewer: string): Promise<AISuggestion | null> {
+  async reject<TPayload extends object = Record<string, unknown>>(
+    id: string,
+    reviewer: string,
+  ): Promise<AISuggestion<TPayload> | null> {
     return this.review(id, 'rejected', reviewer);
   }
 
-  async markApplied(id: string, reviewer: string): Promise<AISuggestion | null> {
+  async markApplied<TPayload extends object = Record<string, unknown>>(
+    id: string,
+    reviewer: string,
+  ): Promise<AISuggestion<TPayload> | null> {
     return this.review(id, 'applied', reviewer);
   }
 
-  private async review(
+  private async review<TPayload extends object = Record<string, unknown>>(
     id: string,
     status: Extract<SuggestionStatus, 'approved' | 'rejected' | 'applied'>,
     reviewer: string,
-  ): Promise<AISuggestion | null> {
+  ): Promise<AISuggestion<TPayload> | null> {
     const { data, error } = await this.db
       .from('ai_suggestions')
       .update({
@@ -126,6 +139,6 @@ export class SuggestionRepository {
 
     if (error) throw new Error(`SuggestionRepository.review: ${error.message}`);
     if (!data) return null;
-    return rowToSuggestion(data);
+    return rowToSuggestion<TPayload>(data);
   }
 }

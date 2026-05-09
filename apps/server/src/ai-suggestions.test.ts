@@ -113,6 +113,7 @@ describe('AI suggestion service', () => {
         findById: async () => createTask(),
       },
       suggestions: {
+        create: async (input) => createSuggestion(input),
         findByTarget: async () => [suggestion],
         markApplied: async () => appliedSuggestion,
       },
@@ -169,6 +170,7 @@ describe('AI suggestion service', () => {
         },
       },
       suggestions: {
+        create: async (input) => createSuggestion(input),
         findByTarget: async () => {
           touchedRepository = true;
           return [createSuggestion()];
@@ -189,6 +191,40 @@ describe('AI suggestion service', () => {
     expect(touchedRepository).toBe(false);
   });
 
+  it('requires a UUID target when creating storage-backed suggestions', async () => {
+    let touchedRepository = false;
+    const service = createAISuggestionService({
+      audit: { log: async () => createAuditEntry({}) },
+      entities: {
+        create: async () => createEntity('created-1'),
+        findById: async () => createTask(),
+      },
+      suggestions: {
+        create: async (input) => {
+          touchedRepository = true;
+          return createSuggestion(input);
+        },
+        findByTarget: async () => [createSuggestion()],
+        markApplied: async () => createSuggestion({ status: 'applied' }),
+      },
+    });
+
+    await expect(
+      service.createTaskDecompositionSuggestion({
+        approvalRequired: true,
+        context: [],
+        createdBy: 'agent:phase2',
+        kind: 'task_decomposition',
+        payload: { steps: [{ title: 'Draft checklist' }] },
+        rationale: 'Needs smaller steps',
+        status: 'pending',
+        targetId: 'task-wire-overview',
+        title: 'Break down task',
+      }),
+    ).rejects.toThrow(/uuid/i);
+    expect(touchedRepository).toBe(false);
+  });
+
   it('does not apply suggestions that are already reviewed', async () => {
     const service = createAISuggestionService({
       audit: { log: async () => createAuditEntry({}) },
@@ -197,6 +233,7 @@ describe('AI suggestion service', () => {
         findById: async () => createTask(),
       },
       suggestions: {
+        create: async (input) => createSuggestion(input),
         findByTarget: async () => [createSuggestion({ status: 'rejected' })],
         markApplied: async () => createSuggestion({ status: 'applied' }),
       },

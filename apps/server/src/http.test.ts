@@ -2,6 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { handleAISuggestionRequest } from './http';
 
 describe('AI suggestion HTTP boundary', () => {
+  it('reports health without touching persistence', async () => {
+    const response = await handleAISuggestionRequest(new Request('http://127.0.0.1:4317/health'), {
+      applyTaskDecompositionSuggestion: async () => {
+        throw new Error('should not call service');
+      },
+      createTaskDecompositionSuggestion: async () => {
+        throw new Error('should not call service');
+      },
+      listLatestTaskDecompositionSuggestion: async () => {
+        throw new Error('should not call service');
+      },
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ status: 'ok' });
+  });
+
   it('only exposes whitelisted suggestion routes', async () => {
     const response = await handleAISuggestionRequest(
       new Request('http://127.0.0.1:4317/v1/admin/table-dump'),
@@ -61,5 +78,108 @@ describe('AI suggestion HTTP boundary', () => {
       },
       createdTasks: [{ id: 'created-1' }],
     });
+  });
+
+  it('dispatches create and latest requests through narrow service methods', async () => {
+    const targetId = '11111111-1111-4111-8111-111111111111';
+    const createResponse = await handleAISuggestionRequest(
+      new Request('http://127.0.0.1:4317/v1/ai/task-decomposition', {
+        body: JSON.stringify({
+          approvalRequired: true,
+          context: [],
+          createdBy: 'agent:phase2',
+          kind: 'task_decomposition',
+          payload: { steps: [{ title: 'Clarify outcome' }] },
+          rationale: 'Split into reviewable steps',
+          status: 'pending',
+          targetId,
+          title: 'Break down task',
+        }),
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+      }),
+      {
+        applyTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        createTaskDecompositionSuggestion: async (input) => ({
+          id: '33333333-3333-4333-8333-333333333333',
+          ...input,
+          createdAt: '2026-05-09T00:00:00.000Z',
+          updatedAt: '2026-05-09T00:00:00.000Z',
+        }),
+        listLatestTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+      },
+    );
+
+    expect(createResponse.status).toBe(201);
+    await expect(createResponse.json()).resolves.toMatchObject({
+      id: '33333333-3333-4333-8333-333333333333',
+      status: 'pending',
+      targetId,
+    });
+
+    const latestResponse = await handleAISuggestionRequest(
+      new Request(`http://127.0.0.1:4317/v1/ai/task-decomposition/latest?targetId=${targetId}`),
+      {
+        applyTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        createTaskDecompositionSuggestion: async () => {
+          throw new Error('wrong route');
+        },
+        listLatestTaskDecompositionSuggestion: async (input) => ({
+          approvalRequired: true,
+          context: [],
+          createdAt: '2026-05-09T00:00:00.000Z',
+          createdBy: 'agent:phase2',
+          id: '33333333-3333-4333-8333-333333333333',
+          kind: 'task_decomposition',
+          payload: { steps: [{ title: 'Clarify outcome' }] },
+          rationale: 'Split into reviewable steps',
+          status: 'pending',
+          targetId: input.targetId,
+          title: 'Break down task',
+          updatedAt: '2026-05-09T00:00:00.000Z',
+        }),
+      },
+    );
+
+    expect(latestResponse.status).toBe(200);
+    await expect(latestResponse.json()).resolves.toMatchObject({ targetId });
+  });
+
+  it('returns safe 400 responses for malformed JSON and missing query params', async () => {
+    const service = {
+      applyTaskDecompositionSuggestion: async () => {
+        throw new Error('should not call service');
+      },
+      createTaskDecompositionSuggestion: async () => {
+        throw new Error('should not call service');
+      },
+      listLatestTaskDecompositionSuggestion: async () => {
+        throw new Error('should not call service');
+      },
+    };
+
+    const malformedResponse = await handleAISuggestionRequest(
+      new Request('http://127.0.0.1:4317/v1/ai/task-decomposition/apply', {
+        body: '{not-json',
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+      }),
+      service,
+    );
+    const missingTargetResponse = await handleAISuggestionRequest(
+      new Request('http://127.0.0.1:4317/v1/ai/task-decomposition/latest'),
+      service,
+    );
+
+    expect(malformedResponse.status).toBe(400);
+    expect(missingTargetResponse.status).toBe(400);
+    expect(await malformedResponse.text()).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY|secret/i);
+    expect(await missingTargetResponse.text()).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY|secret/i);
   });
 });

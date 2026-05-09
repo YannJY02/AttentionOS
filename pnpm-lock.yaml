@@ -138,10 +138,16 @@ importers:
       '@attentionos/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@attentionos/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
     devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/ai:
     dependencies:
