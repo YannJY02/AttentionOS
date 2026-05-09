@@ -1,6 +1,9 @@
 import type { TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { AI_SUGGESTIONS_STORAGE_KEY, saveTaskDecompositionSuggestion } from '../storage/aiSuggestions';
+import {
+  AI_SUGGESTIONS_STORAGE_KEY,
+  saveTaskDecompositionSuggestion,
+} from '../storage/aiSuggestions';
 import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
 import { HIERARCHY_STORAGE_KEY, readHierarchyEntities } from '../storage/hierarchy';
 import { approveTaskDecompositionSuggestion } from './taskDecompositionWorkflow';
