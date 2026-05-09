@@ -418,11 +418,13 @@ CREATE INDEX idx_audit_time ON audit_log(created_at);
 │       │   └── index.ts           # @attentionos/sdk 公开 API
 │       └── package.json
 │
-├── docs/                          # ← 从 V1 复制所有文档
+├── docs/                          # ← 文档统一入口
+│   ├── README.md                  # 文档总入口
+│   ├── product/                   # 产品基线
+│   ├── workflow/                  # 工作流语义基线
+│   ├── sources-or-raw/            # 原始证据
 │   ├── plans/                     # 设计文档（本文件所在）
-│   ├── MASTER_PRODUCT_PLAN.zh-CN.md
-│   ├── WORKFLOW_CANONICAL_MODEL.zh-CN.md
-│   └── user-original-long-prompts.zh-CN.md
+│   └── governance/                # 文档治理与维护记录
 │
 ├── supabase/                      # Supabase 本地开发配置
 │   ├── migrations/                # SQL 迁移文件
@@ -647,9 +649,9 @@ security-reviewer agent → 隐私网关审查
 | 注意力引擎 | `packages/attention-engine/src/index.ts` | `packages/attention-engine/src/index.ts` | 153 行纯函数，原封不动 |
 | 策略引擎 | `packages/policy-engine/src/index.ts` | `packages/policy-engine/src/index.ts` | 322 行纯函数，原封不动 |
 | 工具函数 | `packages/core/src/utils.ts` | `packages/core/src/utils.ts` | clamp, createId 等 |
-| 产品规划 | `docs/MASTER_PRODUCT_PLAN.zh-CN.md` | `docs/MASTER_PRODUCT_PLAN.zh-CN.md` | 产品理念基线 |
-| 工作流模型 | `docs/WORKFLOW_CANONICAL_MODEL.zh-CN.md` | `docs/WORKFLOW_CANONICAL_MODEL.zh-CN.md` | 三舞台五层模型 |
-| 用户需求 | `docs/user-original-long-prompts.zh-CN.md` | `docs/user-original-long-prompts.zh-CN.md` | 原始需求 |
+| 产品规划 | `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md` | `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md` | 产品理念基线 |
+| 工作流模型 | `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` | `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` | 三舞台五层模型 |
+| 用户需求 | `docs/sources-or-raw/user-original-long-prompts.zh-CN.md` | `docs/sources-or-raw/user-original-long-prompts.zh-CN.md` | 原始需求 |
 
 ### 8.2 参考后重新设计
 

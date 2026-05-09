@@ -22,10 +22,9 @@
 
 ## 2. 语义来源（回顾入口）
 
-1. 用户原始需求：`docs/user-original-long-prompts.zh-CN.md`
-2. E-H 重基线历史：`docs/roadmap-execution/planning/SPRINT_EFGH_REBASELINE_V1.zh-CN.md`
-3. 主路径减负历史：`docs/roadmap-execution/planning/WORKFLOW_MAINPATH_UX_REMEDIATION_GUIDE_V1.zh-CN.md`
-4. Sprint H 收口历史：`docs/roadmap-execution/sprint-h/planning/SPRINT_H_BATCH3_EXECUTION_PLAN.zh-CN.md`
+1. 用户原始需求：`docs/sources-or-raw/user-original-long-prompts.zh-CN.md`
+2. 历史 roadmap 执行入口：`docs/roadmap-execution/README.md`
+3. 当前仓库未保留旧 Sprint E/F/G/H 原始文件；若后续恢复，放入 `docs/roadmap-execution/` 并更新索引。
 
 ---
 
