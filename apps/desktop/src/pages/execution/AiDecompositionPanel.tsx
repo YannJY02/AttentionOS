@@ -2,13 +2,12 @@ import type { TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
 import { Bot, CheckCircle2, WandSparkles } from 'lucide-react';
 import { useState } from 'react';
 import { createLocalTaskDecompositionSuggestion } from '../../ai/taskDecomposition';
+import { approveTaskDecompositionSuggestion } from '../../ai/taskDecompositionWorkflow';
 import {
   findTaskDecompositionSuggestion,
-  markTaskDecompositionApplied,
   saveTaskDecompositionSuggestion,
 } from '../../storage/aiSuggestions';
-import { logAISuggestionApproved } from '../../storage/audit';
-import { applyTaskDecompositionSuggestion, readHierarchyEntities } from '../../storage/hierarchy';
+import { readHierarchyEntities } from '../../storage/hierarchy';
 
 interface AiDecompositionPanelProps {
   readonly task: V2Entity;
@@ -42,15 +41,9 @@ export function AiDecompositionPanel({ task }: AiDecompositionPanelProps) {
       return;
     }
 
-    const createdTasks = applyTaskDecompositionSuggestion(task, suggestion);
-    const appliedSuggestion = markTaskDecompositionApplied(suggestion);
-    logAISuggestionApproved({
-      stepCount: createdTasks.length,
-      suggestionId: suggestion.id,
-      targetId: task.id,
-    });
-    setSuggestion(appliedSuggestion);
-    setCreatedTaskCount(createdTasks.length);
+    const result = approveTaskDecompositionSuggestion({ suggestion, task });
+    setSuggestion(result.appliedSuggestion);
+    setCreatedTaskCount(result.createdTasks.length);
   }
 
   return (

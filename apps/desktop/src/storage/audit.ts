@@ -10,6 +10,7 @@ interface TaskLifecycleTransitionInput {
 }
 
 interface AISuggestionApprovedInput {
+  readonly createdTaskIds?: readonly string[];
   readonly stepCount: number;
   readonly suggestionId: string;
   readonly targetId: string;
@@ -66,6 +67,7 @@ export function logTaskLifecycleTransition({
 }
 
 export function logAISuggestionApproved({
+  createdTaskIds = [],
   stepCount,
   suggestionId,
   targetId,
@@ -76,6 +78,7 @@ export function logAISuggestionApproved({
     action: 'ai.suggestion.approved',
     targetId,
     details: {
+      createdTaskIds,
       kind: 'task_decomposition',
       stepCount,
       suggestionId,

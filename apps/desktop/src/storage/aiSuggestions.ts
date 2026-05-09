@@ -19,13 +19,26 @@ export function readAISuggestions(): TaskDecompositionSuggestion[] {
   return parseSuggestions(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY));
 }
 
+function suggestionTimestamp(suggestion: TaskDecompositionSuggestion): number {
+  const updatedAt = Date.parse(suggestion.updatedAt);
+  if (Number.isFinite(updatedAt)) {
+    return updatedAt;
+  }
+
+  const createdAt = Date.parse(suggestion.createdAt);
+  return Number.isFinite(createdAt) ? createdAt : 0;
+}
+
 export function findTaskDecompositionSuggestion(
   targetId: string,
 ): TaskDecompositionSuggestion | null {
   return (
-    readAISuggestions().find(
-      (suggestion) => suggestion.targetId === targetId && suggestion.kind === 'task_decomposition',
-    ) ?? null
+    readAISuggestions()
+      .filter(
+        (suggestion) =>
+          suggestion.targetId === targetId && suggestion.kind === 'task_decomposition',
+      )
+      .sort((left, right) => suggestionTimestamp(right) - suggestionTimestamp(left))[0] ?? null
   );
 }
 
@@ -43,12 +56,14 @@ export function saveTaskDecompositionSuggestion(
 
 export function markTaskDecompositionApplied(
   suggestion: TaskDecompositionSuggestion,
+  reviewer = 'user',
 ): TaskDecompositionSuggestion {
+  const now = new Date().toISOString();
   return saveTaskDecompositionSuggestion({
     ...suggestion,
     status: 'applied',
-    reviewedBy: 'user',
-    reviewedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    reviewedBy: reviewer,
+    reviewedAt: now,
+    updatedAt: now,
   });
 }

@@ -1,5 +1,16 @@
-import type { AISuggestion, CreateAISuggestionInput, SuggestionStatus } from '@attentionos/core';
+import type {
+  AISuggestion,
+  AISuggestionKind,
+  CreateAISuggestionInput,
+  SuggestionStatus,
+} from '@attentionos/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+export interface SuggestionTargetFilter {
+  readonly kind?: AISuggestionKind;
+  readonly limit?: number;
+  readonly status?: SuggestionStatus;
+}
 
 interface SuggestionRow {
   id: string;
@@ -44,6 +55,24 @@ function rowToSuggestion(row: SuggestionRow): AISuggestion {
 export class SuggestionRepository {
   constructor(private readonly db: SupabaseClient) {}
 
+  async findByTarget(
+    targetId: string,
+    filter: SuggestionTargetFilter = {},
+  ): Promise<AISuggestion[]> {
+    let query = this.db.from('ai_suggestions').select('*').eq('target_id', targetId);
+
+    if (filter.kind) query = query.eq('kind', filter.kind);
+    if (filter.status) query = query.eq('status', filter.status);
+
+    query = query.order('updated_at', { ascending: false });
+    if (filter.limit) query = query.limit(filter.limit);
+
+    const { data, error } = await query;
+
+    if (error) throw new Error(`SuggestionRepository.findByTarget: ${error.message}`);
+    return (data ?? []).map(rowToSuggestion);
+  }
+
   async create(input: CreateAISuggestionInput): Promise<AISuggestion> {
     const { data, error } = await this.db
       .from('ai_suggestions')
@@ -75,9 +104,13 @@ export class SuggestionRepository {
     return this.review(id, 'rejected', reviewer);
   }
 
+  async markApplied(id: string, reviewer: string): Promise<AISuggestion | null> {
+    return this.review(id, 'applied', reviewer);
+  }
+
   private async review(
     id: string,
-    status: Extract<SuggestionStatus, 'approved' | 'rejected'>,
+    status: Extract<SuggestionStatus, 'approved' | 'rejected' | 'applied'>,
     reviewer: string,
   ): Promise<AISuggestion | null> {
     const { data, error } = await this.db
