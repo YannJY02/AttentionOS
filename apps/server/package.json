@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@attentionos/ai": "workspace:*",
     "@attentionos/core": "workspace:*",
     "@attentionos/storage": "workspace:*"
   },

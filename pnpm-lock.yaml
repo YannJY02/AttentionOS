@@ -135,6 +135,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@attentionos/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@attentionos/core':
         specifier: workspace:*
         version: link:../../packages/core

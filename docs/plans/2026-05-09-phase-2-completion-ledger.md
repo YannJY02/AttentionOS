@@ -22,7 +22,7 @@ only when each item below is done or explicitly moved out of scope with a reason
 | RAG interfaces and in-memory retrieval | Done | `packages/ai/src/rag.ts` | Connect storage-backed pgvector retrieval to runtime flows. |
 | pgvector schema/repository | Done | `supabase/migrations/0004_create_ai_reasoning_tables.sql`, `packages/storage/src/repositories/embedding.ts` | Add ingestion and model-version migration workflow. |
 | Prompt template schema/repository | Done | `packages/storage/src/repositories/prompt.ts` | Runtime prompt injection into AI adapters. |
-| Prompt runtime | Done | `packages/ai/src/prompts.ts` | Load active templates from storage/server. |
+| Prompt runtime | Done | `packages/ai/src/prompts.ts`, `apps/server/src/prompt-runtime.ts` | Wire loaded templates into real provider construction. |
 | AI task decomposition agent | Done | `packages/ai/src/agent.ts` | Persist storage-backed suggestions for UUID entities. |
 | HITL local UI approval | Done | `apps/desktop/src/pages/execution/AiDecompositionPanel.tsx` | Optional sidecar-backed path for real UUID data. |
 | Server sidecar suggestion boundary | Done | `apps/server/src/ai-suggestions.ts`, `apps/server/src/http.ts` | Connect desktop to sidecar when real UUID data is active. |
@@ -33,8 +33,8 @@ only when each item below is done or explicitly moved out of scope with a reason
 
 ## Current Recommended Order
 
-1. Load active prompt templates from storage/server into runtime decomposers.
-2. Add storage-backed RAG ingestion/retrieval wiring.
-3. Add environment-driven model registry and structured output validation.
+1. Add storage-backed RAG ingestion/retrieval wiring.
+2. Add environment-driven model registry and structured output validation.
+3. Wire loaded prompt templates into real provider construction.
 4. Add a small offline eval harness for task decomposition quality.
 5. Final security review and Phase 2 closeout verification.
