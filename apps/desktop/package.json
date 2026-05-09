@@ -11,6 +11,7 @@
     "test": "vitest run --reporter=verbose"
   },
   "dependencies": {
+    "@attentionos/ai": "workspace:*",
     "@attentionos/core": "workspace:*",
     "@attentionos/machines": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",

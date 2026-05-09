@@ -1,7 +1,9 @@
+import type { V2Entity } from '@attentionos/core';
 import { ArrowLeft } from 'lucide-react';
 import { useDailyFlow } from '../hooks/useDailyFlow';
 import { useTaskLifecycle } from '../hooks/useTaskLifecycle';
 import { findHierarchyEntity } from '../storage/hierarchy';
+import { AiDecompositionPanel } from './execution/AiDecompositionPanel';
 import { TaskActions } from './execution/TaskActions';
 import { TaskDetail } from './execution/TaskDetail';
 import { TaskTimer } from './execution/TaskTimer';
@@ -9,6 +11,7 @@ import { TaskTimer } from './execution/TaskTimer';
 interface ActiveTaskExecutionProps {
   readonly estimatedMinutes: number;
   readonly onDone: () => void;
+  readonly taskEntity: V2Entity;
   readonly taskId: string;
   readonly title: string;
 }
@@ -16,6 +19,7 @@ interface ActiveTaskExecutionProps {
 function ActiveTaskExecution({
   estimatedMinutes,
   onDone,
+  taskEntity,
   taskId,
   title,
 }: ActiveTaskExecutionProps) {
@@ -28,6 +32,7 @@ function ActiveTaskExecution({
         <TaskTimer task={task} />
         <TaskActions task={task} />
       </div>
+      <AiDecompositionPanel task={taskEntity} />
     </div>
   );
 }
@@ -45,6 +50,7 @@ function getTaskTitle(taskId: string): string {
 export function ExecutionPage() {
   const dailyFlow = useDailyFlow();
   const activeTaskId = dailyFlow.activeTaskId;
+  const activeTask = activeTaskId ? findHierarchyEntity(activeTaskId) : null;
 
   function returnToOverview() {
     dailyFlow.send({ type: 'BACK_TO_OVERVIEW' });
@@ -61,11 +67,12 @@ export function ExecutionPage() {
         </p>
       </div>
 
-      {activeTaskId ? (
+      {activeTaskId && activeTask ? (
         <ActiveTaskExecution
           estimatedMinutes={getEstimatedMinutes(activeTaskId)}
           key={activeTaskId}
           onDone={returnToOverview}
+          taskEntity={activeTask}
           taskId={activeTaskId}
           title={getTaskTitle(activeTaskId)}
         />

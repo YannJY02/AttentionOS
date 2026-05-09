@@ -1,4 +1,4 @@
-import type { HierarchyLayer, V2Entity } from '@attentionos/core';
+import type { HierarchyLayer, TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
 
 export const HIERARCHY_STORAGE_KEY = 'attentionos.hierarchy.v1';
 
@@ -114,4 +114,45 @@ export function listHierarchyEntities(layer: HierarchyLayer, parentId: string | 
 
     return entity.parentId === parentId;
   });
+}
+
+export function applyTaskDecompositionSuggestion(
+  task: V2Entity,
+  suggestion: TaskDecompositionSuggestion,
+): V2Entity[] {
+  const entities = readHierarchyEntities();
+  const existingIds = new Set(entities.map((entity) => entity.id));
+  const parentId = task.parentId ?? task.id;
+  const now = new Date().toISOString();
+
+  const createdTasks = suggestion.payload.steps.flatMap((step, index) => {
+    const id = `${suggestion.id}-step-${index + 1}`;
+    if (existingIds.has(id)) {
+      return [];
+    }
+
+    return [
+      {
+        id,
+        entityType: 'task' as const,
+        hierarchyLayer: 'task' as const,
+        title: step.title,
+        content: step.rationale,
+        status: 'active' as const,
+        properties: {
+          aiGenerated: true,
+          estimatedMinutes: step.estimatedMinutes ?? 15,
+          originalTaskId: task.id,
+          sourceSuggestionId: suggestion.id,
+        },
+        workflowStage: 'overview' as const,
+        parentId,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+  });
+
+  localStorage.setItem(HIERARCHY_STORAGE_KEY, JSON.stringify([...entities, ...createdTasks]));
+  return createdTasks;
 }

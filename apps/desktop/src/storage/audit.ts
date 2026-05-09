@@ -9,6 +9,12 @@ interface TaskLifecycleTransitionInput {
   readonly to: string;
 }
 
+interface AISuggestionApprovedInput {
+  readonly stepCount: number;
+  readonly suggestionId: string;
+  readonly targetId: string;
+}
+
 function createAuditId(): string {
   if (globalThis.crypto && 'randomUUID' in globalThis.crypto) {
     return globalThis.crypto.randomUUID();
@@ -47,6 +53,32 @@ export function logTaskLifecycleTransition({
       event,
       from,
       to,
+    },
+    createdAt: new Date().toISOString(),
+  };
+
+  localStorage.setItem(
+    EXECUTION_AUDIT_STORAGE_KEY,
+    JSON.stringify([...readExecutionAuditEntries(), entry]),
+  );
+
+  return entry;
+}
+
+export function logAISuggestionApproved({
+  stepCount,
+  suggestionId,
+  targetId,
+}: AISuggestionApprovedInput): V2AuditLogEntry {
+  const entry: V2AuditLogEntry = {
+    id: createAuditId(),
+    actor: 'user',
+    action: 'ai.suggestion.approved',
+    targetId,
+    details: {
+      kind: 'task_decomposition',
+      stepCount,
+      suggestionId,
     },
     createdAt: new Date().toISOString(),
   };
