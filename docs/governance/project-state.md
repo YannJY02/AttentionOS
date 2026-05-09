@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-09 19:30 CST
+Updated: 2026-05-09 19:45 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -38,6 +38,8 @@ Status: active
 - Phase 2 AI reasoning work is represented on `main` by git commit `489b6c6` (`merge: phase 2 ai reasoning`) and by `docs/plans/2026-05-09-phase-2-completion-ledger.md`.
 - Phase 3 evolutionary learning now has a verified implementation ledger at `docs/plans/2026-05-09-phase-3-evolutionary-learning-ledger.md`.
 - Phase 3 closeout verification passed on 2026-05-09 19:30 CST: `pnpm check`, `pnpm test:run`, `pnpm lint`, `pnpm build`, and `pnpm e2e`.
+- Phase 3 was merged and pushed to `origin/main` at commit `ebda370` (`merge: phase 3 evolutionary learning`).
+- Phase 4 has a draft intake at `docs/plans/2026-05-09-phase-4-intake.md`; it is not an accepted implementation contract yet.
 
 ## Active Work
 
@@ -46,12 +48,13 @@ Status: active
 - Keep `docs/work/todo.md` short and route confirmed work into the proper authority surface.
 - For large AI-assisted tasks, use `docs/governance/development-document-lifecycle.md` to close out prompt, blueprint, verification, audit, and archive artifacts.
 - Run `pnpm docs:check` after any documentation-related AI work; commit-time enforcement is active in this checkout via `.githooks/pre-commit`.
-- Phase 3 implementation is active on branch `codex-phase-3-evolutionary-learning`: deterministic behavior analysis, pending workflow optimization suggestions, adoption tracking, observability boundary, server audit-window ingestion, and desktop HITL review are verified.
+- Phase 4 intake is the current planning surface. The recommended first slice is a read-only protocol surface: local MCP Server, TypeScript SDK read API, shared typed contract, and loopback/auth boundary.
 
 ## Blockers
 
 - Older Sprint E/F/G/H roadmap source files are still not present; `docs/roadmap-execution/README.md` now records this instead of leaving broken direct links.
+- Phase 4 scope and security decisions are not finalized; do not start broad MCP, SDK, plugin, or offline-sync implementation before a Phase 4 contract is accepted or explicitly narrowed by the owner.
 
 ## Next Action
 
-Review and merge branch `codex-phase-3-evolutionary-learning`; keep `docs/plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` synchronized if deployment or real-signal follow-up changes Phase 3 scope.
+Draft and review a Phase 4 implementation contract from `docs/plans/2026-05-09-phase-4-intake.md`, then start the first narrowed implementation slice.

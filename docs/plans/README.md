@@ -6,9 +6,10 @@
 
 | File | Status | Role |
 |---|---|---|
-| `2026-05-09-phase-3-evolutionary-learning-ledger.md` | Current | Tracks the Phase 3 behavior learning, workflow optimization, adoption, observability, and desktop HITL surface. |
-| `2026-05-09-phase-2-completion-ledger.md` | Current | Tracks the remaining Phase 2 AI reasoning closeout surface. |
-| `2026-05-09-phase-2-ai-reasoning-contract.md` | Current | Records the implemented Phase 2 AI reasoning contract and runtime boundaries. |
+| `2026-05-09-phase-4-intake.md` | Draft intake | Frames the next protocol and extension phase before an implementation contract is accepted. |
+| `2026-05-09-phase-3-evolutionary-learning-ledger.md` | Verified | Tracks the completed Phase 3 behavior learning, workflow optimization, adoption, observability, and desktop HITL surface. |
+| `2026-05-09-phase-2-completion-ledger.md` | Verified | Tracks the completed Phase 2 AI reasoning closeout surface. |
+| `2026-05-09-phase-2-ai-reasoning-contract.md` | Current reference | Records the implemented Phase 2 AI reasoning contract and runtime boundaries. |
 | `2026-03-21-attentionos-v2-architecture-design.md` | Draft / 待审批 | Architecture design reference. Use carefully where it conflicts with current baselines. |
 
 ## Archived Plans

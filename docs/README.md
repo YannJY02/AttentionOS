@@ -7,11 +7,12 @@ This is the canonical entry point for AttentionOS documentation.
 1. `governance/project-state.md` — current recovery state, active work, blockers, and next action.
 2. `product/MASTER_PRODUCT_PLAN.zh-CN.md` — product and vision baseline.
 3. `workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` — workflow semantic baseline.
-4. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — current Phase 3 implementation ledger.
-5. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
-6. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
-7. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
-8. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
+4. `plans/2026-05-09-phase-4-intake.md` — draft Phase 4 intake for protocol and extension scope.
+5. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — verified Phase 3 implementation ledger.
+6. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
+7. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
+8. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
+9. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
 
 ## Documentation Map
 

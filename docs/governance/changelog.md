@@ -2,6 +2,8 @@
 
 ## 2026-05-09
 
+- Added: draft Phase 4 protocol and extension intake at `docs/plans/2026-05-09-phase-4-intake.md`.
+- Changed: project recovery state now records Phase 3 as merged and pushed to `origin/main` at `ebda370`.
 - Changed: server-backed Phase 3 learning analysis now ingests audit events for the analyzed learning window.
 - Added: `AuditRepository.findWindow` and regression coverage for audit-window ingestion.
 - Added: workflow optimization rejection coverage for browser storage and desktop HITL controls.
