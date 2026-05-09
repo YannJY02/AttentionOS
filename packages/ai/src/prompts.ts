@@ -3,7 +3,7 @@ import type { TaskDecomposerInput } from './agent';
 
 export const TASK_DECOMPOSITION_PROMPT_KEY = 'task.decomposition.system';
 
-type RuntimePromptTemplate = Pick<PromptTemplate, 'key' | 'template' | 'variables'>;
+export type RuntimePromptTemplate = Pick<PromptTemplate, 'key' | 'template' | 'variables'>;
 
 interface BuiltTaskDecompositionPrompt {
   readonly prompt: string;

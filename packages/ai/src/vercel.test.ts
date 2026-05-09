@@ -6,7 +6,9 @@ const MODEL = { modelId: 'fake-model' } as unknown as LanguageModel;
 
 const TASK_INPUT = {
   content: 'Raw details',
-  context: [{ id: 'ctx-1', score: 0.8, text: 'Storage-backed RAG note', privacyLevel: 'L0' as const }],
+  context: [
+    { id: 'ctx-1', score: 0.8, text: 'Storage-backed RAG note', privacyLevel: 'L0' as const },
+  ],
   model: {
     capabilities: ['tool-calling' as const],
     costTier: 'medium' as const,

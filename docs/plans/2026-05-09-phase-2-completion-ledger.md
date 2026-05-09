@@ -33,6 +33,5 @@ only when each item below is done or explicitly moved out of scope with a reason
 
 ## Current Recommended Order
 
-1. Wire loaded prompt templates and storage-backed RAG into provider construction.
-2. Add a small offline eval harness for task decomposition quality.
-3. Final security review and Phase 2 closeout verification.
+1. Add a small offline eval harness for task decomposition quality.
+2. Final security review and Phase 2 closeout verification.
