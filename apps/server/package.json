@@ -10,9 +10,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@attentionos/core": "workspace:*"
+    "@attentionos/ai": "workspace:*",
+    "@attentionos/core": "workspace:*",
+    "@attentionos/storage": "workspace:*"
   },
   "devDependencies": {
+    "vitest": "catalog:",
     "typescript": "catalog:"
   }
 }

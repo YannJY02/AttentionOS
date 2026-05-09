@@ -2,10 +2,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import App from '../App';
+import { AI_SUGGESTIONS_STORAGE_KEY } from '../storage/aiSuggestions';
 import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
 import { HIERARCHY_STORAGE_KEY } from '../storage/hierarchy';
 
 function renderApp(initialEntry: string) {
+  localStorage.removeItem(AI_SUGGESTIONS_STORAGE_KEY);
   localStorage.removeItem(EXECUTION_AUDIT_STORAGE_KEY);
   localStorage.removeItem(HIERARCHY_STORAGE_KEY);
 
@@ -61,5 +63,55 @@ describe('ExecutionPage task workflow', () => {
     const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
     expect(auditEntries).toHaveLength(3);
     expect(auditEntries[2].details).toMatchObject({ event: 'COMPLETE', to: 'done' });
+  });
+
+  it('generates and applies an AI task decomposition suggestion', async () => {
+    renderApp('/overview');
+    await startOverviewTask();
+
+    fireEvent.click(screen.getByRole('button', { name: /ai decompose task/i }));
+
+    expect(await screen.findByText(/ai task decomposition/i)).toBeInTheDocument();
+    expect(screen.getByText(/pending/i)).toBeInTheDocument();
+    expect(screen.getByText(/clarify outcome for wire overview/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /approve suggestion/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/applied/i)).toBeInTheDocument();
+    });
+
+    const entities = JSON.parse(localStorage.getItem(HIERARCHY_STORAGE_KEY) ?? '[]');
+    expect(entities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          parentId: 'project-desktop-workflow-scaffold',
+          title: 'Clarify outcome for Wire overview',
+        }),
+        expect.objectContaining({
+          parentId: 'project-desktop-workflow-scaffold',
+          title: 'Draft execution checklist for Wire overview',
+        }),
+      ]),
+    );
+
+    const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries.at(-1)).toMatchObject({
+      action: 'ai.suggestion.approved',
+      targetId: 'task-wire-overview',
+      details: expect.objectContaining({
+        createdTaskIds: expect.arrayContaining([
+          expect.stringContaining('-step-1'),
+          expect.stringContaining('-step-2'),
+        ]),
+        stepCount: 3,
+      }),
+    });
+
+    const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');
+    expect(suggestions.at(-1)).toMatchObject({
+      status: 'applied',
+      reviewedBy: 'user',
+    });
   });
 });

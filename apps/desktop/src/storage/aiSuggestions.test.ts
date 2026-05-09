@@ -1,0 +1,69 @@
+import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+  AI_SUGGESTIONS_STORAGE_KEY,
+  findTaskDecompositionSuggestion,
+  markTaskDecompositionApplied,
+  readAISuggestions,
+  saveTaskDecompositionSuggestion,
+} from './aiSuggestions';
+
+function createSuggestion(
+  patch: Partial<TaskDecompositionSuggestion> = {},
+): TaskDecompositionSuggestion {
+  return {
+    id: 'sug-1',
+    kind: 'task_decomposition',
+    status: 'pending',
+    targetId: 'task-1',
+    title: 'Break down task',
+    rationale: 'Split the task into reviewable execution steps.',
+    payload: {
+      steps: [{ title: 'Draft checklist', estimatedMinutes: 15 }],
+    },
+    context: [],
+    createdBy: 'agent:phase2',
+    modelId: 'local-demo-decomposer',
+    modelVersion: '2026-05-09',
+    approvalRequired: true,
+    createdAt: '2026-05-09T00:00:00.000Z',
+    updatedAt: '2026-05-09T00:00:00.000Z',
+    ...patch,
+  };
+}
+
+describe('AI suggestion browser storage', () => {
+  beforeEach(() => {
+    localStorage.removeItem(AI_SUGGESTIONS_STORAGE_KEY);
+  });
+
+  it('finds the newest task decomposition suggestion for a target', () => {
+    const older = createSuggestion({
+      id: 'sug-old',
+      status: 'applied',
+      updatedAt: '2026-05-09T00:00:00.000Z',
+    });
+    const newer = createSuggestion({
+      id: 'sug-new',
+      status: 'pending',
+      updatedAt: '2026-05-09T00:01:00.000Z',
+    });
+
+    localStorage.setItem(AI_SUGGESTIONS_STORAGE_KEY, JSON.stringify([older, newer]));
+
+    expect(findTaskDecompositionSuggestion('task-1')?.id).toBe('sug-new');
+  });
+
+  it('marks a suggestion applied with reviewer metadata', () => {
+    const suggestion = saveTaskDecompositionSuggestion(createSuggestion());
+
+    const applied = markTaskDecompositionApplied(suggestion, 'user');
+
+    expect(applied).toMatchObject({
+      status: 'applied',
+      reviewedBy: 'user',
+    });
+    expect(applied.reviewedAt).toEqual(expect.any(String));
+    expect(readAISuggestions()).toEqual([applied]);
+  });
+});
