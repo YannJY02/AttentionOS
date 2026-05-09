@@ -49,4 +49,32 @@ describe('SuggestionRepository', () => {
     expect(result?.status).toBe('approved');
     expect(result?.reviewedBy).toBe('user');
   });
+
+  it('marks suggestions applied after deterministic execution', async () => {
+    const applied = {
+      ...SAMPLE_ROW,
+      status: 'applied',
+      reviewed_by: 'user',
+      reviewed_at: '2026-05-09T00:05:00Z',
+    };
+    const repo = new SuggestionRepository(asSupabaseClient(createMockSupabaseClient(applied)));
+    const result = await repo.markApplied('sug-1', 'user');
+
+    expect(result?.status).toBe('applied');
+    expect(result?.reviewedBy).toBe('user');
+    expect(result?.reviewedAt).toBe('2026-05-09T00:05:00Z');
+  });
+
+  it('finds suggestions by target for review surfaces', async () => {
+    const repo = new SuggestionRepository(asSupabaseClient(createMockSupabaseClient([SAMPLE_ROW])));
+    const results = await repo.findByTarget('task-1', { kind: 'task_decomposition' });
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        id: 'sug-1',
+        kind: 'task_decomposition',
+        targetId: 'task-1',
+      }),
+    ]);
+  });
 });

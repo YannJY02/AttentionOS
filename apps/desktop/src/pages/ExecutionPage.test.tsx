@@ -99,6 +99,19 @@ describe('ExecutionPage task workflow', () => {
     expect(auditEntries.at(-1)).toMatchObject({
       action: 'ai.suggestion.approved',
       targetId: 'task-wire-overview',
+      details: expect.objectContaining({
+        createdTaskIds: expect.arrayContaining([
+          expect.stringContaining('-step-1'),
+          expect.stringContaining('-step-2'),
+        ]),
+        stepCount: 3,
+      }),
+    });
+
+    const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');
+    expect(suggestions.at(-1)).toMatchObject({
+      status: 'applied',
+      reviewedBy: 'user',
     });
   });
 });
