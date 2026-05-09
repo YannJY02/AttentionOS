@@ -7,6 +7,7 @@ import {
   stepCountIs,
 } from 'ai';
 import type { TaskDecomposerInput, TaskDecomposerOutput } from './agent';
+import { buildTaskDecompositionPrompt } from './prompts';
 import type { EmbeddingClient } from './rag';
 
 export function createVercelEmbeddingClient(model: EmbeddingModel): EmbeddingClient {
@@ -28,18 +29,12 @@ export function createVercelTaskDecomposer(model: LanguageModel): {
 } {
   return {
     async decompose(input) {
+      const prompt = buildTaskDecompositionPrompt(input);
       const result = await generateText({
         model,
         stopWhen: stepCountIs(3),
-        system:
-          'Return strict JSON with title, rationale, and steps. Each step has title, optional rationale, and optional estimatedMinutes.',
-        prompt: [
-          `Task: ${input.title}`,
-          input.content ? `Details: ${input.content}` : '',
-          `Context: ${input.context.map((item) => item.text).join('\n---\n')}`,
-        ]
-          .filter(Boolean)
-          .join('\n\n'),
+        system: prompt.system,
+        prompt: prompt.prompt,
       });
 
       return JSON.parse(result.text) as TaskDecomposerOutput;
