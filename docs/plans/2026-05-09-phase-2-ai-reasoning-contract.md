@@ -13,6 +13,10 @@ AI only proposes tool calls, context links, task decompositions, and workflow ev
   - `router.ts`: fail-closed model routing by capability and privacy level.
   - `privacy.ts`: deterministic privacy classification/redaction boundary.
   - `rag.ts`: embedding client/vector store interfaces plus an in-memory test store.
+  - `prompts.ts`: runtime prompt template rendering with explicit variables.
+  - `output.ts`: structured task decomposition output validation.
+  - `model-registry.ts`: environment-driven model registry loading.
+  - `gateway.ts`: Vercel AI Gateway model factory boundary.
   - `tools.ts`: Zod schemas for `task.decompose`, `context.search`, and
     `suggestion.approve`.
   - `agent.ts`: task decomposition orchestration that produces pending HITL
@@ -22,6 +26,11 @@ AI only proposes tool calls, context links, task decompositions, and workflow ev
     dependencies remain behind AI SDK 6.
 - `packages/storage/src/repositories/`
   - `embedding.ts`, `prompt.ts`, and `suggestion.ts`.
+- `apps/server/src/`
+  - `ai-suggestions.ts`: sidecar-only deterministic application of AI suggestions.
+  - `http.ts`: narrow loopback HTTP boundary for task decomposition suggestions.
+  - `prompt-runtime.ts`: active prompt template loading from storage.
+  - `rag-runtime.ts`: storage-backed embedding ingestion and pgvector retrieval.
 - `packages/machines/src/agent-bridge.ts`
   - Allows AI to request only legal daily-flow transitions.
 - `supabase/migrations/0004_create_ai_reasoning_tables.sql`
@@ -34,8 +43,13 @@ AI only proposes tool calls, context links, task decompositions, and workflow ev
 - L2 data is local-only and cannot route to external models.
 - L1 data is redacted before external model calls.
 - AI suggestions default to `pending` and `approvalRequired: true`.
-- Desktop UI deep integration is intentionally deferred until localStorage demo data
-  is reconciled with the storage layer.
+- Desktop keeps a local deterministic fallback for slug-id demo data.
+- Supabase-backed Phase 2 writes must go through the loopback server sidecar; the
+  renderer must not import `@attentionos/storage` or access service-role credentials.
+- Storage-backed suggestion application rejects slug ids before touching Supabase
+  repositories because the database schema uses UUID primary/foreign keys.
+- Task decomposition quality has a deterministic offline eval gate; DeepEval can
+  be added later when external service credentials are configured.
 
 ## Environment
 
