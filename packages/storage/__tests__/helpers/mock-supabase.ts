@@ -20,6 +20,7 @@ function makeQueryBuilder(resolvedValue: unknown) {
 
 export type MockSupabaseClient = {
   from: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
 };
 
 /**
@@ -34,7 +35,8 @@ export function createMockSupabaseClient(
 ): MockSupabaseClient {
   const builder = makeQueryBuilder({ data, error });
   const from = vi.fn(() => builder);
-  return { from } as MockSupabaseClient;
+  const rpc = vi.fn(() => builder);
+  return { from, rpc } as MockSupabaseClient;
 }
 
 export function asSupabaseClient(mock: MockSupabaseClient): SupabaseClient {

@@ -1,5 +1,6 @@
 // V1 types (legacy — maintained for attention-engine / policy-engine compatibility)
 
+export * from './ai-types.js';
 // V2 types — use these for all new code
 export * from './constants.js';
 export * from './defaults.js';
