@@ -27,13 +27,12 @@ only when each item below is done or explicitly moved out of scope with a reason
 | HITL local UI approval | Done | `apps/desktop/src/pages/execution/AiDecompositionPanel.tsx` | Optional sidecar-backed path for real UUID data. |
 | Server sidecar suggestion boundary | Done | `apps/server/src/ai-suggestions.ts`, `apps/server/src/http.ts` | Connect desktop to sidecar when real UUID data is active. |
 | `@statelyai/agent` integration | Partial | `packages/ai/src/stately-adapter.ts` | Keep behind adapter until peer dependency mismatch is resolved. |
-| Vercel AI SDK Gateway runtime | Partial | `packages/ai/src/vercel.ts`, `packages/ai/src/output.ts` | Bind registry entries to real Gateway model factories. |
+| Vercel AI SDK Gateway runtime | Done | `packages/ai/src/vercel.ts`, `packages/ai/src/gateway.ts`, `packages/ai/src/output.ts` | Requires runtime credentials for live provider calls. |
 | AI quality eval | Missing | Architecture plan only | Add deterministic offline eval before requiring DeepEval credentials. |
 | Observability | Out of Phase 2 | Architecture lists Langfuse under Phase 3 | Do not block Phase 2 on Langfuse. |
 
 ## Current Recommended Order
 
-1. Bind model registry entries to real Gateway model factories.
-2. Wire loaded prompt templates and storage-backed RAG into provider construction.
-3. Add a small offline eval harness for task decomposition quality.
-4. Final security review and Phase 2 closeout verification.
+1. Wire loaded prompt templates and storage-backed RAG into provider construction.
+2. Add a small offline eval harness for task decomposition quality.
+3. Final security review and Phase 2 closeout verification.
