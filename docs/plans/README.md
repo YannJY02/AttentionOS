@@ -6,6 +6,7 @@
 
 | File | Status | Role |
 |---|---|---|
+| `2026-05-13-attentionos-integration-polish-regression-slice.md` | Implemented / QA-verified | Converts Slice 6 of the experience-alignment blueprint into the completed final integration polish and regression pass after prior slices. |
 | `2026-05-13-attentionos-ai-hitl-clarity-slice.md` | Implemented / QA-verified | Converts Slice 5 of the experience-alignment blueprint into the completed AI suggestion placement and HITL clarity slice: Plan-only helper lanes, explicit review status, task-decomposition rejection, and no Phase 4 expansion. |
 | `2026-05-13-attentionos-overview-readonly-scan-slice.md` | Implemented / QA-verified | Converts Slice 3 of the experience-alignment blueprint into the completed Overview read-only scan redesign: layer-first context, timeline-first Vision, preserved read-only boundaries, and task-layer Execution bridge. |
 | `2026-05-13-attentionos-ritual-semantic-correction-slice.md` | Implemented / QA-verified | Converts Slice 2 of the experience-alignment blueprint into the completed Ritual semantic correction: intention-led copy, local wording overrides, breath labels, and shell copy cleanup. |

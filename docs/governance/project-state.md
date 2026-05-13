@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-13 09:48 CST
+Updated: 2026-05-13 09:57 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -61,6 +61,10 @@ Status: active
 - AI HITL clarity is implemented and `/gstack-qa-only` verified on branch `codex-experience-ritual-semantics`: Execution Plan now groups suggestions under human review lanes, task decomposition supports explicit rejection without creating tasks, workflow optimization review copy no longer implies automatic mutation, and Focus mode keeps broad AI queues hidden.
 - `/gstack-qa-only` produced `.gstack/qa-reports/qa-report-ai-hitl-clarity-2026-05-13.md`; no QA defects, console errors, or page errors were found in the AI HITL QA pass.
 - Final AI HITL slice verification passed on 2026-05-13 09:48 CST: `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 206 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check`.
+- Integration polish and regression Slice 6 has an implementation ledger at `docs/plans/2026-05-13-attentionos-integration-polish-regression-slice.md`.
+- Integration polish and regression is implemented and `/gstack-qa-only` verified on branch `codex-experience-ritual-semantics`: no tracked application-code changes were required, the primary Ritual -> Overview -> Execution flow passed, Overview remained read-only, Focus hid broad review lanes, and no old scaffold copy was found in the primary flow.
+- `/gstack-qa-only` produced `.gstack/qa-reports/qa-report-integration-regression-2026-05-13.md`; no QA defects, console errors, or page errors were found in the final integration QA pass.
+- Final integration slice verification passed on 2026-05-13 09:57 CST: `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 206 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check`.
 
 ## Active Work
 
@@ -74,6 +78,7 @@ Status: active
 - Use `docs/plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` as the closeout ledger for the implemented Ritual semantic correction slice.
 - Use `docs/plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` as the closeout ledger for the implemented Overview read-only scan slice.
 - Use `docs/plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md` as the implementation ledger for the active AI suggestion placement and HITL clarity slice.
+- Use `docs/plans/2026-05-13-attentionos-integration-polish-regression-slice.md` as the implementation ledger for the active final integration polish and regression slice.
 - Do not expand this slice into Phase 4 protocol, SDK, MCP, plugin, or offline-sync work without a separate accepted contract.
 
 ## Blockers
@@ -83,8 +88,9 @@ Status: active
 - Ritual semantic correction implementation, `/gstack-qa-only`, final workspace verification, and commit are complete on `codex-experience-ritual-semantics` at `6e7fb80`.
 - Overview read-only scan implementation, `/gstack-qa-only`, and final full-workspace verification are complete.
 - AI HITL clarity implementation, `/gstack-qa-only`, and final full-workspace verification are complete.
+- Integration polish and regression implementation, `/gstack-qa-only`, and final full-workspace verification are complete.
 - Phase 4 scope and security decisions are not finalized; do not start broad MCP, SDK, plugin, or offline-sync implementation before a Phase 4 contract is accepted or explicitly narrowed by the owner.
 
 ## Next Action
 
-Commit the AI HITL clarity slice, save a `/gstack-context-save` checkpoint, then run Slice 6 integration polish and regression pass.
+Commit the Slice 6 closeout docs, save a final `/gstack-context-save` checkpoint, then ask the owner for branch closeout / merge direction.

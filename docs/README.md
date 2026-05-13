@@ -8,17 +8,18 @@ This is the canonical entry point for AttentionOS documentation.
 2. `product/MASTER_PRODUCT_PLAN.zh-CN.md` — product and vision baseline.
 3. `workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` — workflow semantic baseline.
 4. `plans/2026-05-10-attentionos-experience-alignment-blueprint.md` — draft blueprint for the experience-alignment workflow and `/gstack` skill gates.
-5. `plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md` — implemented and QA-verified AI suggestion placement and HITL clarity slice.
-6. `plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` — implemented and QA-verified Overview read-only scan redesign slice.
-7. `plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` — implemented and QA-verified Ritual semantic correction slice.
-8. `plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` — implemented and QA-verified Execution Plan/Focus slice for the accepted experience work.
-9. `plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` — historical review-gate blocker and record of the owner-approved chat fallback.
-10. `plans/2026-05-09-phase-4-intake.md` — draft Phase 4 intake for protocol and extension scope.
-11. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — verified Phase 3 implementation ledger.
-12. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
-13. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
-14. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
-15. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
+5. `plans/2026-05-13-attentionos-integration-polish-regression-slice.md` — implemented and QA-verified final integration polish and regression pass.
+6. `plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md` — implemented and QA-verified AI suggestion placement and HITL clarity slice.
+7. `plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` — implemented and QA-verified Overview read-only scan redesign slice.
+8. `plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` — implemented and QA-verified Ritual semantic correction slice.
+9. `plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` — implemented and QA-verified Execution Plan/Focus slice for the accepted experience work.
+10. `plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` — historical review-gate blocker and record of the owner-approved chat fallback.
+11. `plans/2026-05-09-phase-4-intake.md` — draft Phase 4 intake for protocol and extension scope.
+12. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — verified Phase 3 implementation ledger.
+13. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
+14. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
+15. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
+16. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
 
 ## Documentation Map
 

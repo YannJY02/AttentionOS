@@ -505,6 +505,8 @@ agent without relying on hidden chat context.
 #### Slice 6: Integration Polish And Regression Pass
 
 - Skill gate: `/gstack-autoplan`
+- Status: implemented and `/gstack-qa-only` verified in
+  `docs/plans/2026-05-13-attentionos-integration-polish-regression-slice.md`.
 - Dependency: Slices 1-5.
 - Likely files:
   - Any touched desktop files from previous slices.

@@ -2,6 +2,8 @@
 
 ## 2026-05-13
 
+- Added: `/gstack-qa-only` final integration regression QA report at `.gstack/qa-reports/qa-report-integration-regression-2026-05-13.md`.
+- Added: integration polish and regression implementation plan at `docs/plans/2026-05-13-attentionos-integration-polish-regression-slice.md`.
 - Changed: Execution Plan now groups suggestion surfaces under human review lanes and avoids framing AI as the primary control center.
 - Added: task-decomposition rejection support with reviewer metadata and user audit logging.
 - Changed: workflow optimization review copy now clarifies that marking a suggestion reviewed does not automatically mutate the workflow.

@@ -1,5 +1,23 @@
 # Maintenance Log
 
+## 2026-05-13 09:52 CST
+
+- Task: run `/gstack-autoplan` for the integration polish and regression slice.
+- Files added: `docs/plans/2026-05-13-attentionos-integration-polish-regression-slice.md`.
+- Files updated: `docs/README.md`, `docs/plans/README.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/governance/project-state.md`, `docs/governance/changelog.md`, and this maintenance log.
+- Evidence: Slice 6 in `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md` and local integration search across user-facing desktop UI files.
+- Boundary: initial scan found no required application-code change; this slice should stay focused on final QA, verification, and closeout docs unless a defect appears.
+- Tool note: spawning an additional read-only explorer failed because the current thread had reached the subagent limit, so the integration scan was performed locally.
+
+## 2026-05-13 09:56 CST
+
+- Task: run final `/gstack-qa-only` integration regression QA.
+- Files added: `.gstack/qa-reports/qa-report-integration-regression-2026-05-13.md`.
+- Files updated: the integration slice ledger, blueprint, and governance/index documents.
+- Evidence: full browser click path from Ritual to Overview to Execution Plan and Focus, desktop screenshots, mobile Overview screenshot, forbidden-copy scan, Overview read-only button scan, and console/page-error check.
+- Verification: `/gstack-qa-only` integration regression QA passed with 23 checks and no console or page errors; final `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 206 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check` all passed.
+- Tool note: the first integration QA run failed because the script asserted an outdated Ritual text string. The script was corrected to the current user-facing intention copy and rerun successfully. The first final `pnpm e2e` attempt failed because sandbox permissions blocked the local Playwright web server from listening on `127.0.0.1:1420`; the same command passed after local server permission was granted.
+
 ## 2026-05-13 09:46 CST
 
 - Task: implement and QA the AI suggestion placement and HITL clarity slice.
