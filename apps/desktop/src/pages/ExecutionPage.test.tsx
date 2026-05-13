@@ -23,9 +23,11 @@ function renderApp(initialEntry: string) {
 async function startOverviewTask() {
   fireEvent.click(screen.getByRole('button', { name: /open personal context os/i }));
   fireEvent.click(screen.getByRole('button', { name: /open product development/i }));
-  fireEvent.click(screen.getByRole('button', { name: /open phase 1 deterministic core/i }));
-  fireEvent.click(screen.getByRole('button', { name: /open desktop workflow scaffold/i }));
-  fireEvent.click(screen.getByRole('button', { name: /start execution for wire overview/i }));
+  fireEvent.click(screen.getByRole('button', { name: /open coherent stage experience/i }));
+  fireEvent.click(screen.getByRole('button', { name: /open overview scan redesign/i }));
+  fireEvent.click(
+    screen.getByRole('button', { name: /start execution for clarify overview scan/i }),
+  );
 
   await screen.findByRole('heading', { name: /execution plan/i });
 }
@@ -46,7 +48,7 @@ describe('ExecutionPage task workflow', () => {
     renderApp('/overview');
     await startOverviewTask();
 
-    expect(screen.getByText(/wire overview/i)).toBeInTheDocument();
+    expect(screen.getByText(/clarify overview scan/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /enter focus/i }));
     expect(await screen.findByRole('heading', { name: /execution focus/i })).toBeInTheDocument();
     expect(screen.getByText(/state: planning/i)).toBeInTheDocument();
@@ -115,7 +117,7 @@ describe('ExecutionPage task workflow', () => {
 
     expect(await screen.findByText(/ai task decomposition/i)).toBeInTheDocument();
     expect(screen.getByText(/pending/i)).toBeInTheDocument();
-    expect(screen.getByText(/clarify outcome for wire overview/i)).toBeInTheDocument();
+    expect(screen.getByText(/clarify outcome for clarify overview scan/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /approve suggestion/i }));
 
@@ -128,11 +130,11 @@ describe('ExecutionPage task workflow', () => {
       expect.arrayContaining([
         expect.objectContaining({
           parentId: 'project-desktop-workflow-scaffold',
-          title: 'Clarify outcome for Wire overview',
+          title: 'Clarify outcome for Clarify overview scan',
         }),
         expect.objectContaining({
           parentId: 'project-desktop-workflow-scaffold',
-          title: 'Draft execution checklist for Wire overview',
+          title: 'Draft execution checklist for Clarify overview scan',
         }),
       ]),
     );

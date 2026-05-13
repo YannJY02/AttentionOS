@@ -2,6 +2,12 @@
 
 ## 2026-05-13
 
+- Added: Overview read-only scan component at `apps/desktop/src/pages/overview/VisionOverviewPanel.tsx`.
+- Changed: Overview now leads with current-layer scan context and renders a timeline-first Vision surface before learning metrics.
+- Changed: default hierarchy seed content now reads as user-facing workflow direction rather than implementation scaffold copy.
+- Added: Overview read-only scan regression coverage and updated E2E path labels for the new default hierarchy content.
+- Added: `/gstack-qa-only` Overview QA report at `.gstack/qa-reports/qa-report-overview-readonly-scan-2026-05-13.md`.
+- Added: Overview read-only scan implementation plan at `docs/plans/2026-05-13-attentionos-overview-readonly-scan-slice.md`.
 - Added: Ritual semantic correction implementation ledger at `docs/plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md`.
 - Changed: Ritual now uses intention-led neutral copy with local configurable intention and dedication wording.
 - Changed: Meditation now displays user-facing breath labels instead of internal status values.

@@ -1,5 +1,22 @@
 # Maintenance Log
 
+## 2026-05-13 09:28 CST
+
+- Task: implement and QA the Overview read-only scan slice.
+- Files added: `apps/desktop/src/pages/overview/VisionOverviewPanel.tsx` and `.gstack/qa-reports/qa-report-overview-readonly-scan-2026-05-13.md`.
+- Files updated: `apps/desktop/src/pages/OverviewPage.tsx`, `apps/desktop/src/pages/OverviewPage.test.tsx`, `apps/desktop/src/storage/hierarchy.ts`, `e2e/smoke.spec.ts`, `e2e/evolution-learning.spec.ts`, the Overview slice ledger, blueprint, and governance/index documents.
+- Evidence: Slice 3 in `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, D4 in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, and read-only explorer review of current Overview implementation.
+- Verification: targeted Overview and hierarchy tests passed with 4 tests; targeted Biome check passed; targeted `git diff --check` passed; `/gstack-qa-only` Overview click test passed with no console or page errors; final `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 200 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check` all passed.
+- Tool notes: the first Overview QA script run failed because direct `node` execution could not resolve the pnpm-managed Playwright package; the import was corrected to `@playwright/test` before rerunning. A multi-file documentation read produced output despite a session workflow warning and was not retried blindly. The first full `pnpm test:run` found stale test assertions for the previous default hierarchy labels; tests were updated to the new user-facing labels. The first `pnpm e2e` attempt failed because sandbox permissions blocked the local Playwright web server from listening on `127.0.0.1:1420`; the same command passed after local server permission was granted.
+
+## 2026-05-13 09:15 CST
+
+- Task: run `/gstack-autoplan` for the Overview read-only scan slice.
+- Files added: `docs/plans/2026-05-13-attentionos-overview-readonly-scan-slice.md`.
+- Files updated: `docs/README.md`, `docs/plans/README.md`, `docs/governance/project-state.md`, `docs/governance/changelog.md`, and this maintenance log.
+- Evidence: Slice 3 in `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, D4 in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, and read-only explorer review of current Overview implementation.
+- Boundary: this is an Overview product-experience slice only; it does not start Phase 4 protocol, SDK, MCP, plugin, or offline-sync implementation.
+
 ## 2026-05-13 09:06 CST
 
 - Task: implement and QA the experience-alignment Ritual semantic correction slice.

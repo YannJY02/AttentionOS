@@ -21,11 +21,25 @@ describe('OverviewPage hierarchy workflow', () => {
     renderOverviewPage();
 
     expect(screen.getByRole('heading', { name: /overview/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /overview scan context/i })).toHaveTextContent(
+      /current layer: vision/i,
+    );
+    expect(screen.getByText(/judge long-horizon direction/i)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /vision timeline/i })).toBeInTheDocument();
+    expect(screen.getByText(/timeline-first vision scan/i)).toBeInTheDocument();
     expect(screen.getByRole('region', { name: /learning snapshot/i })).toBeInTheDocument();
     expect(screen.getByText(/attention trend/i)).toBeInTheDocument();
-    expect(screen.getByText(/current layer: vision/i)).toBeInTheDocument();
+    expect(screen.queryByText(/deterministic|workflow scaffold|wire overview/i)).toBeNull();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /create|edit|delete|decompose/i })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /create|edit|delete|decompose|approve/i }),
+    ).toBeNull();
+
+    const timeline = screen.getByRole('region', { name: /vision timeline/i });
+    const learningSnapshot = screen.getByRole('region', { name: /learning snapshot/i });
+    expect(
+      timeline.compareDocumentPosition(learningSnapshot) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     fireEvent.click(screen.getByRole('button', { name: /open personal context os/i }));
     expect(screen.getByText(/current layer: area/i)).toBeInTheDocument();
@@ -44,11 +58,13 @@ describe('OverviewPage hierarchy workflow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /open personal context os/i }));
     fireEvent.click(screen.getByRole('button', { name: /open product development/i }));
-    fireEvent.click(screen.getByRole('button', { name: /open phase 1 deterministic core/i }));
-    fireEvent.click(screen.getByRole('button', { name: /open desktop workflow scaffold/i }));
+    fireEvent.click(screen.getByRole('button', { name: /open coherent stage experience/i }));
+    fireEvent.click(screen.getByRole('button', { name: /open overview scan redesign/i }));
 
     expect(screen.getByText(/current layer: task/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /start execution for wire overview/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /start execution for clarify overview scan/i }),
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /execution/i })).toBeInTheDocument();

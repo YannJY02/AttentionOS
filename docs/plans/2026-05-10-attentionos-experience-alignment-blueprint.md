@@ -30,8 +30,8 @@ into broad MCP, SDK, plugin, or offline-sync implementation.
 | 2 | `/gstack-plan-design-review` | Complete | D1-D5 and Phase 2 review result recorded in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md` |
 | 3 | `/gstack-plan-eng-review` | Complete | E1-E5, failure modes, and test plan recorded in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md` |
 | 4 | `/gstack-autoplan` | Complete | `docs/plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` |
-| 5 | `/gstack-qa-only` | Pending | Run after implementation |
-| 6 | `/gstack-context-save` / `/gstack-context-restore` | Partial | Context saved at `.gstack/projects/YannJY02-AttentionOS/checkpoints/20260510-220217-attentionos-experience-alignment-gates.md`; restore not run |
+| 5 | `/gstack-qa-only` | Complete for implemented slices | QA reports exist for the Execution Plan/Focus slice, Ritual semantic correction slice, and Overview read-only scan slice. |
+| 6 | `/gstack-context-save` / `/gstack-context-restore` | Partial | Context saved at `.gstack/projects/YannJY02-AttentionOS/checkpoints/20260510-220217-attentionos-experience-alignment-gates.md` and later slice checkpoints; restore runs at resume boundaries. |
 
 ## Evidence Sources
 
@@ -427,6 +427,8 @@ agent without relying on hidden chat context.
 #### Slice 3: Overview Read-Only Scan Redesign
 
 - Skill gate: `/gstack-autoplan`
+- Status: implemented and `/gstack-qa-only` verified in
+  `docs/plans/2026-05-13-attentionos-overview-readonly-scan-slice.md`.
 - Dependency: Phase 2 design review, Slice 1.
 - Likely files:
   - `apps/desktop/src/pages/OverviewPage.tsx`

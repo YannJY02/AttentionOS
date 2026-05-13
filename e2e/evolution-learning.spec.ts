@@ -12,9 +12,9 @@ test('reviews a Phase 3 workflow optimization suggestion', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Open Personal Context OS' }).click();
   await page.getByRole('button', { name: 'Open Product development' }).click();
-  await page.getByRole('button', { name: 'Open Phase 1 deterministic core' }).click();
-  await page.getByRole('button', { name: 'Open Desktop workflow scaffold' }).click();
-  await page.getByRole('button', { name: 'Start execution for Wire overview' }).click();
+  await page.getByRole('button', { name: 'Open Coherent stage experience' }).click();
+  await page.getByRole('button', { name: 'Open Overview scan redesign' }).click();
+  await page.getByRole('button', { name: 'Start execution for Clarify overview scan' }).click();
 
   await expect(page.getByRole('heading', { name: 'Execution Plan' })).toBeVisible();
   await page.getByRole('button', { name: 'Analyze workflow' }).click();

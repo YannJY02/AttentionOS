@@ -39,6 +39,6 @@ describe('AttentionOS desktop shell', () => {
     );
 
     expect(screen.getByRole('heading', { name: /overview/i })).toBeInTheDocument();
-    expect(screen.getByText(/A read-only view/i)).toBeInTheDocument();
+    expect(screen.getByText(/read-only scan for the current hierarchy layer/i)).toBeInTheDocument();
   });
 });

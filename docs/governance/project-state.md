@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-13 09:10 CST
+Updated: 2026-05-13 09:31 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -53,6 +53,10 @@ Status: active
 - Ritual semantic correction is implemented and `/gstack-qa-only` verified on branch `codex-experience-ritual-semantics`: Ritual now uses intention-led neutral copy, configurable local intention/dedication wording, user-facing breath labels, and attention-first shell footer copy while preserving the existing Ritual -> Overview flow.
 - `/gstack-qa-only` produced `.gstack/qa-reports/qa-report-ritual-semantics-2026-05-13.md`; no QA defects, console errors, or page errors were found in the final Ritual QA pass.
 - Final Ritual slice verification passed on 2026-05-13 09:10 CST: `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 200 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check`.
+- Overview read-only scan Slice 3 has an implementation ledger at `docs/plans/2026-05-13-attentionos-overview-readonly-scan-slice.md`.
+- Overview read-only scan is implemented and `/gstack-qa-only` verified on branch `codex-experience-ritual-semantics`: Overview now leads with layer scan context, renders a timeline-first Vision panel before learning metrics, preserves read-only controls, and keeps the task-layer bridge into Execution.
+- `/gstack-qa-only` produced `.gstack/qa-reports/qa-report-overview-readonly-scan-2026-05-13.md`; no QA defects, console errors, or page errors were found in the Overview QA pass.
+- Final Overview slice verification passed on 2026-05-13 09:31 CST: `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 200 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check`.
 
 ## Active Work
 
@@ -64,15 +68,17 @@ Status: active
 - Use `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md` as the current draft planning surface for resolving the frontend/product-experience gap before broad implementation.
 - Use `docs/plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` as the closeout ledger for the implemented experience-alignment slice.
 - Use `docs/plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` as the closeout ledger for the implemented Ritual semantic correction slice.
+- Use `docs/plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` as the closeout ledger for the implemented Overview read-only scan slice.
 - Do not expand this slice into Phase 4 protocol, SDK, MCP, plugin, or offline-sync work without a separate accepted contract.
 
 ## Blockers
 
 - Older Sprint E/F/G/H roadmap source files are still not present; `docs/roadmap-execution/README.md` now records this instead of leaving broken direct links.
 - Experience-alignment Execution implementation, `/gstack-qa-only`, and final verification are complete for the prior slice.
-- Ritual semantic correction implementation, `/gstack-qa-only`, and final workspace verification are complete; remaining closeout is diff review and commit.
+- Ritual semantic correction implementation, `/gstack-qa-only`, final workspace verification, and commit are complete on `codex-experience-ritual-semantics` at `6e7fb80`.
+- Overview read-only scan implementation, `/gstack-qa-only`, and final full-workspace verification are complete.
 - Phase 4 scope and security decisions are not finalized; do not start broad MCP, SDK, plugin, or offline-sync implementation before a Phase 4 contract is accepted or explicitly narrowed by the owner.
 
 ## Next Action
 
-Review/stage only the intended Ritual semantic correction files and commit the branch.
+Commit the Overview read-only scan slice, save a `/gstack-context-save` checkpoint, then continue to the next unclosed experience-alignment slice.
