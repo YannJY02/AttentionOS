@@ -2,6 +2,7 @@
 
 ## 2026-05-13
 
+- Changed: project state now records that the experience-alignment closeout was pushed to `origin/main` and returns the next action to `.gitignore` cleanup plus Phase 4 contract scoping.
 - Changed: project state now records the local `main` fast-forward merge of the experience-alignment branch at `faee10d` and identifies push/PR/manual-testing direction as the next owner decision.
 - Added: `/gstack-qa-only` final integration regression QA report at `.gstack/qa-reports/qa-report-integration-regression-2026-05-13.md`.
 - Added: integration polish and regression implementation plan at `docs/plans/2026-05-13-attentionos-integration-polish-regression-slice.md`.
