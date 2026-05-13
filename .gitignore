@@ -40,3 +40,5 @@ supabase/.temp/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+.gstack/
+.agents/skills/gstack*
