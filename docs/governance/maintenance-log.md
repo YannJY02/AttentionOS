@@ -1,5 +1,13 @@
 # Maintenance Log
 
+## 2026-05-13 11:41 CST
+
+- Task: close out the experience-alignment branch after owner approval.
+- Files updated: `docs/governance/project-state.md`, `docs/governance/changelog.md`, and this maintenance log.
+- Evidence: local `main` was fast-forward merged from `codex-experience-ritual-semantics` at `faee10d`; `git status --short --branch` reported `main...origin/main [ahead 4]` with only the unrelated `.gitignore` working-tree change remaining.
+- Boundary: the merge was local only. No push, PR creation, branch deletion, or `.gitignore` cleanup was performed.
+- Tool note: the first `git switch main` attempt failed because sandbox permissions blocked `.git/index.lock`; the command succeeded after approval.
+
 ## 2026-05-13 09:52 CST
 
 - Task: run `/gstack-autoplan` for the integration polish and regression slice.
