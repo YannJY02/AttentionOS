@@ -16,6 +16,11 @@ interface AISuggestionApprovedInput {
   readonly targetId: string;
 }
 
+interface AISuggestionRejectedInput {
+  readonly suggestionId: string;
+  readonly targetId: string;
+}
+
 interface WorkflowOptimizationReviewedInput {
   readonly actionCount: number;
   readonly status: 'approved' | 'rejected';
@@ -87,6 +92,30 @@ export function logAISuggestionApproved({
       createdTaskIds,
       kind: 'task_decomposition',
       stepCount,
+      suggestionId,
+    },
+    createdAt: new Date().toISOString(),
+  };
+
+  localStorage.setItem(
+    EXECUTION_AUDIT_STORAGE_KEY,
+    JSON.stringify([...readExecutionAuditEntries(), entry]),
+  );
+
+  return entry;
+}
+
+export function logAISuggestionRejected({
+  suggestionId,
+  targetId,
+}: AISuggestionRejectedInput): V2AuditLogEntry {
+  const entry: V2AuditLogEntry = {
+    id: createAuditId(),
+    actor: 'user',
+    action: 'ai.suggestion.rejected',
+    targetId,
+    details: {
+      kind: 'task_decomposition',
       suggestionId,
     },
     createdAt: new Date().toISOString(),

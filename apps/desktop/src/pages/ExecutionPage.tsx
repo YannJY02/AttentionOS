@@ -69,8 +69,20 @@ function ActiveTaskPlan({ onEnterFocus, task, taskEntity }: ActiveTaskPlanProps)
           <ArrowRight aria-hidden="true" size={16} />
         </button>
       </div>
-      <AiDecompositionPanel task={taskEntity} />
-      <EvolutionSuggestionsPanel />
+      <section aria-label="Execution plan helper lanes" className="grid gap-4">
+        <div>
+          <p className="font-medium text-sky-700 text-sm">Human review lanes</p>
+          <h2 className="mt-2 font-semibold text-2xl text-stone-950">
+            Suggestions stay pending until you decide
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-stone-600">
+            Use these lanes while planning. Focus mode keeps them out of view so one action remains
+            primary.
+          </p>
+        </div>
+        <AiDecompositionPanel task={taskEntity} />
+        <EvolutionSuggestionsPanel />
+      </section>
     </div>
   );
 }
@@ -200,7 +212,7 @@ export function ExecutionPage() {
         </h1>
         <p className="mt-3 max-w-2xl text-base text-stone-600">
           {mode === 'plan'
-            ? 'Review the selected action, approve useful AI suggestions, and decide when to focus.'
+            ? 'Review the selected action, decide on pending suggestions, and choose when to focus.'
             : 'Work on one chosen action. Planning suggestions stay outside this focus view.'}
         </p>
       </div>

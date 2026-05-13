@@ -1,6 +1,7 @@
 import type {
   AISuggestion,
   TaskDecompositionSuggestion,
+  V2WorkflowStage,
   WorkflowOptimizationSuggestion,
 } from '@attentionos/core';
 
@@ -81,9 +82,38 @@ export function markTaskDecompositionApplied(
   });
 }
 
-export function findWorkflowOptimizationSuggestions(): WorkflowOptimizationSuggestion[] {
+export function markTaskDecompositionRejected(
+  suggestion: TaskDecompositionSuggestion,
+  reviewer = 'user',
+): TaskDecompositionSuggestion {
+  const now = new Date().toISOString();
+  return saveAISuggestion({
+    ...suggestion,
+    status: 'rejected',
+    reviewedBy: reviewer,
+    reviewedAt: now,
+    updatedAt: now,
+  });
+}
+
+export function findWorkflowOptimizationSuggestions(
+  targetStage?: V2WorkflowStage,
+): WorkflowOptimizationSuggestion[] {
   return readAISuggestions()
-    .filter((suggestion) => suggestion.kind === 'workflow_optimization')
+    .filter((suggestion) => {
+      if (suggestion.kind !== 'workflow_optimization') {
+        return false;
+      }
+
+      if (!targetStage) {
+        return true;
+      }
+
+      return (
+        (suggestion as unknown as WorkflowOptimizationSuggestion).payload.targetStage ===
+        targetStage
+      );
+    })
     .map((suggestion) => suggestion as unknown as WorkflowOptimizationSuggestion)
     .sort((left, right) => suggestionTimestamp(right) - suggestionTimestamp(left));
 }

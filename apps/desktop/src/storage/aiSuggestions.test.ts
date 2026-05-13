@@ -6,7 +6,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   AI_SUGGESTIONS_STORAGE_KEY,
   findTaskDecompositionSuggestion,
+  findWorkflowOptimizationSuggestions,
   markTaskDecompositionApplied,
+  markTaskDecompositionRejected,
   markWorkflowOptimizationReviewed,
   readAISuggestions,
   saveTaskDecompositionSuggestion,
@@ -94,6 +96,20 @@ describe('AI suggestion browser storage', () => {
     expect(readAISuggestions()).toEqual([applied]);
   });
 
+  it('marks a task decomposition suggestion rejected with reviewer metadata', () => {
+    const suggestion = saveTaskDecompositionSuggestion(createSuggestion());
+
+    const rejected = markTaskDecompositionRejected(suggestion, 'user');
+
+    expect(rejected).toMatchObject({
+      status: 'rejected',
+      reviewedBy: 'user',
+    });
+    expect(rejected.reviewedAt).toEqual(expect.any(String));
+    expect(rejected.updatedAt).not.toBe(suggestion.updatedAt);
+    expect(readAISuggestions()).toEqual([rejected]);
+  });
+
   it('approves workflow optimization suggestions without applying workflow changes', () => {
     const suggestion = saveWorkflowOptimizationSuggestion(createWorkflowOptimizationSuggestion());
 
@@ -105,6 +121,24 @@ describe('AI suggestion browser storage', () => {
       reviewedBy: 'user',
     });
     expect(readAISuggestions()).toEqual([approved]);
+  });
+
+  it('filters workflow optimization suggestions by target stage', () => {
+    saveWorkflowOptimizationSuggestion(createWorkflowOptimizationSuggestion());
+    saveWorkflowOptimizationSuggestion({
+      ...createWorkflowOptimizationSuggestion(),
+      id: 'sug-workflow-ritual',
+      payload: {
+        ...createWorkflowOptimizationSuggestion().payload,
+        targetStage: 'ritual',
+      },
+      updatedAt: '2026-05-09T00:01:00.000Z',
+    });
+
+    expect(findWorkflowOptimizationSuggestions()).toHaveLength(2);
+    expect(findWorkflowOptimizationSuggestions('execution')).toEqual([
+      expect.objectContaining({ id: 'sug-workflow-1' }),
+    ]);
   });
 
   it('rejects workflow optimization suggestions without applying workflow changes', () => {

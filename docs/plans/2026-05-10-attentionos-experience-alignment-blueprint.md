@@ -478,6 +478,8 @@ agent without relying on hidden chat context.
 #### Slice 5: AI Suggestion Placement And HITL Clarity
 
 - Skill gate: `/gstack-autoplan`
+- Status: implemented and `/gstack-qa-only` verified in
+  `docs/plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md`.
 - Dependency: Slices 3 and 4.
 - Likely files:
   - `apps/desktop/src/pages/execution/AiDecompositionPanel.tsx`

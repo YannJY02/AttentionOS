@@ -1,5 +1,23 @@
 # Maintenance Log
 
+## 2026-05-13 09:46 CST
+
+- Task: implement and QA the AI suggestion placement and HITL clarity slice.
+- Files added: `.gstack/qa-reports/qa-report-ai-hitl-clarity-2026-05-13.md`.
+- Files updated: `apps/desktop/src/pages/ExecutionPage.tsx`, `apps/desktop/src/pages/execution/AiDecompositionPanel.tsx`, `apps/desktop/src/pages/execution/EvolutionSuggestionsPanel.tsx`, `apps/desktop/src/storage/aiSuggestions.ts`, `apps/desktop/src/storage/audit.ts`, `apps/desktop/src/ai/taskDecompositionWorkflow.ts`, related desktop tests, `e2e/evolution-learning.spec.ts`, the AI HITL slice ledger, blueprint, and governance/index documents.
+- Evidence: Slice 5 in `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, D5 in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, and read-only explorer review of current AI suggestion surfaces.
+- Verification: targeted AI storage/workflow/Execution tests passed with 20 tests; targeted Biome check passed; targeted `git diff --check` passed; `/gstack-qa-only` AI HITL click test passed with no console or page errors; final `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 206 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check` all passed.
+- Tool notes: the storage/workflow rejection path was implemented by a scoped worker agent, then reviewed and integrated in the main worktree. QA used project-installed Playwright because gstack browse had already failed earlier in the session with no available port. The first full `pnpm e2e` attempt failed because sandbox permissions blocked the local Playwright web server from listening on `127.0.0.1:1420`; the same command passed after local server permission was granted.
+
+## 2026-05-13 09:39 CST
+
+- Task: run `/gstack-autoplan` for the AI suggestion placement and HITL clarity slice.
+- Files added: `docs/plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md`.
+- Files updated: `docs/README.md`, `docs/plans/README.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/governance/project-state.md`, `docs/governance/changelog.md`, and this maintenance log.
+- Evidence: Slice 5 in `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, D5 in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, and read-only explorer review of current AI suggestion surfaces.
+- Boundary: this is an Execution Plan AI/HITL clarity slice only; it does not start Phase 4 protocol, SDK, MCP, plugin, provider, token, RAG, or offline-sync implementation.
+- Tool note: a multi-file documentation read produced output despite a session workflow warning and was not retried blindly.
+
 ## 2026-05-13 09:28 CST
 
 - Task: implement and QA the Overview read-only scan slice.

@@ -88,8 +88,8 @@ describe('ExecutionPage task workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: /enter focus/i }));
 
     expect(await screen.findByRole('heading', { name: /execution focus/i })).toBeInTheDocument();
-    expect(screen.queryByText(/ai task decomposition/i)).toBeNull();
-    expect(screen.queryByText(/evolution suggestions/i)).toBeNull();
+    expect(screen.queryByRole('region', { name: /task suggestion review/i })).toBeNull();
+    expect(screen.queryByRole('region', { name: /workflow suggestion review/i })).toBeNull();
   });
 
   it('keeps task lifecycle state when returning from focus to plan', async () => {
@@ -113,16 +113,19 @@ describe('ExecutionPage task workflow', () => {
     renderApp('/overview');
     await startOverviewTask();
 
-    fireEvent.click(screen.getByRole('button', { name: /ai decompose task/i }));
+    expect(screen.getByText(/suggestions stay pending until you decide/i)).toBeInTheDocument();
 
-    expect(await screen.findByText(/ai task decomposition/i)).toBeInTheDocument();
-    expect(screen.getByText(/pending/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /draft task split/i }));
+
+    expect(await screen.findByText(/task decomposition review/i)).toBeInTheDocument();
+    expect(screen.getByText(/pending your review/i)).toBeInTheDocument();
+    expect(screen.getByText(/nothing is added to overview until you approve/i)).toBeInTheDocument();
     expect(screen.getByText(/clarify outcome for clarify overview scan/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /approve suggestion/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/applied/i)).toBeInTheDocument();
+      expect(screen.getByText(/applied by you/i)).toBeInTheDocument();
     });
 
     const entities = JSON.parse(localStorage.getItem(HIERARCHY_STORAGE_KEY) ?? '[]');
@@ -159,20 +162,62 @@ describe('ExecutionPage task workflow', () => {
     });
   });
 
+  it('rejects an AI task decomposition suggestion without creating tasks', async () => {
+    renderApp('/overview');
+    await startOverviewTask();
+
+    fireEvent.click(screen.getByRole('button', { name: /draft task split/i }));
+    expect(await screen.findByText(/pending your review/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /reject suggestion/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/rejected by you/i)).toBeInTheDocument();
+    });
+
+    const entities = JSON.parse(localStorage.getItem(HIERARCHY_STORAGE_KEY) ?? '[]');
+    expect(entities).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          properties: expect.objectContaining({
+            sourceSuggestionId: expect.any(String),
+          }),
+        }),
+      ]),
+    );
+
+    const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');
+    expect(suggestions.at(-1)).toMatchObject({
+      kind: 'task_decomposition',
+      status: 'rejected',
+      reviewedBy: 'user',
+    });
+
+    const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries.at(-1)).toMatchObject({
+      action: 'ai.suggestion.rejected',
+      targetId: 'task-wire-overview',
+      details: expect.objectContaining({
+        kind: 'task_decomposition',
+      }),
+    });
+  });
+
   it('reviews a Phase 3 workflow optimization suggestion through HITL controls', async () => {
     renderApp('/overview');
     await startOverviewTask();
 
-    fireEvent.click(screen.getByRole('button', { name: /analyze workflow/i }));
+    fireEvent.click(screen.getByRole('button', { name: /review workflow pattern/i }));
 
     expect(await screen.findByText(/adjust the next workflow cycle/i)).toBeInTheDocument();
-    expect(screen.getByText(/pending/i)).toBeInTheDocument();
+    expect(screen.getByText(/pending your review/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not change the workflow automatically/i)).toBeInTheDocument();
     expect(screen.getByText(/protect the next execution block/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /approve optimization/i }));
+    fireEvent.click(screen.getByRole('button', { name: /mark reviewed as useful/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/approved/i)).toBeInTheDocument();
+      expect(screen.getByText(/marked approved by you/i)).toBeInTheDocument();
     });
 
     const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');
@@ -195,14 +240,14 @@ describe('ExecutionPage task workflow', () => {
     renderApp('/overview');
     await startOverviewTask();
 
-    fireEvent.click(screen.getByRole('button', { name: /analyze workflow/i }));
+    fireEvent.click(screen.getByRole('button', { name: /review workflow pattern/i }));
 
     expect(await screen.findByText(/adjust the next workflow cycle/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /reject/i }));
+    fireEvent.click(screen.getByRole('button', { name: /mark reviewed as not useful/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/rejected/i)).toBeInTheDocument();
+      expect(screen.getByText(/marked rejected by you/i)).toBeInTheDocument();
     });
 
     const suggestions = JSON.parse(localStorage.getItem(AI_SUGGESTIONS_STORAGE_KEY) ?? '[]');

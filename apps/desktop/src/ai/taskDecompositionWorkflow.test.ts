@@ -6,7 +6,10 @@ import {
 } from '../storage/aiSuggestions';
 import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
 import { HIERARCHY_STORAGE_KEY, readHierarchyEntities } from '../storage/hierarchy';
-import { approveTaskDecompositionSuggestion } from './taskDecompositionWorkflow';
+import {
+  approveTaskDecompositionSuggestion,
+  rejectTaskDecompositionSuggestion,
+} from './taskDecompositionWorkflow';
 
 const TASK: V2Entity = {
   id: 'task-1',
@@ -118,6 +121,60 @@ describe('task decomposition workflow', () => {
       approveTaskDecompositionSuggestion({ suggestion, task: TASK, reviewer: 'user' }),
     ).toThrow(/does not target task/i);
     expect(readHierarchyEntities()).toHaveLength(2);
+    expect(JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]')).toEqual([]);
+  });
+
+  it('marks pending suggestions rejected, writes audit details, and creates no tasks', () => {
+    const suggestion = saveTaskDecompositionSuggestion(createSuggestion());
+
+    const result = rejectTaskDecompositionSuggestion({ suggestion, task: TASK, reviewer: 'user' });
+
+    expect(result.rejectedSuggestion).toMatchObject({
+      id: suggestion.id,
+      status: 'rejected',
+      reviewedBy: 'user',
+    });
+    expect(result.rejectedSuggestion.reviewedAt).toEqual(expect.any(String));
+    expect(result.rejectedSuggestion.updatedAt).not.toBe(suggestion.updatedAt);
+    expect(readHierarchyEntities()).toEqual([PARENT, TASK]);
+
+    const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries).toEqual([
+      expect.objectContaining({
+        action: 'ai.suggestion.rejected',
+        actor: 'user',
+        targetId: TASK.id,
+        details: expect.objectContaining({
+          kind: 'task_decomposition',
+          suggestionId: suggestion.id,
+        }),
+      }),
+    ]);
+  });
+
+  it('does not reject non-pending suggestions', () => {
+    const suggestion = saveTaskDecompositionSuggestion({
+      ...createSuggestion(),
+      status: 'applied',
+    });
+
+    expect(() =>
+      rejectTaskDecompositionSuggestion({ suggestion, task: TASK, reviewer: 'user' }),
+    ).toThrow(/is not pending/i);
+    expect(readHierarchyEntities()).toEqual([PARENT, TASK]);
+    expect(JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]')).toEqual([]);
+  });
+
+  it('does not reject suggestions for a different task before writing data', () => {
+    const suggestion = saveTaskDecompositionSuggestion({
+      ...createSuggestion(),
+      targetId: 'other-task',
+    });
+
+    expect(() =>
+      rejectTaskDecompositionSuggestion({ suggestion, task: TASK, reviewer: 'user' }),
+    ).toThrow(/does not target task/i);
+    expect(readHierarchyEntities()).toEqual([PARENT, TASK]);
     expect(JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]')).toEqual([]);
   });
 });

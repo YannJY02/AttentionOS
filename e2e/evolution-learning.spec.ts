@@ -17,13 +17,14 @@ test('reviews a Phase 3 workflow optimization suggestion', async ({ page }) => {
   await page.getByRole('button', { name: 'Start execution for Clarify overview scan' }).click();
 
   await expect(page.getByRole('heading', { name: 'Execution Plan' })).toBeVisible();
-  await page.getByRole('button', { name: 'Analyze workflow' }).click();
+  await page.getByRole('button', { name: 'Review workflow pattern' }).click();
 
   await expect(page.getByText('Adjust the next workflow cycle')).toBeVisible();
   await expect(page.getByText('Protect the next execution block')).toBeVisible();
+  await expect(page.getByText('Pending your review')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Approve optimization' }).click();
-  await expect(page.getByText('approved')).toBeVisible();
+  await page.getByRole('button', { name: 'Mark reviewed as useful' }).click();
+  await expect(page.getByText('Marked approved by you')).toBeVisible();
 
   const state = await page.evaluate(() => {
     const suggestions = JSON.parse(localStorage.getItem('attentionos.ai.suggestions.v1') ?? '[]');

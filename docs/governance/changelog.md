@@ -2,6 +2,12 @@
 
 ## 2026-05-13
 
+- Changed: Execution Plan now groups suggestion surfaces under human review lanes and avoids framing AI as the primary control center.
+- Added: task-decomposition rejection support with reviewer metadata and user audit logging.
+- Changed: workflow optimization review copy now clarifies that marking a suggestion reviewed does not automatically mutate the workflow.
+- Added: AI HITL regression coverage for task-decomposition rejection, execution-stage workflow suggestion filtering, Plan-only review lanes, and updated E2E workflow review labels.
+- Added: `/gstack-qa-only` AI HITL QA report at `.gstack/qa-reports/qa-report-ai-hitl-clarity-2026-05-13.md`.
+- Added: AI HITL clarity implementation plan at `docs/plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md`.
 - Added: Overview read-only scan component at `apps/desktop/src/pages/overview/VisionOverviewPanel.tsx`.
 - Changed: Overview now leads with current-layer scan context and renders a timeline-first Vision surface before learning metrics.
 - Changed: default hierarchy seed content now reads as user-facing workflow direction rather than implementation scaffold copy.
