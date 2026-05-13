@@ -16,7 +16,7 @@ test('reviews a Phase 3 workflow optimization suggestion', async ({ page }) => {
   await page.getByRole('button', { name: 'Open Desktop workflow scaffold' }).click();
   await page.getByRole('button', { name: 'Start execution for Wire overview' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Execution' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Execution Plan' })).toBeVisible();
   await page.getByRole('button', { name: 'Analyze workflow' }).click();
 
   await expect(page.getByText('Adjust the next workflow cycle')).toBeVisible();

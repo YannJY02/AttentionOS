@@ -4,6 +4,10 @@ import type { DailyFlowApi, WorkflowStage } from './useDailyFlow';
 
 const ROUTE_STAGES: ReadonlySet<WorkflowStage> = new Set(['ritual', 'overview', 'execution']);
 
+function routeForStage(stage: WorkflowStage): string {
+  return stage === 'execution' ? '/execution/plan' : `/${stage}`;
+}
+
 function stageFromPathname(pathname: string): WorkflowStage | null {
   const segment = pathname.split('/').filter(Boolean)[0];
 
@@ -28,7 +32,7 @@ export function useRouteSync(dailyFlow: DailyFlowApi): void {
     if (pathChanged && routeStage && routeStage !== dailyFlow.stage) {
       dailyFlow.send({ type: 'RESTORE_STAGE', stage: routeStage });
     } else if (stageChanged && routeStage !== dailyFlow.stage) {
-      navigate(`/${dailyFlow.stage}`, { replace: true });
+      navigate(routeForStage(dailyFlow.stage), { replace: true });
     }
 
     previousPath.current = location.pathname;

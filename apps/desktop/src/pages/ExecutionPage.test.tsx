@@ -27,14 +27,14 @@ async function startOverviewTask() {
   fireEvent.click(screen.getByRole('button', { name: /open desktop workflow scaffold/i }));
   fireEvent.click(screen.getByRole('button', { name: /start execution for wire overview/i }));
 
-  await screen.findByRole('heading', { name: /execution/i });
+  await screen.findByRole('heading', { name: /execution plan/i });
 }
 
 describe('ExecutionPage task workflow', () => {
   it('shows an empty execution state when no task is active', async () => {
     renderApp('/execution');
 
-    expect(await screen.findByText(/no active task/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no focus candidate/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /back to overview/i }));
 
     await waitFor(() => {
@@ -47,6 +47,8 @@ describe('ExecutionPage task workflow', () => {
     await startOverviewTask();
 
     expect(screen.getByText(/wire overview/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /enter focus/i }));
+    expect(await screen.findByRole('heading', { name: /execution focus/i })).toBeInTheDocument();
     expect(screen.getByText(/state: planning/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /start task/i }));
@@ -65,6 +67,44 @@ describe('ExecutionPage task workflow', () => {
     const auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
     expect(auditEntries).toHaveLength(3);
     expect(auditEntries[2].details).toMatchObject({ event: 'COMPLETE', to: 'done' });
+  });
+
+  it('redirects a direct focus route without a focus target back to plan mode', async () => {
+    renderApp('/execution/focus');
+
+    expect(await screen.findByRole('heading', { name: /execution plan/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/choose one task from overview before entering focus/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no focus candidate/i)).toBeInTheDocument();
+  });
+
+  it('keeps AI suggestion queues out of focus mode by default', async () => {
+    renderApp('/overview');
+    await startOverviewTask();
+
+    fireEvent.click(screen.getByRole('button', { name: /enter focus/i }));
+
+    expect(await screen.findByRole('heading', { name: /execution focus/i })).toBeInTheDocument();
+    expect(screen.queryByText(/ai task decomposition/i)).toBeNull();
+    expect(screen.queryByText(/evolution suggestions/i)).toBeNull();
+  });
+
+  it('keeps task lifecycle state when returning from focus to plan', async () => {
+    renderApp('/overview');
+    await startOverviewTask();
+
+    fireEvent.click(screen.getByRole('button', { name: /enter focus/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /start task/i }));
+    expect(screen.getByText(/state: executing/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /back to execution plan/i }));
+    expect(await screen.findByRole('heading', { name: /execution plan/i })).toBeInTheDocument();
+    expect(screen.getByText(/state: executing/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /enter focus/i }));
+    expect(await screen.findByRole('heading', { name: /execution focus/i })).toBeInTheDocument();
+    expect(screen.getByText(/state: executing/i)).toBeInTheDocument();
   });
 
   it('generates and applies an AI task decomposition suggestion', async () => {

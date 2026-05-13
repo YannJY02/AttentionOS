@@ -1,5 +1,71 @@
 # Maintenance Log
 
+## 2026-05-13 07:49 CST
+
+- Task: implement and QA the experience-alignment Execution Plan/Focus slice.
+- Files added: `packages/machines/src/execution-mode.ts`, `packages/machines/__tests__/execution-mode.test.ts`, `.gstack/qa-reports/qa-report-127-0-0-1-1420-2026-05-13.md`, `.gstack/qa-reports/baseline.json`, and `.gstack/projects/YannJY02-AttentionOS/yann.jy-main-test-outcome-20260513-0749.md`.
+- Files updated: `apps/desktop/src/App.tsx`, `apps/desktop/src/components/layout/Shell.tsx`, `apps/desktop/src/hooks/useRouteSync.ts`, `apps/desktop/src/pages/ExecutionPage.tsx`, related RTL/e2e tests, `biome.json`, and governance/index documents.
+- Verification: machines targeted tests passed with 62 tests, desktop targeted tests passed with 29 tests, `pnpm e2e` passed with 3 Chromium tests, and final `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 199 tests, `pnpm lint`, `pnpm build`, `pnpm e2e`, and `git diff --check` all passed.
+- Review fix: diff review found that task lifecycle state would reset when moving Focus -> Plan -> Focus. `ActiveTaskSession` now stays mounted across `/execution/*` mode switches, and `apps/desktop/src/pages/ExecutionPage.test.tsx` covers this regression.
+- Tool notes: the first machines/desktop targeted run exposed an unsupported XState `and` guard and an infinite RESTORE_MODE render loop; both were fixed before rerun. The first `pnpm e2e` attempt failed because sandbox permissions blocked the local Vite dev server from listening on `127.0.0.1:1420`; the same command passed after local server permission was granted. `/gstack-qa-only` preamble initially attempted to write global `~/.gstack`; subsequent QA artifacts were written under repo-local `.gstack`.
+
+## 2026-05-13 07:11 CST
+
+- Task: complete Phase 2 `/gstack-plan-design-review` for AttentionOS experience alignment using owner-approved normal-chat fallback for `AskUserQuestion`.
+- Files updated: `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md`, `docs/plans/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Decisions accepted: D1 mobile bottom stage navigation with top layer context; D2 `/execution/plan` and `/execution/focus` subroutes; D3 neutral default Ritual language with configurable prayer/dedication; D4 timeline-first Vision; D5 AI suggestions grouped by workflow stage/current mode.
+- Boundary: no application code was changed, no visual implementation was accepted, and `/gstack-autoplan` remains blocked until Phase 3 `/gstack-plan-eng-review` completes.
+
+## 2026-05-13 07:33 CST
+
+- Task: complete Phase 3 `/gstack-plan-eng-review` for AttentionOS experience alignment using owner-approved normal-chat fallback for `AskUserQuestion`.
+- Files added: `.gstack/projects/YannJY02-AttentionOS/yann.jy-main-eng-review-test-plan-20260513-0733.md`.
+- Files updated: `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md`, `docs/plans/README.md`, `docs/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Decisions accepted: E1 add `executionModeMachine`; E2 URL requests mode and machine validates; E3 keep task lifecycle separate with future migration path; E4 require full contract test scope; E5 implement one complete slice.
+- Boundary: no application code was changed; `/gstack-autoplan` is now the next gate before implementation.
+
+## 2026-05-13 07:38 CST
+
+- Task: run Phase 4 `/gstack-autoplan` for AttentionOS experience alignment.
+- Files added: `docs/plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md`, `.gstack/projects/YannJY02-AttentionOS/main-autoplan-restore-20260513-073752.md`, and `.gstack/projects/YannJY02-AttentionOS/yann.jy-main-autoplan-test-plan-20260513-0738.md`.
+- Files updated: `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/plans/README.md`, `docs/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Output: one complete implementation slice covering `executionModeMachine`, `/execution/plan`, `/execution/focus`, mobile bottom stage navigation, Plan/Focus AI boundaries, and full contract tests.
+- Boundary: no application code was changed; next coding phase should implement the slice and then run `/gstack-qa-only`.
+
+## 2026-05-10 22:02 CST
+
+- Task: invoke Phase 2 `/gstack-plan-design-review` and Phase 3 `/gstack-plan-eng-review` for AttentionOS experience alignment.
+- Files added: `docs/plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` and `.gstack/projects/YannJY02-AttentionOS/checkpoints/20260510-220217-attentionos-experience-alignment-gates.md`.
+- Files updated: `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/plans/README.md`, `docs/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Evidence: both gstack review skills require `AskUserQuestion` for non-trivial review findings; the current Codex Desktop tool context has no callable `AskUserQuestion` variant. `/gstack-context-save` then captured the blocked handoff state.
+- Boundary: did not fabricate design or engineering review results, did not edit application code, and did not start `/gstack-autoplan` implementation slicing.
+- Tool note: session workflow warnings reported recent reads may have failed; the associated commands returned output and were not blindly retried.
+
+## 2026-05-10 22:01 CST
+
+- Task: execute Phase 1 `/gstack-design-consultation` for AttentionOS experience alignment.
+- Files added: `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`.
+- Files updated: `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/plans/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Evidence: Phase 0 evidence ledger, product baseline, workflow semantic baseline, original user long prompt, and current UI capture findings.
+- Boundary: wrote a stage-specific experience contract under `docs/plans/`; did not create root `DESIGN.md`, generate final visual assets, or implement code.
+
+## 2026-05-10 22:00 CST
+
+- Task: execute Phase 0 `/gstack-investigate` for AttentionOS experience alignment.
+- Files added: `docs/plans/2026-05-10-attentionos-experience-alignment-evidence-ledger.md`.
+- Files updated: `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, `docs/plans/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Evidence: refreshed desktop and mobile UI captures under `/private/tmp/attentionos-ui-audit/`; product baseline, workflow baseline, Phase 2/3/4 plan surfaces, desktop UI code, XState machines, and prior project memory.
+- Root-cause hypothesis: the architecture direction is mostly intact, but the frontend lacks an explicit experience contract, causing scaffold/demo patterns and a fixed desktop shell to dominate the user experience.
+- Tool notes: a mobile Execution flow capture failed waiting for `Start execution`, so `/execution` was captured directly; two multi-file `nl` attempts failed on macOS and were replaced with targeted single-file reads.
+
+## 2026-05-10 18:05 CST
+
+- Task: create a draft AttentionOS experience-alignment blueprint with exact `/gstack` skill gates per phase.
+- Files added: `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`.
+- Files updated: `docs/plans/README.md`, `docs/README.md`, `docs/governance/project-state.md`, and `docs/governance/changelog.md`.
+- Evidence: prior UI/product diagnosis identified an experience contract gap; product baseline requires workflow-first and attention-first UI; workflow baseline fixes `ritual / overview / execution`; Phase 4 intake remains draft and non-expansive.
+- Boundary: no code implementation was started; the blueprint does not authorize Phase 4 protocol work or root-level plan creation.
+
 ## 2026-05-09 19:45 CST
 
 - Task: close the post-merge Phase 3 documentation state and prepare Phase 4 intake.

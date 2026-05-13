@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-09 19:45 CST
+Updated: 2026-05-13 08:09 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -40,6 +40,15 @@ Status: active
 - Phase 3 closeout verification passed on 2026-05-09 19:30 CST: `pnpm check`, `pnpm test:run`, `pnpm lint`, `pnpm build`, and `pnpm e2e`.
 - Phase 3 was merged and pushed to `origin/main` at commit `ebda370` (`merge: phase 3 evolutionary learning`).
 - Phase 4 has a draft intake at `docs/plans/2026-05-09-phase-4-intake.md`; it is not an accepted implementation contract yet.
+- Experience alignment now has a draft blueprint at `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`; it requires exact `/gstack` skill gates before implementation and does not authorize code changes by itself.
+- Phase 0 `/gstack-investigate` evidence freeze for experience alignment is complete at `docs/plans/2026-05-10-attentionos-experience-alignment-evidence-ledger.md`; it identifies the root cause as a missing product-to-frontend experience contract plus a concrete fixed-shell mobile layout bug.
+- Phase 1 `/gstack-design-consultation` experience contract is complete at `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`.
+- Phase 2 `/gstack-plan-design-review` is complete under owner-approved normal-chat fallback, with D1-D5 recorded in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`: mobile bottom stage navigation with top layer context, `/execution/plan` plus `/execution/focus` subroutes, neutral default Ritual language with configurable prayer/dedication, timeline-first Vision, and AI suggestions grouped by workflow stage/current mode.
+- Phase 3 `/gstack-plan-eng-review` is complete under owner-approved normal-chat fallback, with E1-E5 recorded in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`: add `executionModeMachine`, let URL request and machine validate mode, keep task lifecycle separate with a migration path, require the full contract test set, and implement as one complete slice.
+- The experience-alignment implementation slice is implemented and QA-verified as of 2026-05-13 08:09 CST. The completed slice covers `executionModeMachine`, `/execution/plan`, `/execution/focus`, mobile bottom stage navigation, Plan/Focus AI boundaries, active task lifecycle preservation across Plan/Focus, and contract tests.
+- `/gstack-qa-only` produced `.gstack/qa-reports/qa-report-127-0-0-1-1420-2026-05-13.md` and `.gstack/projects/YannJY02-AttentionOS/yann.jy-main-test-outcome-20260513-0749.md`; no QA defects were found.
+- Final verification passed on 2026-05-13 08:09 CST: `pnpm docs:check`, `pnpm check`, `pnpm test:run`, `pnpm lint`, `pnpm build`, `pnpm e2e`, and `git diff --check`.
+- Phase 6 `/gstack-context-save` has saved the current experience-alignment handoff at `.gstack/projects/YannJY02-AttentionOS/checkpoints/20260510-220217-attentionos-experience-alignment-gates.md`; `/gstack-context-restore` is only needed in a future resume context.
 
 ## Active Work
 
@@ -48,13 +57,16 @@ Status: active
 - Keep `docs/work/todo.md` short and route confirmed work into the proper authority surface.
 - For large AI-assisted tasks, use `docs/governance/development-document-lifecycle.md` to close out prompt, blueprint, verification, audit, and archive artifacts.
 - Run `pnpm docs:check` after any documentation-related AI work; commit-time enforcement is active in this checkout via `.githooks/pre-commit`.
-- Phase 4 intake is the current planning surface. The recommended first slice is a read-only protocol surface: local MCP Server, TypeScript SDK read API, shared typed contract, and loopback/auth boundary.
+- Use `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md` as the current draft planning surface for resolving the frontend/product-experience gap before broad implementation.
+- Use `docs/plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` as the closeout ledger for the implemented experience-alignment slice.
+- Do not expand this slice into Phase 4 protocol, SDK, MCP, plugin, or offline-sync work without a separate accepted contract.
 
 ## Blockers
 
 - Older Sprint E/F/G/H roadmap source files are still not present; `docs/roadmap-execution/README.md` now records this instead of leaving broken direct links.
+- Experience-alignment implementation, `/gstack-qa-only`, and final verification are complete for the current slice. The remaining blocker is branch closeout: diff review and commit/merge decision.
 - Phase 4 scope and security decisions are not finalized; do not start broad MCP, SDK, plugin, or offline-sync implementation before a Phase 4 contract is accepted or explicitly narrowed by the owner.
 
 ## Next Action
 
-Draft and review a Phase 4 implementation contract from `docs/plans/2026-05-09-phase-4-intake.md`, then start the first narrowed implementation slice.
+Review the completed implementation diff, then decide whether to commit and merge this experience-alignment slice.

@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-05-13
+
+- Added: `executionModeMachine` with guarded Plan/Focus mode transitions and unit coverage.
+- Changed: Execution routing now uses `/execution/plan` and `/execution/focus`; `/execution` redirects to Plan mode.
+- Changed: Execution UI now separates Plan-mode AI suggestion review from Focus-mode single-action work.
+- Fixed: active task lifecycle state now survives moving from Execution Focus back to Plan and then into Focus again.
+- Changed: desktop shell keeps the sidebar on desktop and uses bottom stage navigation on mobile.
+- Changed: Biome now excludes repo-local gstack tool/artifact directories from product linting.
+- Added: browser and RTL coverage for Plan/Focus routing, invalid Focus redirects, AI/HITL preservation, and 390px mobile shell behavior.
+- Added: `/gstack-qa-only` report and project test outcome for the implemented experience-alignment slice.
+- Added: Phase 4 `/gstack-autoplan` implementation slice at `docs/plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md`.
+- Added: autoplan QA input at `.gstack/projects/YannJY02-AttentionOS/yann.jy-main-autoplan-test-plan-20260513-0738.md`.
+- Changed: project state and documentation indexes now identify the implementation slice as the next coding contract and `/gstack-qa-only` as the post-implementation gate.
+- Changed: Phase 3 `/gstack-plan-eng-review` is now complete under owner-approved normal-chat fallback, with E1-E5 recorded in the experience-alignment contract.
+- Added: accepted engineering decisions for `executionModeMachine`, URL-request/machine-validated mode authority, separated task lifecycle boundary with migration path, full contract test scope, and one complete implementation slice.
+- Added: gstack QA test plan artifact at `.gstack/projects/YannJY02-AttentionOS/yann.jy-main-eng-review-test-plan-20260513-0733.md`.
+- Changed: project state and plan indexes now identify `/gstack-autoplan` as the next required gate before implementation.
+- Changed: Phase 2 `/gstack-plan-design-review` is now complete under owner-approved normal-chat fallback, with D1-D5 recorded in the experience-alignment contract.
+- Added: accepted design decisions for mobile bottom stage navigation, `/execution/plan` and `/execution/focus` subroutes, neutral default Ritual language with configurable prayer/dedication, timeline-first Vision, and stage/mode-grouped AI suggestions.
+- Changed: project state and plan indexes now identify `/gstack-plan-eng-review` as the next required implementation blocker before `/gstack-autoplan`.
+
+## 2026-05-10
+
+- Added: Phase 2/3 experience-alignment review gate blocker at `docs/plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md`, recording that `/gstack-plan-design-review` and `/gstack-plan-eng-review` are blocked until `AskUserQuestion` is available.
+- Changed: experience-alignment blueprint, documentation indexes, and project state now mark Phase 2 and Phase 3 as blocked instead of next/complete, preventing implementation from starting on a false review pass.
+- Added: `/gstack-context-save` checkpoint for the current experience-alignment handoff under `.gstack/projects/YannJY02-AttentionOS/checkpoints/`.
+- Added: Phase 1 experience-alignment contract at `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`, covering Ritual, Overview, Execution Plan, Execution Focus, five-layer visual semantics, AI placement rules, and mobile/desktop expectations.
+- Changed: experience-alignment blueprint and project state now mark Phase 1 complete and identify `/gstack-plan-design-review` plus `/gstack-plan-eng-review` as the next required skill gates.
+- Added: Phase 0 experience-alignment evidence ledger at `docs/plans/2026-05-10-attentionos-experience-alignment-evidence-ledger.md`, recording the `/gstack-investigate` evidence freeze, root-cause hypothesis, UI capture paths, and Phase 1 gate.
+- Changed: experience-alignment blueprint and project state now mark Phase 0 complete and identify `/gstack-design-consultation` as the next required skill gate.
+- Added: draft experience-alignment blueprint at `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`, with mandatory `/gstack` skill gates for investigation, design consultation, design review, engineering review, autoplan slicing, QA-only verification, and context preservation.
+- Changed: documentation entrypoints and project state now surface the experience-alignment blueprint as the next planning surface before implementation.
+
 ## 2026-05-09
 
 - Added: draft Phase 4 protocol and extension intake at `docs/plans/2026-05-09-phase-4-intake.md`.
