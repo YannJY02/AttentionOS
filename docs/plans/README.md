@@ -6,6 +6,11 @@
 
 | File | Status | Role |
 |---|---|---|
+| `2026-05-13-attentionos-experience-alignment-implementation-slice.md` | Implemented / QA-verified | Converts accepted D1-D5 and E1-E5 decisions into the completed Execution Plan/Focus and mobile shell implementation slice. |
+| `2026-05-10-attentionos-experience-alignment-blueprint.md` | Draft blueprint | Plans the multi-phase experience-alignment workflow and requires exact `/gstack` skill gates for each phase. |
+| `2026-05-10-attentionos-experience-alignment-evidence-ledger.md` | Phase 0 evidence ledger | Records the `/gstack-investigate` evidence freeze and root-cause map for experience alignment. |
+| `2026-05-10-attentionos-experience-alignment-contract.md` | Phase 1 contract + Phase 2/3 reviews | Translates the product/workflow baselines into stage-specific requirements and records accepted design decisions D1-D5 plus engineering decisions E1-E5. |
+| `2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` | Historical blocker | Records the original missing `AskUserQuestion` blocker and the owner-approved chat fallback used to complete Phase 2 and Phase 3 reviews. |
 | `2026-05-09-phase-4-intake.md` | Draft intake | Frames the next protocol and extension phase before an implementation contract is accepted. |
 | `2026-05-09-phase-3-evolutionary-learning-ledger.md` | Verified | Tracks the completed Phase 3 behavior learning, workflow optimization, adoption, observability, and desktop HITL surface. |
 | `2026-05-09-phase-2-completion-ledger.md` | Verified | Tracks the completed Phase 2 AI reasoning closeout surface. |

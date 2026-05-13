@@ -46,7 +46,7 @@ function renderHarness(initialPath: string) {
 
 describe('useRouteSync', () => {
   it('restores the daily-flow stage from the initial route', async () => {
-    renderHarness('/execution');
+    renderHarness('/execution/focus');
 
     await waitFor(() => {
       expect(screen.getByTestId('stage')).toHaveTextContent('execution');
@@ -69,7 +69,7 @@ describe('useRouteSync', () => {
     fireEvent.click(screen.getByRole('button', { name: /start execution/i }));
 
     await waitFor(() => {
-      expect(screen.getByTestId('path')).toHaveTextContent('/execution');
+      expect(screen.getByTestId('path')).toHaveTextContent('/execution/plan');
     });
   });
 });

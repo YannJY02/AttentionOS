@@ -14,7 +14,8 @@ function App() {
           <Route index element={<Navigate to="/ritual" replace />} />
           <Route path="ritual" element={<RitualPage />} />
           <Route path="overview" element={<OverviewPage />} />
-          <Route path="execution" element={<ExecutionPage />} />
+          <Route path="execution" element={<Navigate to="/execution/plan" replace />} />
+          <Route path="execution/*" element={<ExecutionPage />} />
           <Route path="*" element={<Navigate to="/ritual" replace />} />
         </Route>
       </Routes>

@@ -24,7 +24,9 @@ test('runs the Phase 1 ritual to execution workflow', async ({ page }) => {
   await expect(page.getByText('Current layer: task')).toBeVisible();
 
   await page.getByRole('button', { name: 'Start execution for Wire overview' }).click();
-  await expect(page.getByRole('heading', { name: 'Execution' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Execution Plan' })).toBeVisible();
+  await page.getByRole('button', { name: 'Enter focus' }).click();
+  await expect(page.getByRole('heading', { name: 'Execution Focus' })).toBeVisible();
   await expect(page.getByText('State: planning')).toBeVisible();
 
   await page.getByRole('button', { name: 'Start task' }).click();
@@ -37,4 +39,17 @@ test('runs the Phase 1 ritual to execution workflow', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Complete task' }).click();
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
+});
+
+test('keeps the canonical stage navigation usable at 390px width', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/overview');
+
+  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ritual' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Overview' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Execution' })).toBeVisible();
+
+  const mainWidth = await page.locator('main').evaluate((element) => element.clientWidth);
+  expect(mainWidth).toBeGreaterThanOrEqual(350);
 });

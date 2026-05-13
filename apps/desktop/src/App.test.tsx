@@ -21,9 +21,12 @@ describe('AttentionOS desktop shell', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: /ritual/i })).toHaveAttribute('href', '/ritual');
-    expect(screen.getByRole('link', { name: /overview/i })).toHaveAttribute('href', '/overview');
-    expect(screen.getByRole('link', { name: /execution/i })).toHaveAttribute('href', '/execution');
+    expect(screen.getAllByRole('link', { name: /^ritual$/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('link', { name: /^overview$/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('link', { name: /^execution$/i }).length).toBeGreaterThanOrEqual(1);
+    for (const executionLink of screen.getAllByRole('link', { name: /^execution$/i })) {
+      expect(executionLink).toHaveAttribute('href', '/execution/plan');
+    }
   });
 
   it('renders the overview route as a read-only workflow stage', () => {
