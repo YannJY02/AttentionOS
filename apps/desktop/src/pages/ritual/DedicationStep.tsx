@@ -1,18 +1,21 @@
 import { CheckCircle2 } from 'lucide-react';
 
 interface DedicationStepProps {
+  readonly dedicationText: string;
   readonly onComplete: () => void;
   readonly reflectionText: string;
 }
 
-export function DedicationStep({ onComplete, reflectionText }: DedicationStepProps) {
+export function DedicationStep({
+  dedicationText,
+  onComplete,
+  reflectionText,
+}: DedicationStepProps) {
   return (
     <section className="max-w-2xl">
       <p className="font-medium text-amber-700 text-sm">Ritual step 3</p>
       <h1 className="mt-2 font-semibold text-4xl text-stone-950">Dedication</h1>
-      <p className="mt-3 text-base text-stone-600">
-        Close the ritual and move into overview when the reflection has been captured.
-      </p>
+      <p className="mt-3 text-base text-stone-600">{dedicationText}</p>
 
       <div className="mt-8 rounded-md border border-stone-200 bg-white p-6">
         <p className="font-medium text-sm text-stone-800">Saved reflection</p>

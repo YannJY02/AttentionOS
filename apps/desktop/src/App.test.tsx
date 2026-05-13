@@ -27,6 +27,8 @@ describe('AttentionOS desktop shell', () => {
     for (const executionLink of screen.getAllByRole('link', { name: /^execution$/i })) {
       expect(executionLink).toHaveAttribute('href', '/execution/plan');
     }
+    expect(screen.queryByText(/deterministic core/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/keep attention human-led/i)).toBeInTheDocument();
   });
 
   it('renders the overview route as a read-only workflow stage', () => {

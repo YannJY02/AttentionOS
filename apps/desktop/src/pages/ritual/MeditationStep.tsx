@@ -3,6 +3,7 @@ import { useMachine } from '@xstate/react';
 import { Pause, Play, SkipForward } from 'lucide-react';
 
 interface MeditationStepProps {
+  readonly intentionText: string;
   readonly onComplete: () => void;
 }
 
@@ -13,7 +14,19 @@ function formatElapsed(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-export function MeditationStep({ onComplete }: MeditationStepProps) {
+function getBreathLabel(snapshotValue: unknown): string {
+  if (snapshotValue === 'meditating') {
+    return 'In rhythm';
+  }
+
+  if (snapshotValue === 'paused') {
+    return 'Paused';
+  }
+
+  return 'Ready';
+}
+
+export function MeditationStep({ intentionText, onComplete }: MeditationStepProps) {
   const [snapshot, send] = useMachine(meditationMachine, { input: { durationMs: 300_000 } });
   const isIdle = snapshot.matches('idle');
   const isMeditating = snapshot.matches('meditating');
@@ -28,17 +41,14 @@ export function MeditationStep({ onComplete }: MeditationStepProps) {
     <section className="max-w-2xl">
       <p className="font-medium text-amber-700 text-sm">Ritual step 1</p>
       <h1 className="mt-2 font-semibold text-4xl text-stone-950">Meditation</h1>
-      <p className="mt-3 text-base text-stone-600">
-        Start with a short deterministic pause before planning. The timer state is controlled by the
-        meditation state machine.
-      </p>
+      <p className="mt-3 text-base text-stone-600">{intentionText}</p>
 
       <div className="mt-8 rounded-md border border-stone-200 bg-white p-6">
         <p className="text-sm text-stone-500">Elapsed</p>
         <p className="mt-2 font-semibold text-5xl tabular-nums text-stone-950">
           {formatElapsed(snapshot.context.elapsedMs)}
         </p>
-        <p className="mt-2 text-sm capitalize text-stone-500">Status: {String(snapshot.value)}</p>
+        <p className="mt-2 text-sm text-stone-500">Breath: {getBreathLabel(snapshot.value)}</p>
 
         <div className="mt-6 flex flex-wrap gap-3">
           {isIdle ? (

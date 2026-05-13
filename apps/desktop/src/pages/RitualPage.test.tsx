@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
 import { REFLECTION_STORAGE_KEY } from '../storage/reflections';
+import { RITUAL_COPY_STORAGE_KEY } from '../storage/ritualCopy';
 
 function renderRitualPage() {
   render(
@@ -29,16 +30,28 @@ describe('RitualPage workflow', () => {
     localStorage.clear();
   });
 
-  it('renders meditation controls driven by the meditation state machine', () => {
+  it('renders settling-oriented meditation controls without implementation copy', () => {
     renderRitualPage();
 
-    expect(screen.getByRole('heading', { name: /meditation/i })).toBeInTheDocument();
+    const meditationHeading = screen.getByRole('heading', { name: /meditation/i });
+    expect(meditationHeading).toBeInTheDocument();
+    expect(screen.getByText(/settle your attention/i)).toBeInTheDocument();
+
+    const ritualStep = meditationHeading.closest('section');
+    expect(ritualStep).toBeTruthy();
+    expect(
+      within(ritualStep as HTMLElement).queryByText(/deterministic|state machine/i),
+    ).not.toBeInTheDocument();
+    expect(within(ritualStep as HTMLElement).queryByText(/^status:/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/breath: ready/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /start meditation/i }));
     expect(screen.getByRole('button', { name: /pause meditation/i })).toBeInTheDocument();
+    expect(screen.getByText(/breath: in rhythm/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /pause meditation/i }));
     expect(screen.getByRole('button', { name: /resume meditation/i })).toBeInTheDocument();
+    expect(screen.getByText(/breath: paused/i)).toBeInTheDocument();
   });
 
   it('persists reflection text as a reflection entity before dedication', async () => {
@@ -55,6 +68,24 @@ describe('RitualPage workflow', () => {
       status: 'completed',
       workflowStage: 'ritual',
     });
+  });
+
+  it('uses locally configured intention and dedication wording when present', async () => {
+    localStorage.setItem(
+      RITUAL_COPY_STORAGE_KEY,
+      JSON.stringify({
+        intentionText: 'Settle into patient product thinking.',
+        dedicationText: 'Dedicate this block to careful attention.',
+      }),
+    );
+    renderRitualPage();
+
+    expect(screen.getByText('Settle into patient product thinking.')).toBeInTheDocument();
+
+    await completeMeditation();
+    await saveReflection('Move deliberately.');
+
+    expect(screen.getByText('Dedicate this block to careful attention.')).toBeInTheDocument();
   });
 
   it('finishes dedication and transitions to overview', async () => {

@@ -2,6 +2,12 @@
 
 ## 2026-05-13
 
+- Added: Ritual semantic correction implementation ledger at `docs/plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md`.
+- Changed: Ritual now uses intention-led neutral copy with local configurable intention and dedication wording.
+- Changed: Meditation now displays user-facing breath labels instead of internal status values.
+- Changed: desktop shell footer copy now describes human-led attention and suggestion review instead of the deterministic core.
+- Added: Ritual regression coverage for semantic copy, local wording overrides, reflection persistence, Overview transition, and shell footer wording.
+- Added: `/gstack-qa-only` Ritual QA report at `.gstack/qa-reports/qa-report-ritual-semantics-2026-05-13.md`.
 - Added: `executionModeMachine` with guarded Plan/Focus mode transitions and unit coverage.
 - Changed: Execution routing now uses `/execution/plan` and `/execution/focus`; `/execution` redirects to Plan mode.
 - Changed: Execution UI now separates Plan-mode AI suggestion review from Focus-mode single-action work.

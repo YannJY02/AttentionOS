@@ -6,6 +6,7 @@
 
 | File | Status | Role |
 |---|---|---|
+| `2026-05-13-attentionos-ritual-semantic-correction-slice.md` | Implemented / QA-verified | Converts Slice 2 of the experience-alignment blueprint into the completed Ritual semantic correction: intention-led copy, local wording overrides, breath labels, and shell copy cleanup. |
 | `2026-05-13-attentionos-experience-alignment-implementation-slice.md` | Implemented / QA-verified | Converts accepted D1-D5 and E1-E5 decisions into the completed Execution Plan/Focus and mobile shell implementation slice. |
 | `2026-05-10-attentionos-experience-alignment-blueprint.md` | Draft blueprint | Plans the multi-phase experience-alignment workflow and requires exact `/gstack` skill gates for each phase. |
 | `2026-05-10-attentionos-experience-alignment-evidence-ledger.md` | Phase 0 evidence ledger | Records the `/gstack-investigate` evidence freeze and root-cause map for experience alignment. |

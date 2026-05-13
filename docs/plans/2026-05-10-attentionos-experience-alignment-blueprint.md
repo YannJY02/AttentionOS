@@ -402,6 +402,8 @@ agent without relying on hidden chat context.
 #### Slice 2: Ritual Semantic Correction
 
 - Skill gate: `/gstack-autoplan`
+- Status: implemented and `/gstack-qa-only` verified in
+  `docs/plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md`.
 - Dependency: Slice 1 may run before or in parallel if files do not overlap.
 - Likely files:
   - `apps/desktop/src/pages/RitualPage.tsx`

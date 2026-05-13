@@ -1,5 +1,14 @@
 # Maintenance Log
 
+## 2026-05-13 09:06 CST
+
+- Task: implement and QA the experience-alignment Ritual semantic correction slice.
+- Files added: `docs/plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md`, `apps/desktop/src/storage/ritualCopy.ts`, and `.gstack/qa-reports/qa-report-ritual-semantics-2026-05-13.md`.
+- Files updated: `apps/desktop/src/pages/RitualPage.tsx`, `apps/desktop/src/pages/ritual/MeditationStep.tsx`, `apps/desktop/src/pages/ritual/DedicationStep.tsx`, `apps/desktop/src/pages/RitualPage.test.tsx`, `apps/desktop/src/components/layout/Shell.tsx`, `apps/desktop/src/App.test.tsx`, and governance/index documents.
+- Evidence: Slice 2 in `docs/plans/2026-05-10-attentionos-experience-alignment-blueprint.md`; D3 Ritual language decision in `docs/plans/2026-05-10-attentionos-experience-alignment-contract.md`; explorer review of existing Ritual copy; Playwright QA screenshots under `.gstack/qa-reports/ritual-semantics-20260513/screenshots/`.
+- Verification: targeted `pnpm test:run apps/desktop/src/pages/RitualPage.test.tsx apps/desktop/src/App.test.tsx` passed with 7 tests; `/gstack-qa-only` Ritual click test passed with no console or page errors; final `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 200 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check` all passed.
+- Tool notes: `gh repo view` failed because network access to `api.github.com` was unavailable, so the base branch fell back to local `origin/HEAD`; gstack browse failed to start its service because it reported no available port, so QA continued with project-installed Playwright; the first Playwright launch failed under sandbox permissions and passed after escalation; the first QA run found shell footer scaffold copy, which was fixed before the final passing QA run.
+
 ## 2026-05-13 07:49 CST
 
 - Task: implement and QA the experience-alignment Execution Plan/Focus slice.
