@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-05-19
+
+- Added: project-local Matt Pocock skills under `.agents/skills/`, including `/grill-me`, with `skills-lock.json` as the lockfile.
+- Added: agent skill configuration docs under `docs/agents/` for issue tracker routing, triage labels, and domain context.
+- Changed: `AGENTS.md`, `CLAUDE.md`, documentation indexes, and project state now expose the project-local skill setup while keeping gstack generated artifacts ignored.
+
 ## 2026-05-13
 
 - Changed: project state now records that the experience-alignment closeout was pushed to `origin/main` and returns the next action to `.gitignore` cleanup plus Phase 4 contract scoping.

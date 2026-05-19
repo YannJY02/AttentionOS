@@ -75,3 +75,25 @@ Use this order:
 - `pnpm check` includes `pnpm docs:check` before the normal Turbo check.
 - `.githooks/pre-commit` is prepared to run `pnpm docs:check` before commits after `pnpm hooks:install`.
 - Automation may report or block obvious documentation drift, but it must not silently accept decisions, rewrite raw sources, modify product/workflow baselines, or change this `AGENTS.md` file.
+
+## Agent Skills
+
+This repository has project-local Matt Pocock engineering skills installed under
+`.agents/skills/` and project-local gstack skills under `.agents/skills/gstack*`.
+
+### Issue Tracker
+
+Use GitHub Issues for tracked implementation work on
+`YannJY02/AttentionOS`. See `docs/agents/issue-tracker.md`.
+
+### Triage Labels
+
+Use the default Matt Pocock triage label vocabulary unless the owner creates
+repo-specific GitHub labels later. See `docs/agents/triage-labels.md`.
+
+### Domain Docs
+
+AttentionOS uses the governed `docs/` authority map instead of a root
+`CONTEXT.md`. Skills that ask for domain context should start from
+`docs/README.md`, then follow product, workflow, decision, and plan authority
+from there. See `docs/agents/domain.md`.

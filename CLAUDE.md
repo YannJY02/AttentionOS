@@ -60,6 +60,22 @@
 8. `/simplify` → 简化
 9. `/commit` → 提交
 
+## Agent skills
+
+Project-local Matt Pocock skills are installed under `.agents/skills/`; project-local gstack skills are installed under `.agents/skills/gstack*`.
+
+### Issue tracker
+
+Use GitHub Issues for tracked implementation work on `YannJY02/AttentionOS`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default Matt Pocock triage label vocabulary unless the owner creates repo-specific GitHub labels later. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+AttentionOS uses the governed `docs/` authority map instead of a root `CONTEXT.md`. Skills that ask for domain context should start from `docs/README.md`, then follow product, workflow, decision, and plan authority from there. See `docs/agents/domain.md`.
+
 ## 从 V1 移植的资产
 
 已复制到 V2 的:

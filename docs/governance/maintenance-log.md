@@ -1,5 +1,14 @@
 # Maintenance Log
 
+## 2026-05-19 15:13 CST
+
+- Task: make the previously local Matt Pocock skill setup durable on the current branch and local `main`.
+- Files added: `.agents/skills/` Matt Pocock skill directories, `skills-lock.json`, and `docs/agents/`.
+- Files updated: `AGENTS.md`, `CLAUDE.md`, `docs/README.md`, `docs/governance/project-state.md`, `docs/governance/changelog.md`, and this maintenance log.
+- Evidence: `npx skills@latest add mattpocock/skills --agent codex --skill '*' --yes` installed the project-local skills; `npx skills@latest list --json` listed the installed Matt Pocock skills including `/grill-me`.
+- Boundary: `.gstack/` and `.agents/skills/gstack*` remain ignored local tooling artifacts; no application code was changed.
+- Tool note: broad home-directory searches were stopped after producing noisy permission and generated-artifact output; the durable setup was reconstructed from the official skills CLI and repo-local configuration surfaces instead.
+
 ## 2026-05-13 11:45 CST
 
 - Task: push the experience-alignment closeout to `origin/main`.

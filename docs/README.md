@@ -20,6 +20,7 @@ This is the canonical entry point for AttentionOS documentation.
 14. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
 15. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
 16. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
+17. `agents/README.md` — project-local skill configuration for Matt Pocock and gstack workflows.
 
 ## Documentation Map
 
@@ -30,6 +31,7 @@ This is the canonical entry point for AttentionOS documentation.
 | Original user sources | `sources-or-raw/` | Raw requirement prompts preserved from early design | Source evidence |
 | Implementation plans | `plans/` | Architecture, phase plans, phase ledgers, and contracts | Depends on file status |
 | App docs | `apps/` | Application/package docs that should not live beside code | Derived from package files and implementation |
+| Agent skill config | `agents/` | Project-local skill setup, issue tracker, triage labels, and domain context pointers | Derived tooling configuration; subordinate to root agent instructions and governance state |
 | Historical roadmap notes | `roadmap-execution/` | Historical references kept separate from active plans | Historical/source context only |
 | Developer intake | `work/todo.md` | Daily ideas, rough requirements, and small reminders | Non-authoritative intake queue |
 | Governance state | `governance/`, `decisions/`, `work/`, `archive/` | Recovery, proposed decisions, audits, maintenance logs, and controlled evolution | `governance/project-state.md` is recovery; `governance/` reports are non-authoritative |

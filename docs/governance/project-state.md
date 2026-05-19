@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-13 11:45 CST
+Updated: 2026-05-19 15:13 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -14,6 +14,7 @@ Status: active
 - Archive: `docs/archive/`. Moving key files there requires confirmation.
 - AI maintenance surfaces: `docs/governance/`. These files are non-authoritative audit, proposal, and maintenance records.
 - Repo-local AI instructions: `AGENTS.md`.
+- Project-local skill configuration: `CLAUDE.md`, `AGENTS.md`, `skills-lock.json`, `.agents/skills/`, and `docs/agents/`.
 - AI-generated documentation workflow: `docs/governance/ai-generated-doc-workflow.md`.
 - Developer intake queue: `docs/work/todo.md`.
 - Development document lifecycle: `docs/governance/development-document-lifecycle.md`.
@@ -67,6 +68,9 @@ Status: active
 - Final integration slice verification passed on 2026-05-13 09:57 CST: `pnpm docs:check`, `pnpm check`, `pnpm test:run` with 206 tests, `pnpm lint`, `pnpm build`, `pnpm e2e` with 3 Chromium tests, and `git diff --check`.
 - Experience alignment was fast-forward merged into local `main` at `faee10d` on 2026-05-13 11:41 CST and pushed to `origin/main` through `8ff2d7f` on 2026-05-13 11:45 CST.
 - Final `/gstack-context-save` closeout checkpoint was saved at `.gstack/projects/YannJY02-AttentionOS/checkpoints/20260513-113528-final-experience-alignment-branch-closeout.md`.
+- Project-local Matt Pocock skills are installed under `.agents/skills/` and locked by `skills-lock.json`, including `/grill-me`, `/grill-with-docs`, `/diagnose`, `/triage`, `/prototype`, `/tdd`, `/handoff`, `/to-prd`, `/to-issues`, `/zoom-out`, `/caveman`, `/write-a-skill`, `/improve-codebase-architecture`, and `/setup-matt-pocock-skills`.
+- Project-local gstack runtime and generated skill surfaces remain local tooling artifacts; `.gstack/` and `.agents/skills/gstack*` stay ignored rather than becoming durable repo configuration.
+- Matt Pocock skill support docs live under `docs/agents/`: issue tracker routing, triage labels, and domain-context pointers.
 
 ## Active Work
 
@@ -77,6 +81,7 @@ Status: active
 - Run `pnpm docs:check` after any documentation-related AI work; commit-time enforcement is active in this checkout via `.githooks/pre-commit`.
 - Keep the experience-alignment blueprint and slice ledgers as closeout evidence for the merged frontend/product-experience work.
 - Do not expand this slice into Phase 4 protocol, SDK, MCP, plugin, or offline-sync work without a separate accepted contract.
+- Keep project-local skills aligned through `skills-lock.json`, `.agents/skills/`, `CLAUDE.md`, `AGENTS.md`, and `docs/agents/`; do not rely on untracked local generated skills for shared workflows.
 
 ## Blockers
 
@@ -86,4 +91,4 @@ Status: active
 
 ## Next Action
 
-Resolve the unrelated `.gitignore` working-tree change for repo-local gstack artifacts if the owner wants a clean tree. Then return to Phase 4 intake by drafting or reviewing a narrow Phase 4 implementation contract, with explicit scope and security decisions before any MCP, SDK, plugin, provider, RAG, or offline-sync implementation.
+Use the installed project-local skills for the next workflow-specific frontend/product iteration. For broad UI/workflow redesign, start from the current visible workflow in the browser, then choose a narrow slice before invoking planning, design review, QA, or implementation skills.
