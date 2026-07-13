@@ -1,5 +1,13 @@
 # Maintenance Log
 
+## 2026-07-14 07:55 CST
+
+- Task: add the owner-approved automatic commit-and-push completion rule to `AGENTS.md`.
+- Files updated: `AGENTS.md`, project state, changelog, and this maintenance log.
+- Rule: tasks and tracked issues with repository changes must finish with a scoped commit and normal push; unrelated working-tree changes must be isolated on a `codex/` branch or separate worktree.
+- Boundary: read-only or tracker-only work does not create empty commits; force pushes, skipped hooks, and staging unrelated changes remain forbidden. Unsafe isolation or push failure requires owner intervention before completion.
+- Verification: `pnpm docs:check`, targeted rule search, and `git diff --check`.
+
 ## 2026-05-13 11:45 CST
 
 - Task: push the experience-alignment closeout to `origin/main`.

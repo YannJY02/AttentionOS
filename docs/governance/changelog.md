@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-14
+
+- Required completed tasks and tracked issues with repository changes to end with a scoped automatic commit and normal push, while forbidding unrelated staging, empty tracker-only commits, skipped hooks, and force pushes.
+
 ## 2026-05-13
 
 - Changed: project state now records that the experience-alignment closeout was pushed to `origin/main` and returns the next action to `.gitignore` cleanup plus Phase 4 contract scoping.

@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-13 11:45 CST
+Updated: 2026-07-14 07:55 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -35,6 +35,7 @@ Status: active
 - `docs/work/todo.md` is the only developer todo/intake queue. It is non-authoritative and must not replace project-state, plans, decisions, changelog, or archive.
 - Low-risk documentation governance checks are available through `pnpm docs:check`; `pnpm check` runs them before the normal Turbo check.
 - This checkout has `core.hooksPath` set to `.githooks`, so commit-time documentation governance checks are active locally.
+- Completed tasks and tracked issues with repository changes now require an automatic scoped commit and normal push before completion. Read-only or tracker-only work does not create empty commits, and unsafe isolation or push failure remains an owner-intervention blocker.
 - Phase 2 AI reasoning work is represented on `main` by git commit `489b6c6` (`merge: phase 2 ai reasoning`) and by `docs/plans/2026-05-09-phase-2-completion-ledger.md`.
 - Phase 3 evolutionary learning now has a verified implementation ledger at `docs/plans/2026-05-09-phase-3-evolutionary-learning-ledger.md`.
 - Phase 3 closeout verification passed on 2026-05-09 19:30 CST: `pnpm check`, `pnpm test:run`, `pnpm lint`, `pnpm build`, and `pnpm e2e`.

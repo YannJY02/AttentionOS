@@ -75,3 +75,17 @@ Use this order:
 - `pnpm check` includes `pnpm docs:check` before the normal Turbo check.
 - `.githooks/pre-commit` is prepared to run `pnpm docs:check` before commits after `pnpm hooks:install`.
 - Automation may report or block obvious documentation drift, but it must not silently accept decisions, rewrite raw sources, modify product/workflow baselines, or change this `AGENTS.md` file.
+
+## Task Completion Git Workflow
+
+- Before marking a task or tracked issue complete, automatically commit only
+  that task's scoped repository changes and push the current task branch.
+- When the checkout contains unrelated or pre-existing changes, isolate the task
+  on a `codex/` branch or separate worktree; never stage unrelated changes.
+- Run the relevant checks before committing, allow configured hooks to run, and
+  use a normal push. Never force-push or skip hooks unless the owner explicitly
+  requests it.
+- Read-only or tracker-only work with no repository changes does not create an
+  empty commit.
+- If a safe isolated commit or normal push cannot be completed, keep the task or
+  issue open and request owner intervention instead of claiming completion.
