@@ -21,8 +21,6 @@
     "verify": "pnpm check && pnpm test:run",
     "e2e": "playwright test",
     "qa:browser:release": "node scripts/qa-browser-release-workflow.mjs",
-    "release:ledger": "node scripts/check-release-candidate-ledger.mjs",
-    "release:ledger:complete": "node scripts/check-release-candidate-ledger.mjs --complete",
     "release:check:macos": "node scripts/check-macos-release-readiness.mjs",
     "lint": "biome check .",
     "performance:check:macos": "node scripts/check-native-performance.mjs",
