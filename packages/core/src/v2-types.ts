@@ -1,5 +1,4 @@
-import type { AttentionState } from './types';
-
+export type { V2AttentionObservationRecord } from '@attentionos/guidance';
 export type {
   CreateAuditLogInput,
   CreateEdgeInput,
@@ -17,17 +16,3 @@ export type {
   V2WorkflowStage,
   WorkflowFacts,
 } from '@attentionos/workflow';
-
-export interface V2AttentionObservationRecord {
-  readonly id: string;
-  readonly state: AttentionState;
-  readonly score: number;
-  readonly confidence: number;
-  readonly breakdown: {
-    readonly subjectiveScore: number;
-    readonly passiveScore: number;
-    readonly behavioralScore: number;
-  };
-  readonly reasons: readonly string[];
-  readonly observedAt: string;
-}

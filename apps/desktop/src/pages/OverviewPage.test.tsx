@@ -1,4 +1,4 @@
-import type { V2AttentionObservationRecord } from '@attentionos/core';
+import type { V2AttentionObservationRecord } from '@attentionos/guidance';
 import type { V2AuditLogEntry, V2Entity } from '@attentionos/workflow';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';

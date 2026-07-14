@@ -1,15 +1,14 @@
 import {
+  type AttentionState,
   analyzeBehaviorPatterns,
+  type BehaviorPatternReport,
   createWorkflowOptimizationSuggestions,
-} from '@attentionos/ai/src/browser';
-import { estimateAttentionState, suggestProbeCadence } from '@attentionos/attention-engine';
-import type {
-  AttentionState,
-  BehaviorPatternReport,
-  PassiveForegroundCategory,
-  V2AttentionObservationRecord,
-  WorkflowOptimizationSuggestion,
-} from '@attentionos/core';
+  estimateAttentionState,
+  type PassiveForegroundCategory,
+  suggestProbeCadence,
+  type V2AttentionObservationRecord,
+  type WorkflowOptimizationSuggestion,
+} from '@attentionos/guidance';
 import { readAISuggestions, saveWorkflowOptimizationSuggestion } from './aiSuggestions';
 import { readExecutionAuditEntries } from './audit';
 import { readHierarchyEntities } from './hierarchy';
@@ -223,10 +222,12 @@ export interface LearningSnapshot {
 export function getLearningSnapshot(): LearningSnapshot {
   const report = analyzeBehaviorPatterns({
     attention: readLearningObservations(),
-    audit: readExecutionAuditEntries(),
     suggestions: readAISuggestions(),
-    tasks: readHierarchyEntities(),
     window: DEFAULT_WINDOW,
+    workflow: {
+      auditEntries: readExecutionAuditEntries(),
+      entities: readHierarchyEntities(),
+    },
   });
 
   return {

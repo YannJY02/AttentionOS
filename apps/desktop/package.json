@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@attentionos/ai": "workspace:*",
-    "@attentionos/attention-engine": "workspace:*",
     "@attentionos/core": "workspace:*",
+    "@attentionos/guidance": "workspace:*",
     "@attentionos/workflow": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@tauri-apps/api": "^2",

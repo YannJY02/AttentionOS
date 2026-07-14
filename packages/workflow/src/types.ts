@@ -88,7 +88,6 @@ export type CreateAuditLogInput = Omit<V2AuditLogEntry, 'id' | 'createdAt'>;
 export interface WorkflowFacts {
   readonly auditEntries: readonly V2AuditLogEntry[];
   readonly entities: readonly V2Entity[];
-  readonly stage: V2WorkflowStage;
 }
 
 export interface ProposedTaskStep {

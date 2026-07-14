@@ -4,7 +4,7 @@ import {
   createPrivacyGateway,
   createRetriever,
   InMemoryVectorStore,
-} from '@attentionos/ai/src/browser';
+} from '@attentionos/ai/browser';
 import type { TaskDecompositionSuggestion } from '@attentionos/core';
 import type { V2Entity } from '@attentionos/workflow';
 

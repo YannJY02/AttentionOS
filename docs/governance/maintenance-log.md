@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-07-14 14:25 CST
+
+- Task: execute Wayfinder ticket [Establish the Attention Guidance context package](https://github.com/YannJY02/AttentionOS/issues/17).
+- Ownership moved: attention estimation and cadence, immutable guidance suggestion analysis, release metrics, and reminder prompt-budget policy now live behind the public `@attentionos/guidance` API.
+- Dependency boundary: Guidance imports only public `@attentionos/workflow` facts; desktop storage supplies those facts and retains persistence/platform side effects.
+- Compatibility boundary: `packages/core`, `packages/ai`, and `packages/attention-engine` retain temporary public re-export shims until the scheduled legacy-package deletion.
+
 ## 2026-07-14 14:15 CST
 
 - Task: execute Wayfinder ticket #16 by establishing the Attention Workflow context package.

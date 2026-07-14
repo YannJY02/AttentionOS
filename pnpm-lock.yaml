@@ -65,12 +65,12 @@ importers:
       '@attentionos/ai':
         specifier: workspace:*
         version: link:../../packages/ai
-      '@attentionos/attention-engine':
-        specifier: workspace:*
-        version: link:../../packages/attention-engine
       '@attentionos/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@attentionos/guidance':
+        specifier: workspace:*
+        version: link:../../packages/guidance
       '@attentionos/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
@@ -141,6 +141,9 @@ importers:
       '@attentionos/core':
         specifier: workspace:*
         version: link:../core
+      '@attentionos/guidance':
+        specifier: workspace:*
+        version: link:../guidance
       '@statelyai/agent':
         specifier: ^1.1.6
         version: 1.1.6(react@19.2.4)(sswr@2.2.0(svelte@5.55.5))(svelte@5.55.5)(vue@3.5.34(typescript@5.9.3))(zod@4.4.3)
@@ -160,9 +163,9 @@ importers:
 
   packages/attention-engine:
     dependencies:
-      '@attentionos/core':
+      '@attentionos/guidance':
         specifier: workspace:*
-        version: link:../core
+        version: link:../guidance
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -172,6 +175,22 @@ importers:
         version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/core:
+    dependencies:
+      '@attentionos/guidance':
+        specifier: workspace:*
+        version: link:../guidance
+      '@attentionos/workflow':
+        specifier: workspace:*
+        version: link:../workflow
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
+
+  packages/guidance:
     dependencies:
       '@attentionos/workflow':
         specifier: workspace:*

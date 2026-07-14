@@ -1,4 +1,4 @@
-import type { AttentionState, PassiveForegroundCategory } from '@attentionos/core';
+import type { AttentionState, PassiveForegroundCategory } from '@attentionos/guidance';
 import { Gauge, Save } from 'lucide-react';
 import { useState } from 'react';
 import { getLatestAttentionObservation, recordAttentionCalibration } from '../../storage/learning';

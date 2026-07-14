@@ -1,15 +1,11 @@
-import type {
-  AISuggestion,
-  V2AttentionObservationRecord,
-  V2AuditLogEntry,
-  V2Entity,
-} from '@attentionos/core';
+import type { V2AuditLogEntry, V2Entity } from '@attentionos/workflow';
 import { describe, expect, it } from 'vitest';
 import {
   analyzeBehaviorPatterns,
   createWorkflowOptimizationSuggestions,
   measureSuggestionAdoption,
-} from './evolution';
+} from '../src/evolution';
+import type { GuidanceSuggestion, V2AttentionObservationRecord } from '../src/types';
 
 const WINDOW = {
   endedAt: '2026-05-09T12:00:00.000Z',
@@ -74,7 +70,7 @@ const audit: V2AuditLogEntry[] = [
   },
 ];
 
-const suggestions: AISuggestion[] = [
+const suggestions: GuidanceSuggestion[] = [
   {
     id: 'sug-1',
     kind: 'task_decomposition',
@@ -111,10 +107,9 @@ describe('Phase 3 evolutionary learning', () => {
   it('analyzes attention, task completion, and adoption patterns in one window', () => {
     const report = analyzeBehaviorPatterns({
       attention,
-      audit,
       suggestions,
-      tasks,
       window: WINDOW,
+      workflow: { auditEntries: audit, entities: tasks },
     });
 
     expect(report.attention.averageScore).toBeCloseTo(0.58);
@@ -128,10 +123,9 @@ describe('Phase 3 evolutionary learning', () => {
   it('creates pending HITL workflow optimization suggestions from weak patterns', () => {
     const report = analyzeBehaviorPatterns({
       attention,
-      audit,
       suggestions,
-      tasks,
       window: WINDOW,
+      workflow: { auditEntries: audit, entities: tasks },
     });
     const generated = createWorkflowOptimizationSuggestions(report);
 

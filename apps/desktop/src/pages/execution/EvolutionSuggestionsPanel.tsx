@@ -1,4 +1,4 @@
-import type { WorkflowOptimizationSuggestion } from '@attentionos/core';
+import type { WorkflowOptimizationSuggestion } from '@attentionos/guidance';
 import { Check, Lightbulb, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import {
