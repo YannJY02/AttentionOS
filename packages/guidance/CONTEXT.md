@@ -24,7 +24,8 @@ desktop app can decide when and how to present or deliver them.
 - **Behavior Pattern Report** — derived behavior summary over historical facts;
   it is not workflow state.
 - **Reminder Policy** — pure decision about eligibility, quiet hours,
-  frequency, and daily caps; it does not deliver a notification.
+  frequency, and daily caps; it does not request permission or deliver a
+  notification.
 
 ## Ownership
 
@@ -41,6 +42,8 @@ This context owns:
 - Guidance does not read local storage, files, environment state, or platform APIs.
 - Outputs are estimates or suggestions, not hidden commands.
 - Uncertainty, evidence, provenance, and approval requirements remain explicit.
+- Reminder eligibility is deterministic and always applies enabled state,
+  quiet hours, frequency, and the native daily cap before platform delivery.
 - Production attention outcomes require explicit user-provided observations;
   generated examples and built-in workflow samples are not evidence.
 - Current attention signals are manual calibration inputs. Guidance must not

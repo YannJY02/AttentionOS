@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
+import { startNativeReminderDelivery } from './adapters/nativeNotifications';
 import { isOnboardingComplete } from './adapters/storage/onboarding';
 import {
   initializeAppPersistence,
@@ -47,6 +48,14 @@ function App() {
     }
 
     void recordNativeQaReady(onboardingComplete ? 'app-ready' : 'onboarding-ready');
+  }, [isPersistenceReady, onboardingComplete]);
+
+  useEffect(() => {
+    if (!isPersistenceReady || !onboardingComplete) {
+      return;
+    }
+
+    return startNativeReminderDelivery();
   }, [isPersistenceReady, onboardingComplete]);
 
   if (!isPersistenceReady) {

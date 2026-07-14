@@ -17,6 +17,7 @@ import {
 } from './persistence';
 
 const HIERARCHY_STORAGE_KEY = 'attentionos.hierarchy.v1';
+const NATIVE_REMINDER_DELIVERY_STORAGE_KEY = 'attentionos.nativeReminderDelivery.v1';
 const ONBOARDING_STORAGE_KEY = 'attentionos.onboarding.v1';
 const REFLECTION_STORAGE_KEY = 'attentionos.reflections.v1';
 const REMINDER_SETTINGS_STORAGE_KEY = 'attentionos.reminderSettings.v1';
@@ -104,6 +105,10 @@ describe('desktop persistence snapshot', () => {
 
   it('serializes known app storage keys into a portable snapshot', () => {
     localStorage.setItem(HIERARCHY_STORAGE_KEY, '[{"id":"task-1"}]');
+    localStorage.setItem(
+      NATIVE_REMINDER_DELIVERY_STORAGE_KEY,
+      '{"deliveredToday":1,"lastDeliveredAt":"2026-05-23T16:00:00.000Z","localDate":"2026-05-23"}',
+    );
     localStorage.setItem(ONBOARDING_STORAGE_KEY, '{"completedAt":"2026-05-23T16:00:00.000Z"}');
     localStorage.setItem(REFLECTION_STORAGE_KEY, '[{"id":"reflection-1"}]');
     localStorage.setItem(REMINDER_SETTINGS_STORAGE_KEY, '{"remindersEnabled":true}');
@@ -113,6 +118,7 @@ describe('desktop persistence snapshot', () => {
 
     expect(parsed.schemaVersion).toBe(1);
     expect(parsed.entries[HIERARCHY_STORAGE_KEY]).toBe('[{"id":"task-1"}]');
+    expect(parsed.entries[NATIVE_REMINDER_DELIVERY_STORAGE_KEY]).toContain('deliveredToday');
     expect(parsed.entries[ONBOARDING_STORAGE_KEY]).toContain('completedAt');
     expect(parsed.entries[REFLECTION_STORAGE_KEY]).toBe('[{"id":"reflection-1"}]');
     expect(parsed.entries[REMINDER_SETTINGS_STORAGE_KEY]).toContain('remindersEnabled');

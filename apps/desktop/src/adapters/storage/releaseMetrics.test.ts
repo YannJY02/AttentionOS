@@ -159,7 +159,9 @@ describe('release metrics snapshot', () => {
     localStorage.setItem(
       REMINDER_SETTINGS_STORAGE_KEY,
       JSON.stringify({
+        dailyPromptLimit: 6,
         frequencyMinutes: 60,
+        nativePermissionConsentVersion: 1,
         priorityOverrideEnabled: false,
         quietHoursEnd: '09:00',
         quietHoursStart: '21:00',
@@ -195,7 +197,7 @@ describe('release metrics snapshot', () => {
     );
     expect(snapshot.guardrailMetrics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: 'reminder-fatigue', value: '12/day' }),
+        expect.objectContaining({ id: 'reminder-fatigue', value: '6/day' }),
         expect.objectContaining({ id: 'recording-friction', value: '1' }),
         expect.objectContaining({ id: 'autonomy', value: '0 auto' }),
         expect.objectContaining({ id: 'misjudgment', value: '100%' }),
@@ -203,10 +205,11 @@ describe('release metrics snapshot', () => {
     );
   });
 
-  it('caps integration reminder load to the configured daily limit', () => {
+  it('caps native reminder load independently from the integration handoff cap', () => {
     localStorage.setItem(
       REMINDER_SETTINGS_STORAGE_KEY,
       JSON.stringify({
+        dailyPromptLimit: 5,
         frequencyMinutes: 30,
         integration: {
           appAutoOpenTarget: 'Calendar',
@@ -216,6 +219,7 @@ describe('release metrics snapshot', () => {
           enabled: true,
           permissionStatementAccepted: true,
         },
+        nativePermissionConsentVersion: 1,
         priorityOverrideEnabled: true,
         quietHoursEnd: '08:00',
         quietHoursStart: '22:00',
@@ -229,9 +233,11 @@ describe('release metrics snapshot', () => {
     expect(snapshot.guardrailMetrics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          detail: expect.stringContaining('integration cap 4/day across 3 channels'),
+          detail: expect.stringContaining(
+            'native cap 5/day; integration cap 4/day across 3 channels',
+          ),
           id: 'reminder-fatigue',
-          value: '4/day',
+          value: '5/day',
         }),
       ]),
     );

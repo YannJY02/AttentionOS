@@ -20,8 +20,10 @@ export interface ReleaseMetricsSnapshot {
 }
 
 export interface ReminderMetricSettings extends ReminderPolicySettings {
-  readonly integration: ReminderPolicySettings['integration'] & {
+  readonly integration: {
     readonly channels: readonly string[];
+    readonly dailyPromptLimit: number;
+    readonly enabled: boolean;
   };
 }
 
@@ -186,7 +188,7 @@ export function createReleaseMetricsSnapshot({
     guardrailMetrics: [
       {
         detail: reminderSettings.remindersEnabled
-          ? `${reminderSettings.frequencyMinutes} min cadence outside quiet hours${
+          ? `${reminderSettings.frequencyMinutes} min cadence outside quiet hours; native cap ${reminderSettings.dailyPromptLimit}/day${
               reminderSettings.integration.enabled
                 ? `; integration cap ${reminderSettings.integration.dailyPromptLimit}/day across ${reminderSettings.integration.channels.length} channel${reminderSettings.integration.channels.length === 1 ? '' : 's'}`
                 : ''
@@ -194,7 +196,7 @@ export function createReleaseMetricsSnapshot({
           : 'Native reminders are off; no scheduled prompt load',
         id: 'reminder-fatigue',
         label: 'Reminder load',
-        status: reminderPromptBudget > 16 ? 'review' : 'steady',
+        status: reminderPromptBudget > 6 ? 'review' : 'steady',
         value: `${reminderPromptBudget}/day`,
       },
       {

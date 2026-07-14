@@ -157,6 +157,7 @@ fn record_qa_ready(app: AppHandle, label: String) -> Result<Option<AppStateWrite
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             read_app_state,
             write_app_state,

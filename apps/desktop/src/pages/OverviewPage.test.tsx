@@ -397,7 +397,9 @@ describe('OverviewPage hierarchy workflow', () => {
         },
       ],
       reminderSettings: {
+        dailyPromptLimit: 6,
         frequencyMinutes: 60,
+        nativePermissionConsentVersion: 1,
         priorityOverrideEnabled: false,
         quietHoursEnd: '09:00',
         quietHoursStart: '21:00',
@@ -415,7 +417,7 @@ describe('OverviewPage hierarchy workflow', () => {
     expect(metrics).toHaveTextContent(/focus success/i);
     expect(metrics).toHaveTextContent(/plan fulfillment/i);
     expect(metrics).toHaveTextContent(/reminder load/i);
-    expect(metrics).toHaveTextContent(/12\/day/i);
+    expect(metrics).toHaveTextContent(/6\/day/i);
     expect(metrics).toHaveTextContent(/recording friction/i);
     expect(metrics).toHaveTextContent(/autonomy kept/i);
     expect(metrics).toHaveTextContent(/0 auto/i);

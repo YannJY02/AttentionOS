@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import { EXECUTION_AUDIT_STORAGE_KEY } from '../adapters/storage/audit';
 import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../adapters/storage/learning';
@@ -20,9 +20,22 @@ import {
   STORAGE_RECOVERY_PAYLOADS_STORAGE_KEY,
 } from '../adapters/storage/storageRecovery';
 
+const nativeNotificationMocks = vi.hoisted(() => ({
+  deliverDueNativeReminder: vi.fn(async () => ({ status: 'delivered' as const })),
+  requestNativeReminderPermission: vi.fn<() => Promise<'denied' | 'granted' | 'unavailable'>>(
+    async () => 'granted',
+  ),
+  startNativeReminderDelivery: vi.fn(() => vi.fn()),
+}));
+
+vi.mock('../adapters/nativeNotifications', () => nativeNotificationMocks);
+
 describe('SettingsPage data controls', () => {
   beforeEach(() => {
     localStorage.clear();
+    nativeNotificationMocks.deliverDueNativeReminder.mockClear();
+    nativeNotificationMocks.requestNativeReminderPermission.mockClear();
+    nativeNotificationMocks.requestNativeReminderPermission.mockResolvedValue('granted');
   });
 
   it('keeps settings outside workflow stage redirects', async () => {
@@ -162,9 +175,21 @@ describe('SettingsPage data controls', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(await screen.findByLabelText(/enable attentionos reminder preferences/i));
+    const nativeReminderToggle = await screen.findByLabelText(
+      /enable attentionos native reminders/i,
+    );
+    expect(nativeReminderToggle.closest('label')).toHaveTextContent(/while the app is running/i);
+    expect(nativeReminderToggle.closest('label')).toHaveTextContent(
+      /does not install a background service/i,
+    );
+    expect(nativeReminderToggle.closest('label')).toHaveTextContent(/after the app quits/i);
+
+    fireEvent.click(nativeReminderToggle);
     fireEvent.change(screen.getByLabelText(/reminder frequency/i), {
       target: { value: '45' },
+    });
+    fireEvent.change(screen.getByLabelText(/native reminder daily cap/i), {
+      target: { value: '5' },
     });
     fireEvent.change(screen.getByLabelText(/quiet hours start/i), {
       target: { value: '22:15' },
@@ -178,7 +203,7 @@ describe('SettingsPage data controls', () => {
     fireEvent.change(screen.getByLabelText(/auto-open target/i), {
       target: { value: 'raycast://extensions/calendar' },
     });
-    fireEvent.change(screen.getByLabelText(/daily cap/i), {
+    fireEvent.change(screen.getByLabelText(/integration handoff daily cap/i), {
       target: { value: '4' },
     });
     fireEvent.click(
@@ -188,21 +213,29 @@ describe('SettingsPage data controls', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /save reminder settings/i }));
 
-    expect(JSON.parse(localStorage.getItem(REMINDER_SETTINGS_STORAGE_KEY) ?? '{}')).toMatchObject({
-      frequencyMinutes: 45,
-      integration: expect.objectContaining({
-        appAutoOpenTarget: 'raycast://extensions/calendar',
-        channels: expect.arrayContaining(['calendar-file', 'focus-handoff', 'app-auto-open']),
-        dailyPromptLimit: 4,
-        enabled: true,
-        permissionStatementAccepted: true,
-      }),
-      priorityOverrideEnabled: true,
-      quietHoursEnd: '07:30',
-      quietHoursStart: '22:15',
-      remindersEnabled: true,
-      updatedAt: expect.any(String),
+    await waitFor(() => {
+      expect(JSON.parse(localStorage.getItem(REMINDER_SETTINGS_STORAGE_KEY) ?? '{}')).toMatchObject(
+        {
+          dailyPromptLimit: 5,
+          frequencyMinutes: 45,
+          integration: expect.objectContaining({
+            appAutoOpenTarget: 'raycast://extensions/calendar',
+            channels: expect.arrayContaining(['calendar-file', 'focus-handoff', 'app-auto-open']),
+            dailyPromptLimit: 4,
+            enabled: true,
+            permissionStatementAccepted: true,
+          }),
+          nativePermissionConsentVersion: 1,
+          priorityOverrideEnabled: true,
+          quietHoursEnd: '07:30',
+          quietHoursStart: '22:15',
+          remindersEnabled: true,
+          updatedAt: expect.any(String),
+        },
+      );
     });
+    expect(nativeNotificationMocks.requestNativeReminderPermission).toHaveBeenCalledTimes(1);
+    expect(nativeNotificationMocks.deliverDueNativeReminder).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('status')).toHaveTextContent(/integration reminder handoffs saved/i);
     expect(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY)).toContain(
       'reminder.integration.settings.changed',
@@ -213,6 +246,32 @@ describe('SettingsPage data controls', () => {
         'attentionos.reminderSettings.v1',
       );
     });
+  });
+
+  it('keeps reminders off after permission denial without repeating the prompt', async () => {
+    nativeNotificationMocks.requestNativeReminderPermission.mockResolvedValue('denied');
+
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByLabelText(/enable attentionos native reminders/i));
+    fireEvent.click(screen.getByRole('button', { name: /save reminder settings/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(/permission was not granted/i);
+    });
+    expect(JSON.parse(localStorage.getItem(REMINDER_SETTINGS_STORAGE_KEY) ?? '{}')).toMatchObject({
+      nativePermissionConsentVersion: null,
+      remindersEnabled: false,
+    });
+    expect(screen.getByLabelText(/enable attentionos native reminders/i)).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole('button', { name: /save reminder settings/i }));
+    expect(nativeNotificationMocks.requestNativeReminderPermission).toHaveBeenCalledTimes(1);
+    expect(nativeNotificationMocks.deliverDueNativeReminder).not.toHaveBeenCalled();
   });
 
   it('saves attention calibration with user correction into local learning observations', async () => {

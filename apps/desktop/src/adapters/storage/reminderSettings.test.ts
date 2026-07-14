@@ -12,6 +12,7 @@ describe('reminder settings storage', () => {
 
   it('defaults reminders off with quiet hours and hourly frequency', () => {
     expect(readReminderSettings()).toMatchObject({
+      dailyPromptLimit: 6,
       frequencyMinutes: 60,
       integration: expect.objectContaining({
         auditTrailEnabled: true,
@@ -20,6 +21,7 @@ describe('reminder settings storage', () => {
         enabled: false,
         permissionStatementAccepted: false,
       }),
+      nativePermissionConsentVersion: null,
       priorityOverrideEnabled: false,
       quietHoursEnd: '08:00',
       quietHoursStart: '21:30',
@@ -30,6 +32,7 @@ describe('reminder settings storage', () => {
 
   it('persists reminder consent, frequency, quiet hours, and priority override intent', () => {
     const saved = saveReminderSettings({
+      dailyPromptLimit: 5,
       frequencyMinutes: 45,
       integration: {
         appAutoOpenTarget: 'raycast://extensions/calendar',
@@ -39,6 +42,7 @@ describe('reminder settings storage', () => {
         enabled: true,
         permissionStatementAccepted: true,
       },
+      nativePermissionConsentVersion: 1,
       priorityOverrideEnabled: true,
       quietHoursEnd: '07:30',
       quietHoursStart: '22:15',
@@ -46,6 +50,7 @@ describe('reminder settings storage', () => {
     });
 
     expect(saved).toMatchObject({
+      dailyPromptLimit: 5,
       frequencyMinutes: 45,
       integration: expect.objectContaining({
         appAutoOpenTarget: 'raycast://extensions/calendar',
@@ -54,6 +59,7 @@ describe('reminder settings storage', () => {
         enabled: true,
         permissionStatementAccepted: true,
       }),
+      nativePermissionConsentVersion: 1,
       priorityOverrideEnabled: true,
       quietHoursEnd: '07:30',
       quietHoursStart: '22:15',
@@ -67,6 +73,7 @@ describe('reminder settings storage', () => {
     localStorage.setItem(
       REMINDER_SETTINGS_STORAGE_KEY,
       JSON.stringify({
+        dailyPromptLimit: 99,
         frequencyMinutes: 999,
         integration: {
           appAutoOpenTarget: '',
@@ -77,13 +84,14 @@ describe('reminder settings storage', () => {
           permissionStatementAccepted: 'yes',
         },
         priorityOverrideEnabled: 'yes',
-        quietHoursEnd: 'bad',
-        quietHoursStart: 'also bad',
+        quietHoursEnd: '99:99',
+        quietHoursStart: '24:00',
         remindersEnabled: 'yes',
       }),
     );
 
     expect(readReminderSettings()).toMatchObject({
+      dailyPromptLimit: 24,
       frequencyMinutes: 240,
       integration: expect.objectContaining({
         appAutoOpenTarget: null,
@@ -93,9 +101,29 @@ describe('reminder settings storage', () => {
         enabled: false,
         permissionStatementAccepted: false,
       }),
+      nativePermissionConsentVersion: null,
       priorityOverrideEnabled: false,
       quietHoursEnd: '08:00',
       quietHoursStart: '21:30',
+      remindersEnabled: false,
+    });
+  });
+
+  it('migrates legacy reminder intent to off until native permission consent is recorded', () => {
+    localStorage.setItem(
+      REMINDER_SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        dailyPromptLimit: 6,
+        frequencyMinutes: 60,
+        priorityOverrideEnabled: false,
+        quietHoursEnd: '08:00',
+        quietHoursStart: '22:00',
+        remindersEnabled: true,
+      }),
+    );
+
+    expect(readReminderSettings()).toMatchObject({
+      nativePermissionConsentVersion: null,
       remindersEnabled: false,
     });
   });

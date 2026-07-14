@@ -15,6 +15,7 @@
     "@attentionos/workflow": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-notification": "^2.3.3",
     "@xstate/react": "^6.1.0",
     "lucide-react": "^1.14.0",
     "react": "^19.1.0",

@@ -1,13 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { ONBOARDING_STORAGE_KEY } from './adapters/storage/onboarding';
 import { APP_STATE_SNAPSHOT_STORAGE_KEY } from './adapters/storage/persistence';
 
+const nativeNotificationMocks = vi.hoisted(() => ({
+  deliverDueNativeReminder: vi.fn(async () => ({ status: 'disabled' as const })),
+  requestNativeReminderPermission: vi.fn(async () => 'unavailable' as const),
+  startNativeReminderDelivery: vi.fn(() => vi.fn()),
+}));
+
+vi.mock('./adapters/nativeNotifications', () => nativeNotificationMocks);
+
 describe('AttentionOS desktop shell', () => {
   beforeEach(() => {
     localStorage.clear();
+    nativeNotificationMocks.startNativeReminderDelivery.mockClear();
   });
 
   it('redirects the first-run root route to onboarding', async () => {
@@ -41,6 +50,7 @@ describe('AttentionOS desktop shell', () => {
     );
 
     expect(await screen.findByRole('heading', { name: /ritual/i })).toBeInTheDocument();
+    expect(nativeNotificationMocks.startNativeReminderDelivery).toHaveBeenCalledTimes(1);
   });
 
   it('renders the three canonical workflow stage navigation links', () => {

@@ -4,6 +4,7 @@ import { recordMalformedStorageEntry } from './storageRecovery';
 export const REMINDER_SETTINGS_STORAGE_KEY = 'attentionos.reminderSettings.v1';
 
 export type ReminderIntegrationChannel = 'app-auto-open' | 'calendar-file' | 'focus-handoff';
+export type NativePermissionConsentVersion = 1 | null;
 
 export interface ReminderIntegrationSettings {
   readonly appAutoOpenTarget: string | null;
@@ -15,8 +16,10 @@ export interface ReminderIntegrationSettings {
 }
 
 export interface ReminderSettings {
+  readonly dailyPromptLimit: number;
   readonly frequencyMinutes: number;
   readonly integration: ReminderIntegrationSettings;
+  readonly nativePermissionConsentVersion: NativePermissionConsentVersion;
   readonly priorityOverrideEnabled: boolean;
   readonly quietHoursEnd: string;
   readonly quietHoursStart: string;
@@ -40,8 +43,10 @@ export const DEFAULT_REMINDER_INTEGRATION_SETTINGS: ReminderIntegrationSettings 
 };
 
 export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
+  dailyPromptLimit: 6,
   frequencyMinutes: 60,
   integration: DEFAULT_REMINDER_INTEGRATION_SETTINGS,
+  nativePermissionConsentVersion: null,
   priorityOverrideEnabled: false,
   quietHoursEnd: '08:00',
   quietHoursStart: '21:30',
@@ -50,8 +55,10 @@ export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
 };
 
 export interface ReminderSettingsInput {
+  readonly dailyPromptLimit: number;
   readonly frequencyMinutes: number;
   readonly integration?: Partial<ReminderIntegrationSettings>;
+  readonly nativePermissionConsentVersion: NativePermissionConsentVersion;
   readonly priorityOverrideEnabled: boolean;
   readonly quietHoursEnd: string;
   readonly quietHoursStart: string;
@@ -72,7 +79,11 @@ function sanitizeFrequencyMinutes(value: unknown): number {
 }
 
 function sanitizeTime(value: unknown, fallback: string): string {
-  return typeof value === 'string' && /^\d{2}:\d{2}$/.test(value) ? value : fallback;
+  return typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value) ? value : fallback;
+}
+
+function sanitizeNativePermissionConsentVersion(value: unknown): NativePermissionConsentVersion {
+  return value === 1 ? 1 : null;
 }
 
 function booleanOrDefault(value: unknown, fallback: boolean): boolean {
@@ -90,6 +101,15 @@ function sanitizeDailyPromptLimit(value: unknown): number {
   }
 
   return Math.min(6, Math.max(1, Math.round(parsed)));
+}
+
+function sanitizeNativeDailyPromptLimit(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_REMINDER_SETTINGS.dailyPromptLimit;
+  }
+
+  return Math.min(24, Math.max(1, Math.round(parsed)));
 }
 
 function sanitizeIntegrationChannels(value: unknown): readonly ReminderIntegrationChannel[] {
@@ -144,9 +164,20 @@ export function readReminderSettings(): ReminderSettings {
       return DEFAULT_REMINDER_SETTINGS;
     }
 
+    const nativePermissionConsentVersion = sanitizeNativePermissionConsentVersion(
+      parsed.nativePermissionConsentVersion,
+    );
+
     return {
+      dailyPromptLimit: sanitizeNativeDailyPromptLimit(
+        parsed.dailyPromptLimit ??
+          (typeof parsed.integration === 'object' && parsed.integration !== null
+            ? (parsed.integration as Partial<ReminderIntegrationSettings>).dailyPromptLimit
+            : undefined),
+      ),
       frequencyMinutes: sanitizeFrequencyMinutes(parsed.frequencyMinutes),
       integration: sanitizeIntegrationSettings(parsed.integration),
+      nativePermissionConsentVersion,
       priorityOverrideEnabled: booleanOrDefault(
         parsed.priorityOverrideEnabled,
         DEFAULT_REMINDER_SETTINGS.priorityOverrideEnabled,
@@ -156,10 +187,9 @@ export function readReminderSettings(): ReminderSettings {
         parsed.quietHoursStart,
         DEFAULT_REMINDER_SETTINGS.quietHoursStart,
       ),
-      remindersEnabled: booleanOrDefault(
-        parsed.remindersEnabled,
-        DEFAULT_REMINDER_SETTINGS.remindersEnabled,
-      ),
+      remindersEnabled:
+        nativePermissionConsentVersion === 1 &&
+        booleanOrDefault(parsed.remindersEnabled, DEFAULT_REMINDER_SETTINGS.remindersEnabled),
       updatedAt: stringOrNull(parsed.updatedAt),
     };
   } catch (error) {
@@ -174,16 +204,21 @@ export function readReminderSettings(): ReminderSettings {
 }
 
 export function saveReminderSettings(settings: ReminderSettingsInput): ReminderSettings {
+  const nativePermissionConsentVersion = sanitizeNativePermissionConsentVersion(
+    settings.nativePermissionConsentVersion,
+  );
   const nextSettings: ReminderSettings = {
+    dailyPromptLimit: sanitizeNativeDailyPromptLimit(settings.dailyPromptLimit),
     frequencyMinutes: sanitizeFrequencyMinutes(settings.frequencyMinutes),
     integration: sanitizeIntegrationSettings(settings.integration),
+    nativePermissionConsentVersion,
     priorityOverrideEnabled: Boolean(settings.priorityOverrideEnabled),
     quietHoursEnd: sanitizeTime(settings.quietHoursEnd, DEFAULT_REMINDER_SETTINGS.quietHoursEnd),
     quietHoursStart: sanitizeTime(
       settings.quietHoursStart,
       DEFAULT_REMINDER_SETTINGS.quietHoursStart,
     ),
-    remindersEnabled: Boolean(settings.remindersEnabled),
+    remindersEnabled: nativePermissionConsentVersion === 1 && Boolean(settings.remindersEnabled),
     updatedAt: new Date().toISOString(),
   };
 

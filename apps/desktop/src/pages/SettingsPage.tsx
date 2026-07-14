@@ -14,6 +14,10 @@ import {
   XCircle,
 } from 'lucide-react';
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import {
+  deliverDueNativeReminder,
+  requestNativeReminderPermission,
+} from '../adapters/nativeNotifications';
 import { downloadPortableAppState, readPortableAppStateFile } from '../adapters/portableAppState';
 import { logReminderIntegrationSettingsChanged } from '../adapters/storage/audit';
 import {
@@ -70,6 +74,7 @@ export function SettingsPage() {
     const settings = readReminderSettings();
 
     return {
+      dailyPromptLimit: settings.dailyPromptLimit.toString(),
       frequencyMinutes: settings.frequencyMinutes.toString(),
       integrationAppAutoOpenTarget: settings.integration.appAutoOpenTarget ?? '',
       integrationAuditTrailEnabled: settings.integration.auditTrailEnabled,
@@ -144,8 +149,13 @@ export function SettingsPage() {
     );
   }
 
-  function saveReminderForm() {
+  async function saveReminderForm() {
+    const permissionResult = reminderForm.remindersEnabled
+      ? await requestNativeReminderPermission()
+      : null;
+    const nativeRemindersEnabled = reminderForm.remindersEnabled && permissionResult === 'granted';
     const saved = saveReminderSettings({
+      dailyPromptLimit: Number(reminderForm.dailyPromptLimit),
       frequencyMinutes: Number(reminderForm.frequencyMinutes),
       integration: {
         appAutoOpenTarget: reminderForm.integrationAppAutoOpenTarget,
@@ -155,10 +165,11 @@ export function SettingsPage() {
         enabled: reminderForm.integrationEnabled,
         permissionStatementAccepted: reminderForm.integrationPermissionAccepted,
       },
+      nativePermissionConsentVersion: nativeRemindersEnabled ? 1 : null,
       priorityOverrideEnabled: reminderForm.priorityOverrideEnabled,
       quietHoursEnd: reminderForm.quietHoursEnd,
       quietHoursStart: reminderForm.quietHoursStart,
-      remindersEnabled: reminderForm.remindersEnabled,
+      remindersEnabled: nativeRemindersEnabled,
     });
 
     if (saved.integration.enabled) {
@@ -172,6 +183,7 @@ export function SettingsPage() {
     }
 
     setReminderForm({
+      dailyPromptLimit: saved.dailyPromptLimit.toString(),
       frequencyMinutes: saved.frequencyMinutes.toString(),
       integrationAppAutoOpenTarget: saved.integration.appAutoOpenTarget ?? '',
       integrationAuditTrailEnabled: saved.integration.auditTrailEnabled,
@@ -184,12 +196,23 @@ export function SettingsPage() {
       quietHoursStart: saved.quietHoursStart,
       remindersEnabled: saved.remindersEnabled,
     });
+
+    if (reminderForm.remindersEnabled && permissionResult !== 'granted') {
+      setStatus(
+        permissionResult === 'denied'
+          ? 'macOS notification permission was not granted. Native reminders remain off; AttentionOS will not prompt again unless you explicitly enable and save them.'
+          : 'Native notification permission is unavailable in this runtime. Preferences were saved with native reminders off.',
+      );
+      return;
+    }
+
+    const deliveryResult = saved.remindersEnabled ? await deliverDueNativeReminder() : null;
     setStatus(
       saved.integration.enabled
-        ? `Integration reminder handoffs saved for ${saved.integration.channels.length} channel${saved.integration.channels.length === 1 ? '' : 's'} with a ${saved.integration.dailyPromptLimit}/day cap.`
+        ? `Native reminders ${saved.remindersEnabled ? 'are enabled while AttentionOS is open' : 'remain off'}. Integration reminder handoffs saved for ${saved.integration.channels.length} channel${saved.integration.channels.length === 1 ? '' : 's'} with a ${saved.integration.dailyPromptLimit}/day cap.`
         : saved.remindersEnabled
-          ? `Reminder preferences saved for every ${saved.frequencyMinutes} minutes outside quiet hours.`
-          : 'Reminder preferences saved. Native notifications remain off until explicitly enabled.',
+          ? `Native reminders enabled while AttentionOS is open: every ${saved.frequencyMinutes} minutes outside quiet hours, capped at ${saved.dailyPromptLimit}/day.${deliveryResult?.status === 'delivered' ? ' The first check-in was delivered.' : ''}`
+          : 'Reminder preferences saved. Native notifications are off.',
     );
   }
 
@@ -581,7 +604,8 @@ export function SettingsPage() {
             Frequency and quiet windows
           </h2>
           <p className="mt-2 text-sm text-stone-600">
-            Configure reminder intent before any future native notification permission request.
+            Enable reminders here to request macOS notification permission in a clear user action.
+            AttentionOS checks delivery only while the app is open.
           </p>
         </div>
 
@@ -600,16 +624,17 @@ export function SettingsPage() {
             />
             <span>
               <span className="block font-medium text-stone-900">
-                Enable AttentionOS reminder preferences.
+                Enable AttentionOS native reminders.
               </span>
               <span className="mt-1 block text-stone-600">
-                This stores local preferences only; it does not request macOS notification
-                permission or schedule background notifications in this build.
+                Saving this setting requests macOS notification permission. If granted, AttentionOS
+                can send check-ins while the app is running; it does not install a background
+                service or deliver after the app quits.
               </span>
             </span>
           </label>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <label
               className="block font-medium text-sm text-stone-800"
               htmlFor="reminder-frequency"
@@ -629,6 +654,27 @@ export function SettingsPage() {
                 step={15}
                 type="number"
                 value={reminderForm.frequencyMinutes}
+              />
+            </label>
+
+            <label
+              className="block font-medium text-sm text-stone-800"
+              htmlFor="native-reminder-daily-cap"
+            >
+              Native reminder daily cap
+              <input
+                className="mt-2 w-full rounded-md border border-stone-300 bg-white px-3 py-2 font-normal text-sm text-stone-900 outline-none focus:border-sky-700"
+                id="native-reminder-daily-cap"
+                max={24}
+                min={1}
+                onChange={(event) =>
+                  setReminderForm((current) => ({
+                    ...current,
+                    dailyPromptLimit: event.target.value,
+                  }))
+                }
+                type="number"
+                value={reminderForm.dailyPromptLimit}
               />
             </label>
 
@@ -682,8 +728,8 @@ export function SettingsPage() {
                 Allow priority overrides for active focus recovery.
               </span>
               <span className="mt-1 block text-stone-600">
-                Priority overrides are saved as local intent only until native notification behavior
-                is explicitly implemented and reviewed.
+                Priority overrides remain saved intent only. Current native reminders still obey
+                quiet hours, frequency, and the daily cap.
               </span>
             </span>
           </label>
@@ -814,7 +860,7 @@ export function SettingsPage() {
                   className="block font-medium text-sm text-stone-800"
                   htmlFor="integration-daily-limit"
                 >
-                  Daily cap
+                  Integration handoff daily cap
                   <input
                     className="mt-2 w-full rounded-md border border-stone-300 bg-white px-3 py-2 font-normal text-sm text-stone-900 outline-none focus:border-sky-700"
                     id="integration-daily-limit"
