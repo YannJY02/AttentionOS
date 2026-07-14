@@ -1,7 +1,7 @@
 import { type HierarchyLayer, hierarchyNavMachine, type V2Entity } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { useMemo } from 'react';
-import { findHierarchyEntity, listHierarchyEntities } from '../storage/hierarchy';
+import { findHierarchyEntity, listHierarchyEntities } from '../adapters/storage/hierarchy';
 
 interface HierarchyStore {
   readonly findById: (id: string) => V2Entity | null;

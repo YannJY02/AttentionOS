@@ -1,12 +1,12 @@
 import { taskLifecycleMachine } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { useEffect, useRef } from 'react';
-import { logTaskLifecycleTransition } from '../storage/audit';
+import { logTaskLifecycleTransition } from '../adapters/storage/audit';
 import {
   clearPersistedTaskRuntime,
   readPersistedTaskRuntime,
   savePersistedTaskRuntime,
-} from '../storage/taskRuntime';
+} from '../adapters/storage/taskRuntime';
 
 type TaskLifecycleState = 'planning' | 'executing' | 'reviewing' | 'paused' | 'done' | 'cancelled';
 type TaskLifecycleEvent =

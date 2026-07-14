@@ -4,7 +4,7 @@ import {
   type ContextCaptureChannel,
   readContextCaptures,
   saveContextCapture,
-} from '../storage/contextCapture';
+} from '../adapters/storage/contextCapture';
 
 const CHANNEL_OPTIONS: readonly {
   readonly description: string;

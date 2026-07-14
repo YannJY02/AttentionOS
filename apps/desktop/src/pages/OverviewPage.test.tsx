@@ -4,13 +4,13 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import App from '../App';
-import { AI_SUGGESTIONS_STORAGE_KEY } from '../storage/aiSuggestions';
-import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
-import { DEFAULT_HIERARCHY_ENTITIES, HIERARCHY_STORAGE_KEY } from '../storage/hierarchy';
-import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../storage/learning';
-import { REFLECTION_STORAGE_KEY } from '../storage/reflections';
-import { REMINDER_SETTINGS_STORAGE_KEY } from '../storage/reminderSettings';
-import { TASK_RUNTIME_STORAGE_KEY } from '../storage/taskRuntime';
+import { AI_SUGGESTIONS_STORAGE_KEY } from '../adapters/storage/aiSuggestions';
+import { EXECUTION_AUDIT_STORAGE_KEY } from '../adapters/storage/audit';
+import { DEFAULT_HIERARCHY_ENTITIES, HIERARCHY_STORAGE_KEY } from '../adapters/storage/hierarchy';
+import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../adapters/storage/learning';
+import { REFLECTION_STORAGE_KEY } from '../adapters/storage/reflections';
+import { REMINDER_SETTINGS_STORAGE_KEY } from '../adapters/storage/reminderSettings';
+import { TASK_RUNTIME_STORAGE_KEY } from '../adapters/storage/taskRuntime';
 
 interface RenderOverviewPageOptions {
   readonly aiSuggestions?: readonly unknown[];

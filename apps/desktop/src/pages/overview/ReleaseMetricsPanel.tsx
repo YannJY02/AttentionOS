@@ -1,5 +1,8 @@
 import { Gauge, ShieldCheck } from 'lucide-react';
-import { getReleaseMetricsSnapshot, type ReleaseMetric } from '../../storage/releaseMetrics';
+import {
+  getReleaseMetricsSnapshot,
+  type ReleaseMetric,
+} from '../../adapters/storage/releaseMetrics';
 
 const STATUS_STYLES = {
   review: 'border-rose-200 bg-rose-50 text-rose-900',

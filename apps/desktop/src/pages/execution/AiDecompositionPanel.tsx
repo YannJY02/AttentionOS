@@ -2,7 +2,7 @@ import type { TaskDecompositionSuggestion } from '@attentionos/core';
 import type { V2Entity } from '@attentionos/workflow';
 import { Bot, CheckCircle2, RotateCcw, ShieldCheck, WandSparkles, X } from 'lucide-react';
 import { useState } from 'react';
-import { createLocalTaskDecompositionSuggestion } from '../../ai/taskDecomposition';
+import { createLocalTaskDecompositionSuggestion } from '../../adapters/ai/taskDecomposition';
 import {
   approveTaskDecompositionSuggestion,
   getTaskDecompositionRollbackState,
@@ -10,12 +10,12 @@ import {
   restoreTaskDecompositionRollback,
   rollbackTaskDecompositionSuggestion,
   validateTaskDecompositionSuggestion,
-} from '../../ai/taskDecompositionWorkflow';
+} from '../../adapters/ai/taskDecompositionWorkflow';
 import {
   findTaskDecompositionSuggestion,
   saveTaskDecompositionSuggestion,
-} from '../../storage/aiSuggestions';
-import { readHierarchyEntities } from '../../storage/hierarchy';
+} from '../../adapters/storage/aiSuggestions';
+import { readHierarchyEntities } from '../../adapters/storage/hierarchy';
 
 interface AiDecompositionPanelProps {
   readonly task: V2Entity;

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { HIERARCHY_STORAGE_KEY } from '../storage/hierarchy';
+import { HIERARCHY_STORAGE_KEY } from '../adapters/storage/hierarchy';
 import { useHierarchyNav } from './useHierarchyNav';
 
 function HierarchyHarness() {

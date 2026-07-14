@@ -8,13 +8,11 @@ import { useMachine } from '@xstate/react';
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { useDailyFlow } from '../hooks/useDailyFlow';
-import { type TaskLifecycleApi, useTaskLifecycle } from '../hooks/useTaskLifecycle';
 import {
   type ContextCaptureChannel,
   type ContextCaptureRecord,
   listContextCapturePlanningInputs,
-} from '../storage/contextCapture';
+} from '../adapters/storage/contextCapture';
 import {
   createExecutionPlanEntity,
   type ExecutionActionRole,
@@ -24,17 +22,19 @@ import {
   type ProjectSignal,
   readFocusCandidateId,
   setExecutionActionRole,
-} from '../storage/hierarchy';
+} from '../adapters/storage/hierarchy';
 import {
   getRitualFollowUpTargets,
   listRitualFollowUpInputs,
   type RitualFollowUpTarget,
-} from '../storage/reflections';
+} from '../adapters/storage/reflections';
 import {
   type PersistedTaskRuntime,
   readCurrentPersistedTaskRuntime,
   readPersistedTaskRuntime,
-} from '../storage/taskRuntime';
+} from '../adapters/storage/taskRuntime';
+import { useDailyFlow } from '../hooks/useDailyFlow';
+import { type TaskLifecycleApi, useTaskLifecycle } from '../hooks/useTaskLifecycle';
 import { AiDecompositionPanel } from './execution/AiDecompositionPanel';
 import { EvolutionSuggestionsPanel } from './execution/EvolutionSuggestionsPanel';
 import { TaskActions } from './execution/TaskActions';

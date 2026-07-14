@@ -1,6 +1,6 @@
 import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
-import type { RitualFollowUpTarget } from '../../storage/reflections';
+import type { RitualFollowUpTarget } from '../../adapters/storage/reflections';
 
 interface DedicationStepProps {
   readonly dedicationText: string;

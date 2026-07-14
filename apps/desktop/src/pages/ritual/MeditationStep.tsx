@@ -2,7 +2,7 @@ import { meditationMachine } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { Pause, Play, SkipForward } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import type { RitualSoundMode } from '../../storage/ritualCopy';
+import type { RitualSoundMode } from '../../adapters/storage/ritualCopy';
 
 interface MeditationStepProps {
   readonly durationMinutes: number;

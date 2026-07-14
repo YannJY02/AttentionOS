@@ -14,7 +14,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
-import { logReminderIntegrationSettingsChanged } from '../storage/audit';
+import { downloadPortableAppState, readPortableAppStateFile } from '../adapters/portableAppState';
+import { logReminderIntegrationSettingsChanged } from '../adapters/storage/audit';
 import {
   clearPersistenceRecoveryIssue,
   createAppStateBackup,
@@ -22,13 +23,13 @@ import {
   importAppStateFromPayload,
   persistCurrentAppState,
   readPersistenceRecoveryIssue,
-} from '../storage/persistence';
-import { readPrivacySettings, savePrivacySettings } from '../storage/privacySettings';
+} from '../adapters/storage/persistence';
+import { readPrivacySettings, savePrivacySettings } from '../adapters/storage/privacySettings';
 import {
   type ReminderIntegrationChannel,
   readReminderSettings,
   saveReminderSettings,
-} from '../storage/reminderSettings';
+} from '../adapters/storage/reminderSettings';
 import {
   RITUAL_CADENCE_OPTIONS,
   RITUAL_GUIDANCE_OPTIONS,
@@ -38,24 +39,14 @@ import {
   type RitualSoundMode,
   readRitualSettings,
   saveRitualSettings,
-} from '../storage/ritualCopy';
+} from '../adapters/storage/ritualCopy';
 import {
   clearAllStorageRecoveryIssues,
   readStorageRecoveryIssues,
-  STORAGE_RECOVERY_UPDATED_EVENT,
-} from '../storage/storageRecovery';
+  subscribeStorageRecoveryUpdates,
+} from '../adapters/storage/storageRecovery';
 import { AttentionCalibrationPanel } from './settings/AttentionCalibrationPanel';
 import { IntegrationBoundaryPanel } from './settings/IntegrationBoundaryPanel';
-
-function downloadJson(payload: string): void {
-  const blob = new Blob([payload], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `attentionos-export-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 export function SettingsPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -104,11 +95,7 @@ export function SettingsPage() {
       setStorageRecoveryIssues(readStorageRecoveryIssues());
     }
 
-    window.addEventListener(STORAGE_RECOVERY_UPDATED_EVENT, refreshStorageRecoveryIssues);
-
-    return () => {
-      window.removeEventListener(STORAGE_RECOVERY_UPDATED_EVENT, refreshStorageRecoveryIssues);
-    };
+    return subscribeStorageRecoveryUpdates(refreshStorageRecoveryIssues);
   }, []);
 
   function saveRitualForm() {
@@ -252,7 +239,7 @@ export function SettingsPage() {
     try {
       const result = await exportAppStateAsPortableFile();
       if (result.payload) {
-        downloadJson(result.payload);
+        downloadPortableAppState(result.payload);
       }
       setStatus(
         result.path
@@ -274,7 +261,7 @@ export function SettingsPage() {
 
     setIsWorking(true);
     try {
-      const payload = await file.text();
+      const payload = await readPortableAppStateFile(file);
       const snapshot = await importAppStateFromPayload(payload);
       clearRecoveryIssue();
       setStatus(`Imported AttentionOS backup from ${snapshot.exportedAt}.`);

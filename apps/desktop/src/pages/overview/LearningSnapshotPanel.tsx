@@ -1,5 +1,5 @@
 import { Activity, CheckCircle2, Lightbulb } from 'lucide-react';
-import { getLearningSnapshot } from '../../storage/learning';
+import { getLearningSnapshot } from '../../adapters/storage/learning';
 
 function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;

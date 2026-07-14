@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-07-14 14:33 CST
+
+- Task: execute Wayfinder ticket [Move desktop I/O behind explicit adapters](https://github.com/YannJY02/AttentionOS/issues/18).
+- Files moved: the desktop `storage` and local `ai` modules with their tests now live under `apps/desktop/src/adapters`; portable browser import/export I/O moved out of `SettingsPage` into a concrete adapter.
+- Seam: `storageRecovery` now owns browser recovery event subscription and dispatch, so UI modules consume an adapter interface without knowing event names.
+- Boundary: no generic port, one-implementation interface, or barrel layer was added; pure Workflow and Guidance modules remain outside desktop, and Rust Tauri command implementations remain in `apps/desktop/src-tauri`.
+
 ## 2026-07-14 14:25 CST
 
 - Task: execute Wayfinder ticket [Establish the Attention Guidance context package](https://github.com/YannJY02/AttentionOS/issues/17).

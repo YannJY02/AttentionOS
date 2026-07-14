@@ -2,17 +2,17 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import App from '../App';
-import { AI_SUGGESTIONS_STORAGE_KEY } from '../storage/aiSuggestions';
-import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
-import { CONTEXT_CAPTURE_STORAGE_KEY } from '../storage/contextCapture';
+import { AI_SUGGESTIONS_STORAGE_KEY } from '../adapters/storage/aiSuggestions';
+import { EXECUTION_AUDIT_STORAGE_KEY } from '../adapters/storage/audit';
+import { CONTEXT_CAPTURE_STORAGE_KEY } from '../adapters/storage/contextCapture';
 import {
   DEFAULT_HIERARCHY_ENTITIES,
   EXECUTION_FOCUS_CANDIDATE_STORAGE_KEY,
   HIERARCHY_STORAGE_KEY,
-} from '../storage/hierarchy';
-import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../storage/learning';
-import { REFLECTION_STORAGE_KEY } from '../storage/reflections';
-import { TASK_RUNTIME_STORAGE_KEY } from '../storage/taskRuntime';
+} from '../adapters/storage/hierarchy';
+import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../adapters/storage/learning';
+import { REFLECTION_STORAGE_KEY } from '../adapters/storage/reflections';
+import { TASK_RUNTIME_STORAGE_KEY } from '../adapters/storage/taskRuntime';
 
 function renderApp(
   initialEntry: string,

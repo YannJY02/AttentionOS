@@ -1,7 +1,7 @@
 import type { HierarchyLayer } from '@attentionos/workflow';
 import { AlertTriangle, GitBranch, Inbox, TrendingUp } from 'lucide-react';
-import { getLearningSnapshot } from '../../storage/learning';
-import { listRitualFollowUpInputs } from '../../storage/reflections';
+import { getLearningSnapshot } from '../../adapters/storage/learning';
+import { listRitualFollowUpInputs } from '../../adapters/storage/reflections';
 
 interface OverviewSignalsPanelProps {
   readonly currentLayer: HierarchyLayer;

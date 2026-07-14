@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-07-14 14:25 CST
+Updated: 2026-07-14 14:33 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -27,6 +27,7 @@ Status: active
 - The accepted runtime is the local desktop app. Issue #15 removed the disconnected server, Supabase, storage, SDK, MCP, sync, and policy placeholder surfaces; older plans and logs that name them are historical baseline evidence, not current runtime ownership.
 - `packages/workflow` is now the owner of canonical workflow types, immutable Workflow Facts, hierarchy validation/mutation rules, and the Ritual/Overview/Execution state machines. Desktop hierarchy storage keeps only local persistence and audit side effects; the temporary `packages/machines` and `packages/core` compatibility surfaces remain until their later retirement ticket.
 - `packages/guidance` is now the owner of attention estimation, immutable guidance suggestions, learning/outcome metrics, and reminder policy. It consumes only public immutable Workflow Facts and performs no persistence or platform I/O; desktop storage remains the temporary adapter until the explicit adapter migration.
+- `apps/desktop/src/adapters` is the visible home for concrete localStorage persistence, Tauri fallback/recovery, portable file I/O, and local AI execution. UI modules call these concrete adapters without knowing storage-recovery event names; the native Rust command implementation remains under `apps/desktop/src-tauri`.
 - The product and vision baseline is `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md`, which declares itself the product/design/development/acceptance baseline.
 - The workflow semantic baseline is `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md`, which declares the three-stage/five-layer model as active source of truth.
 - Original user prompt evidence is categorized under `docs/sources-or-raw/user-original-long-prompts.zh-CN.md`.
@@ -134,7 +135,7 @@ Status: active
 
 ## Active Work
 
-- Follow the native dependency chain in Wayfinder map [Normalize AttentionOS around Matt workflow and explicit contexts](https://github.com/YannJY02/AttentionOS/issues/8). The next unblocked slice is [Move desktop I/O behind explicit adapters](https://github.com/YannJY02/AttentionOS/issues/18).
+- Follow the native dependency chain in Wayfinder map [Normalize AttentionOS around Matt workflow and explicit contexts](https://github.com/YannJY02/AttentionOS/issues/8). The next unblocked slice is [Retire emptied legacy packages and enforce dependency directions](https://github.com/YannJY02/AttentionOS/issues/19).
 - Keep all project documentation discoverable through `docs/README.md` and prevent new root-level documentation sprawl.
 - Keep `docs/governance/proposed-updates/` as a pending-only queue; archive applied proposals under `docs/archive/governance/proposed-updates/`.
 - Keep `docs/work/todo.md` short and route confirmed work into the proper authority surface.
@@ -158,4 +159,4 @@ Status: active
 
 ## Next Action
 
-Execute Wayfinder ticket [Move desktop I/O behind explicit adapters](https://github.com/YannJY02/AttentionOS/issues/18) as a behavior-preserving boundary migration.
+Execute Wayfinder ticket [Retire emptied legacy packages and enforce dependency directions](https://github.com/YannJY02/AttentionOS/issues/19) after the retained behavior has moved to Workflow, Guidance, and desktop adapters.

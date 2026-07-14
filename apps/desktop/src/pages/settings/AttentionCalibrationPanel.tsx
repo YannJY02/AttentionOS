@@ -1,7 +1,10 @@
 import type { AttentionState, PassiveForegroundCategory } from '@attentionos/guidance';
 import { Gauge, Save } from 'lucide-react';
 import { useState } from 'react';
-import { getLatestAttentionObservation, recordAttentionCalibration } from '../../storage/learning';
+import {
+  getLatestAttentionObservation,
+  recordAttentionCalibration,
+} from '../../adapters/storage/learning';
 
 const ATTENTION_STATES: readonly AttentionState[] = [
   'focused',

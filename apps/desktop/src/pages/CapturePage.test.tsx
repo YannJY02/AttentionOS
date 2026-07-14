@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
-import { CONTEXT_CAPTURE_STORAGE_KEY } from '../storage/contextCapture';
+import { CONTEXT_CAPTURE_STORAGE_KEY } from '../adapters/storage/contextCapture';
 
 describe('CapturePage context bus', () => {
   beforeEach(() => {

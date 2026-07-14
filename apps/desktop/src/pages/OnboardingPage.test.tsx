@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
-import { ONBOARDING_STORAGE_KEY } from '../storage/onboarding';
-import { APP_STATE_SNAPSHOT_STORAGE_KEY } from '../storage/persistence';
-import { PRIVACY_SETTINGS_STORAGE_KEY } from '../storage/privacySettings';
+import { ONBOARDING_STORAGE_KEY } from '../adapters/storage/onboarding';
+import { APP_STATE_SNAPSHOT_STORAGE_KEY } from '../adapters/storage/persistence';
+import { PRIVACY_SETTINGS_STORAGE_KEY } from '../adapters/storage/privacySettings';
 
 describe('OnboardingPage first-run flow', () => {
   beforeEach(() => {

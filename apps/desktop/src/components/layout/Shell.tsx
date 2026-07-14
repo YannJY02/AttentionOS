@@ -1,17 +1,17 @@
 import { Focus, Inbox, ListTree, Settings, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
-import { useDailyFlow } from '../../hooks/useDailyFlow';
-import { useRouteSync } from '../../hooks/useRouteSync';
 import {
   clearPersistenceRecoveryIssue,
   readPersistenceRecoveryIssue,
-} from '../../storage/persistence';
+} from '../../adapters/storage/persistence';
 import {
   clearAllStorageRecoveryIssues,
   readStorageRecoveryIssues,
-  STORAGE_RECOVERY_UPDATED_EVENT,
-} from '../../storage/storageRecovery';
+  subscribeStorageRecoveryUpdates,
+} from '../../adapters/storage/storageRecovery';
+import { useDailyFlow } from '../../hooks/useDailyFlow';
+import { useRouteSync } from '../../hooks/useRouteSync';
 
 const workflowStages = [
   {
@@ -85,11 +85,7 @@ function StorageRecoveryBanner() {
     }
 
     refreshIssues();
-    window.addEventListener(STORAGE_RECOVERY_UPDATED_EVENT, refreshIssues);
-
-    return () => {
-      window.removeEventListener(STORAGE_RECOVERY_UPDATED_EVENT, refreshIssues);
-    };
+    return subscribeStorageRecoveryUpdates(refreshIssues);
   }, []);
 
   if (issues.length === 0) {

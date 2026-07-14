@@ -1,7 +1,7 @@
 import type { V2Entity } from '@attentionos/workflow';
 import { CalendarRange, FolderKanban, Grid2X2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { readHierarchyEntities } from '../../storage/hierarchy';
+import { readHierarchyEntities } from '../../adapters/storage/hierarchy';
 
 type BrowseMode = 'day' | 'week' | 'month';
 

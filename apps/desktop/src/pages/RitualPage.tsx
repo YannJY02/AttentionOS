@@ -1,16 +1,16 @@
-import { useDailyFlow } from '../hooks/useDailyFlow';
 import {
   type RitualFollowUpTarget,
   saveDedicationInput,
   saveReflection,
-} from '../storage/reflections';
+} from '../adapters/storage/reflections';
 import {
   formatRitualScheduleSummary,
   getRitualGuidanceLabel,
   getRitualGuidancePrompt,
   getRitualSoundLabel,
   readRitualSettings,
-} from '../storage/ritualCopy';
+} from '../adapters/storage/ritualCopy';
+import { useDailyFlow } from '../hooks/useDailyFlow';
 import { DedicationStep } from './ritual/DedicationStep';
 import { MeditationStep } from './ritual/MeditationStep';
 import { ReflectionStep } from './ritual/ReflectionStep';

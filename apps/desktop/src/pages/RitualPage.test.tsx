@@ -6,12 +6,12 @@ import {
   REFLECTION_CORRUPT_STORAGE_KEY,
   REFLECTION_RECOVERY_STORAGE_KEY,
   REFLECTION_STORAGE_KEY,
-} from '../storage/reflections';
+} from '../adapters/storage/reflections';
 import {
   RITUAL_COPY_STORAGE_KEY,
   RITUAL_MEDITATION_SETTINGS_STORAGE_KEY,
   RITUAL_SCHEDULE_SETTINGS_STORAGE_KEY,
-} from '../storage/ritualCopy';
+} from '../adapters/storage/ritualCopy';
 
 function renderRitualPage() {
   render(

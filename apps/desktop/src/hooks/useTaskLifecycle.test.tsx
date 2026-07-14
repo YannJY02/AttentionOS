@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
-import { TASK_RUNTIME_STORAGE_KEY } from '../storage/taskRuntime';
+import { EXECUTION_AUDIT_STORAGE_KEY } from '../adapters/storage/audit';
+import { TASK_RUNTIME_STORAGE_KEY } from '../adapters/storage/taskRuntime';
 import { useTaskLifecycle } from './useTaskLifecycle';
 
 function TaskLifecycleHarness() {

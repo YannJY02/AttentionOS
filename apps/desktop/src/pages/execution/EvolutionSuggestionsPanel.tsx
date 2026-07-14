@@ -4,9 +4,9 @@ import { useState } from 'react';
 import {
   findWorkflowOptimizationSuggestions,
   markWorkflowOptimizationReviewed,
-} from '../../storage/aiSuggestions';
-import { logWorkflowOptimizationReviewed } from '../../storage/audit';
-import { generateWorkflowOptimizationSuggestion } from '../../storage/learning';
+} from '../../adapters/storage/aiSuggestions';
+import { logWorkflowOptimizationReviewed } from '../../adapters/storage/audit';
+import { generateWorkflowOptimizationSuggestion } from '../../adapters/storage/learning';
 
 export function EvolutionSuggestionsPanel() {
   const [suggestion, setSuggestion] = useState<WorkflowOptimizationSuggestion | null>(

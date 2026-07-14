@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
+import { isOnboardingComplete } from './adapters/storage/onboarding';
+import {
+  initializeAppPersistence,
+  recordNativeQaReady,
+  shouldWaitForPersistenceRestore,
+} from './adapters/storage/persistence';
 import { Shell } from './components/layout/Shell';
 import { DailyFlowProvider } from './hooks/useDailyFlow';
 import { CapturePage } from './pages/CapturePage';
@@ -8,12 +14,6 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { RitualPage } from './pages/RitualPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { isOnboardingComplete } from './storage/onboarding';
-import {
-  initializeAppPersistence,
-  recordNativeQaReady,
-  shouldWaitForPersistenceRestore,
-} from './storage/persistence';
 import './App.css';
 
 function App() {

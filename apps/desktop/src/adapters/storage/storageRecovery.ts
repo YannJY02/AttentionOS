@@ -1,6 +1,6 @@
 export const STORAGE_RECOVERY_ISSUES_STORAGE_KEY = 'attentionos.storageRecovery.issues.v1';
 export const STORAGE_RECOVERY_PAYLOADS_STORAGE_KEY = 'attentionos.storageRecovery.payloads.v1';
-export const STORAGE_RECOVERY_UPDATED_EVENT = 'attentionos-storage-recovery-updated';
+const STORAGE_RECOVERY_UPDATED_EVENT = 'attentionos-storage-recovery-updated';
 
 export interface StorageRecoveryIssue {
   readonly detectedAt: string;
@@ -65,6 +65,11 @@ function parsePayloadMap(raw: string | null): Record<string, string> {
 
 function notifyStorageRecoveryUpdated(): void {
   window.dispatchEvent(new Event(STORAGE_RECOVERY_UPDATED_EVENT));
+}
+
+export function subscribeStorageRecoveryUpdates(listener: () => void): () => void {
+  window.addEventListener(STORAGE_RECOVERY_UPDATED_EVENT, listener);
+  return () => window.removeEventListener(STORAGE_RECOVERY_UPDATED_EVENT, listener);
 }
 
 export function readStorageRecoveryIssues(): StorageRecoveryIssue[] {

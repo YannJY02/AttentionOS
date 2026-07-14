@@ -5,7 +5,7 @@ import {
   type RitualFollowUpTarget,
   readReflectionRecoveryIssue,
   readReflections,
-} from '../../storage/reflections';
+} from '../../adapters/storage/reflections';
 
 interface ReflectionStepProps {
   readonly onSave: (text: string, followUpTargets: readonly RitualFollowUpTarget[]) => void;

@@ -1,7 +1,7 @@
 import { ArrowRight, Focus, ListTree, ShieldCheck, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { completeOnboarding } from '../storage/onboarding';
+import { completeOnboarding } from '../adapters/storage/onboarding';
 
 interface OnboardingPageProps {
   readonly onComplete: () => void;

@@ -2,23 +2,23 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
-import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
-import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../storage/learning';
+import { EXECUTION_AUDIT_STORAGE_KEY } from '../adapters/storage/audit';
+import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../adapters/storage/learning';
 import {
   APP_STATE_RECOVERY_STORAGE_KEY,
   APP_STATE_SNAPSHOT_STORAGE_KEY,
-} from '../storage/persistence';
-import { PRIVACY_SETTINGS_STORAGE_KEY } from '../storage/privacySettings';
-import { REMINDER_SETTINGS_STORAGE_KEY } from '../storage/reminderSettings';
+} from '../adapters/storage/persistence';
+import { PRIVACY_SETTINGS_STORAGE_KEY } from '../adapters/storage/privacySettings';
+import { REMINDER_SETTINGS_STORAGE_KEY } from '../adapters/storage/reminderSettings';
 import {
   RITUAL_COPY_STORAGE_KEY,
   RITUAL_MEDITATION_SETTINGS_STORAGE_KEY,
   RITUAL_SCHEDULE_SETTINGS_STORAGE_KEY,
-} from '../storage/ritualCopy';
+} from '../adapters/storage/ritualCopy';
 import {
   STORAGE_RECOVERY_ISSUES_STORAGE_KEY,
   STORAGE_RECOVERY_PAYLOADS_STORAGE_KEY,
-} from '../storage/storageRecovery';
+} from '../adapters/storage/storageRecovery';
 
 describe('SettingsPage data controls', () => {
   beforeEach(() => {
