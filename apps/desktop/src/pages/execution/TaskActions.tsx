@@ -1,13 +1,30 @@
-import { CheckCircle2, Pause, Play, Send } from 'lucide-react';
+import { CheckCircle2, LogOut, Pause, Play, Send } from 'lucide-react';
 import type { TaskLifecycleApi } from '../../hooks/useTaskLifecycle';
 
 interface TaskActionsProps {
+  readonly onExitFocus: () => void;
   readonly task: TaskLifecycleApi;
 }
 
 const baseButtonClass = 'inline-flex items-center gap-2 rounded-md px-4 py-2 font-medium text-sm';
 
-export function TaskActions({ task }: TaskActionsProps) {
+function canExitWithoutStateChange(state: TaskLifecycleApi['state']): boolean {
+  return state === 'planning' || state === 'paused';
+}
+
+function shouldPauseBeforeExit(state: TaskLifecycleApi['state']): boolean {
+  return state === 'executing' || state === 'reviewing';
+}
+
+export function TaskActions({ onExitFocus, task }: TaskActionsProps) {
+  function exitFocus() {
+    if (shouldPauseBeforeExit(task.state)) {
+      task.pause();
+    }
+
+    onExitFocus();
+  }
+
   return (
     <div className="rounded-md border border-stone-200 bg-white p-5">
       <p className="font-medium text-stone-950">Task controls</p>
@@ -63,6 +80,17 @@ export function TaskActions({ task }: TaskActionsProps) {
           >
             <CheckCircle2 aria-hidden="true" size={16} />
             Complete task
+          </button>
+        ) : null}
+
+        {canExitWithoutStateChange(task.state) || shouldPauseBeforeExit(task.state) ? (
+          <button
+            className={`${baseButtonClass} border border-stone-300 text-stone-800`}
+            onClick={exitFocus}
+            type="button"
+          >
+            <LogOut aria-hidden="true" size={16} />
+            {shouldPauseBeforeExit(task.state) ? 'Pause and exit focus' : 'Exit focus'}
           </button>
         ) : null}
       </div>

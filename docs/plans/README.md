@@ -6,6 +6,9 @@
 
 | File | Status | Role |
 |---|---|---|
+| `2026-05-23-attentionos-release-candidate-requirements-ledger.md` | Active coverage ledger | Maps the product baseline, workflow baseline, and original user-source requirements to release-candidate implementation and verification status. |
+| `2026-05-24-attentionos-release-readiness-report.md` | Release-candidate readiness report | Summarizes the final local macOS RC evidence, verification commands, owner deferral, Developer ID external blocker, and residual risks. |
+| `2026-05-24-attentionos-release-candidate-owner-decision-packet.md` | Owner reply recorded | Records D1=A, D2=C, D3=A, and D4=B, then narrows the remaining integration-reminder, native GUI/VoiceOver, and Developer ID validation boundaries. |
 | `2026-05-13-attentionos-integration-polish-regression-slice.md` | Implemented / QA-verified | Converts Slice 6 of the experience-alignment blueprint into the completed final integration polish and regression pass after prior slices. |
 | `2026-05-13-attentionos-ai-hitl-clarity-slice.md` | Implemented / QA-verified | Converts Slice 5 of the experience-alignment blueprint into the completed AI suggestion placement and HITL clarity slice: Plan-only helper lanes, explicit review status, task-decomposition rejection, and no Phase 4 expansion. |
 | `2026-05-13-attentionos-overview-readonly-scan-slice.md` | Implemented / QA-verified | Converts Slice 3 of the experience-alignment blueprint into the completed Overview read-only scan redesign: layer-first context, timeline-first Vision, preserved read-only boundaries, and task-layer Execution bridge. |

@@ -1,10 +1,10 @@
 # Agent Skill Configuration
 
-This directory configures project-local engineering skills for AttentionOS.
+This directory provides repository-specific routing for AttentionOS agent workflows.
 
-The repo currently has Matt Pocock skills installed under `.agents/skills/` and
-gstack skills under `.agents/skills/gstack*`. These files tell those skills
-where issues, triage labels, and domain documentation live.
+The repository does not vendor Matt Pocock skills. The owner's global Matt
+installation and any ignored project-local gstack skills can use these files to
+find issue, triage-label, and domain-documentation rules.
 
 ## Files
 

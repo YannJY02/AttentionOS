@@ -20,12 +20,11 @@ const ignoredDirs = new Set([
   '.pnpm-store',
 ]);
 
-const allowedRootDocs = new Set(['README.md', 'CLAUDE.md', 'AGENTS.md']);
+const allowedRootDocs = new Set(['README.md', 'AGENTS.md']);
 const allowedDocsRoot = new Set(['docs/README.md']);
 const requiredFiles = [
   'AGENTS.md',
   'README.md',
-  'CLAUDE.md',
   'docs/README.md',
   'docs/work/todo.md',
   'docs/governance/project-state.md',

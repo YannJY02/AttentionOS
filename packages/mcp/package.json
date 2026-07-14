@@ -11,9 +11,11 @@
     "test": "vitest run --reporter=verbose"
   },
   "dependencies": {
-    "@attentionos/core": "workspace:*"
+    "@attentionos/core": "workspace:*",
+    "@attentionos/sdk": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

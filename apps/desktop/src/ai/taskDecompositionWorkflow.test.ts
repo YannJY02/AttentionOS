@@ -8,7 +8,11 @@ import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
 import { HIERARCHY_STORAGE_KEY, readHierarchyEntities } from '../storage/hierarchy';
 import {
   approveTaskDecompositionSuggestion,
+  getTaskDecompositionRollbackState,
   rejectTaskDecompositionSuggestion,
+  restoreTaskDecompositionRollback,
+  rollbackTaskDecompositionSuggestion,
+  validateTaskDecompositionSuggestion,
 } from './taskDecompositionWorkflow';
 
 const TASK: V2Entity = {
@@ -47,8 +51,16 @@ function createSuggestion(): TaskDecompositionSuggestion {
     rationale: 'Split the task into reviewable execution steps.',
     payload: {
       steps: [
-        { title: 'Clarify outcome', estimatedMinutes: 10 },
-        { title: 'Draft checklist', estimatedMinutes: 15 },
+        {
+          title: 'Clarify outcome',
+          rationale: 'Define the outcome before creating follow-up work.',
+          estimatedMinutes: 10,
+        },
+        {
+          title: 'Draft checklist',
+          rationale: 'Write the concrete checks needed to complete the task.',
+          estimatedMinutes: 15,
+        },
       ],
     },
     context: [],
@@ -111,6 +123,96 @@ describe('task decomposition workflow', () => {
     ]);
   });
 
+  it('rolls back applied AI-created tasks with audit snapshots and can restore them', () => {
+    const suggestion = saveTaskDecompositionSuggestion(createSuggestion());
+    const approved = approveTaskDecompositionSuggestion({
+      suggestion,
+      task: TASK,
+      reviewer: 'user',
+    });
+
+    const rollback = rollbackTaskDecompositionSuggestion({
+      suggestion: approved.appliedSuggestion,
+      task: TASK,
+    });
+
+    expect(rollback.archivedTasks.map((task) => task.id)).toEqual(['sug-1-step-1', 'sug-1-step-2']);
+    expect(rollback.skippedTaskIds).toEqual([]);
+    expect(getTaskDecompositionRollbackState(approved.appliedSuggestion, TASK)).toMatchObject({
+      archivedTaskIds: ['sug-1-step-1', 'sug-1-step-2'],
+      rolledBack: true,
+    });
+    expect(readHierarchyEntities()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'sug-1-step-1',
+          properties: expect.objectContaining({
+            rollbackReason: 'ai.suggestion.rollback',
+            rollbackSuggestionId: suggestion.id,
+          }),
+          status: 'archived',
+        }),
+        expect.objectContaining({
+          id: 'sug-1-step-2',
+          status: 'archived',
+        }),
+      ]),
+    );
+
+    let auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries.at(-1)).toMatchObject({
+      action: 'ai.suggestion.rollback',
+      targetId: TASK.id,
+      details: expect.objectContaining({
+        archivedTaskIds: ['sug-1-step-1', 'sug-1-step-2'],
+        archivedTaskSnapshots: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'sug-1-step-1',
+            status: 'active',
+          }),
+        ]),
+        kind: 'task_decomposition',
+        suggestionId: suggestion.id,
+      }),
+    });
+
+    const restored = restoreTaskDecompositionRollback({
+      suggestion: approved.appliedSuggestion,
+      task: TASK,
+    });
+
+    expect(restored.restoredTasks.map((task) => task.id)).toEqual(['sug-1-step-1', 'sug-1-step-2']);
+    expect(getTaskDecompositionRollbackState(approved.appliedSuggestion, TASK).rolledBack).toBe(
+      false,
+    );
+    expect(readHierarchyEntities()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'sug-1-step-1',
+          properties: expect.objectContaining({
+            restoredFromRollbackAt: expect.any(String),
+            sourceSuggestionId: suggestion.id,
+          }),
+          status: 'active',
+        }),
+        expect.objectContaining({
+          id: 'sug-1-step-2',
+          status: 'active',
+        }),
+      ]),
+    );
+
+    auditEntries = JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]');
+    expect(auditEntries.at(-1)).toMatchObject({
+      action: 'ai.suggestion.rollback.restored',
+      targetId: TASK.id,
+      details: expect.objectContaining({
+        restoredTaskIds: ['sug-1-step-1', 'sug-1-step-2'],
+        suggestionId: suggestion.id,
+      }),
+    });
+  });
+
   it('rejects suggestions for a different task before writing data', () => {
     const suggestion = saveTaskDecompositionSuggestion({
       ...createSuggestion(),
@@ -120,6 +222,36 @@ describe('task decomposition workflow', () => {
     expect(() =>
       approveTaskDecompositionSuggestion({ suggestion, task: TASK, reviewer: 'user' }),
     ).toThrow(/does not target task/i);
+    expect(readHierarchyEntities()).toHaveLength(2);
+    expect(JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]')).toEqual([]);
+  });
+
+  it('blocks approval when generated steps violate startability or duration bounds', () => {
+    const invalidSuggestion = saveTaskDecompositionSuggestion({
+      ...createSuggestion(),
+      payload: {
+        steps: [
+          {
+            title: '',
+            rationale: 'Start by naming the missing outcome.',
+            estimatedMinutes: 10,
+          },
+          {
+            title: 'Overlong work block',
+            rationale: 'This estimate should be rejected.',
+            estimatedMinutes: 180,
+          },
+        ],
+      },
+    });
+
+    expect(validateTaskDecompositionSuggestion(invalidSuggestion)).toEqual([
+      'Step 1 needs a startable title.',
+      'Step 2 exceeds the two-hour task bound.',
+    ]);
+    expect(() =>
+      approveTaskDecompositionSuggestion({ suggestion: invalidSuggestion, task: TASK }),
+    ).toThrow(/startable title/i);
     expect(readHierarchyEntities()).toHaveLength(2);
     expect(JSON.parse(localStorage.getItem(EXECUTION_AUDIT_STORAGE_KEY) ?? '[]')).toEqual([]);
   });

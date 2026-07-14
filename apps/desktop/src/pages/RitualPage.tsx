@@ -1,24 +1,37 @@
 import { useDailyFlow } from '../hooks/useDailyFlow';
-import { saveReflection } from '../storage/reflections';
-import { readRitualCopy } from '../storage/ritualCopy';
+import {
+  type RitualFollowUpTarget,
+  saveDedicationInput,
+  saveReflection,
+} from '../storage/reflections';
+import {
+  formatRitualScheduleSummary,
+  getRitualGuidanceLabel,
+  getRitualGuidancePrompt,
+  getRitualSoundLabel,
+  readRitualSettings,
+} from '../storage/ritualCopy';
 import { DedicationStep } from './ritual/DedicationStep';
 import { MeditationStep } from './ritual/MeditationStep';
 import { ReflectionStep } from './ritual/ReflectionStep';
 
 export function RitualPage() {
   const dailyFlow = useDailyFlow();
-  const ritualCopy = readRitualCopy();
+  const ritualSettings = readRitualSettings();
 
   function completeMeditation() {
     dailyFlow.send({ type: 'MEDITATION_COMPLETE' });
   }
 
-  function saveReflectionText(text: string) {
-    const reflection = saveReflection(text);
+  function saveReflectionText(text: string, followUpTargets: readonly RitualFollowUpTarget[]) {
+    const reflection = saveReflection(text, { followUpTargets });
     dailyFlow.send({ type: 'REFLECTION_SAVED', text: reflection.content ?? text });
   }
 
-  function completeRitual() {
+  function completeRitual(followUpTargets: readonly RitualFollowUpTarget[]) {
+    if (followUpTargets.length > 0) {
+      saveDedicationInput(ritualSettings.dedicationText, { followUpTargets });
+    }
     dailyFlow.send({ type: 'RITUAL_COMPLETE' });
   }
 
@@ -31,10 +44,21 @@ export function RitualPage() {
           Begin by settling attention, choosing an intention, reflecting briefly, and dedicating the
           work before the day moves into planning.
         </p>
+        <p className="mt-4 inline-flex rounded-md bg-amber-50 px-3 py-2 text-amber-900 text-sm">
+          {formatRitualScheduleSummary(ritualSettings.schedule)}
+        </p>
       </div>
 
       {dailyFlow.ritualStep === 'meditation' ? (
-        <MeditationStep intentionText={ritualCopy.intentionText} onComplete={completeMeditation} />
+        <MeditationStep
+          durationMinutes={ritualSettings.meditation.durationMinutes}
+          guidanceLabel={getRitualGuidanceLabel(ritualSettings.meditation.guidanceMode)}
+          guidancePrompt={getRitualGuidancePrompt(ritualSettings.meditation.guidanceMode)}
+          intentionText={ritualSettings.intentionText}
+          onComplete={completeMeditation}
+          soundLabel={getRitualSoundLabel(ritualSettings.meditation.soundMode)}
+          soundMode={ritualSettings.meditation.soundMode}
+        />
       ) : null}
 
       {dailyFlow.ritualStep === 'reflection' ? (
@@ -43,7 +67,7 @@ export function RitualPage() {
 
       {dailyFlow.ritualStep === 'dedication' ? (
         <DedicationStep
-          dedicationText={ritualCopy.dedicationText}
+          dedicationText={ritualSettings.dedicationText}
           onComplete={completeRitual}
           reflectionText={dailyFlow.snapshot.context.reflectionText}
         />

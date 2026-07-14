@@ -9,8 +9,6 @@ is not an accepted implementation contract yet. Its purpose is to prevent Phase
 
 ## Evidence
 
-- `CLAUDE.md` lists Phase 4 as protocol and extension work: MCP, SDK, plugins,
-  and PowerSync offline support.
 - `docs/plans/2026-03-21-attentionos-v2-architecture-design.md` lists Phase 4
   deliverables as MCP Server, MCP Client, TypeScript SDK, plugin infrastructure,
   and PowerSync offline sync. That architecture document remains draft /
@@ -18,7 +16,7 @@ is not an accepted implementation contract yet. Its purpose is to prevent Phase
 - `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md` uses a longer product-roadmap
   phase model where protocolization and ecosystem work are 2027-2028 themes.
   Do not confuse that macro product phase model with the engineering Phase 4
-  sequence in `CLAUDE.md`.
+  framing in this intake.
 
 ## Recommended First Slice
 

@@ -26,3 +26,27 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .transition,
+  .transition-all,
+  .transition-colors,
+  [class*="animate-"],
+  [class*="duration-"],
+  [class*="transition-"] {
+    animation-delay: 0s;
+    animation-duration: 0s;
+    animation-iteration-count: 1;
+    transition-delay: 0s;
+    transition-duration: 0s;
+  }
+}

@@ -1,10 +1,16 @@
 import type { V2Entity } from '@attentionos/core';
-import { ArrowUp, Layers3 } from 'lucide-react';
+import { ArrowRight, ArrowUp, Layers3, RotateCcw } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { useDailyFlow } from '../hooks/useDailyFlow';
 import { useHierarchyNav } from '../hooks/useHierarchyNav';
+import { findHierarchyEntity, setExecutionActionRole } from '../storage/hierarchy';
+import { type PersistedTaskRuntime, readCurrentPersistedTaskRuntime } from '../storage/taskRuntime';
 import { EntityList } from './overview/EntityList';
 import { HierarchyBreadcrumb } from './overview/HierarchyBreadcrumb';
 import { LearningSnapshotPanel } from './overview/LearningSnapshotPanel';
+import { OverviewSignalsPanel } from './overview/OverviewSignalsPanel';
+import { ReleaseMetricsPanel } from './overview/ReleaseMetricsPanel';
+import { TaskOverviewModesPanel } from './overview/TaskOverviewModesPanel';
 import { VisionOverviewPanel } from './overview/VisionOverviewPanel';
 
 const LAYER_SCAN_COPY = {
@@ -35,14 +41,55 @@ const LAYER_SCAN_COPY = {
   },
 } as const;
 
+function OverviewRecoveryBridge({
+  onOpen,
+  runtime,
+  task,
+}: {
+  readonly onOpen: () => void;
+  readonly runtime: PersistedTaskRuntime;
+  readonly task: V2Entity;
+}) {
+  return (
+    <section
+      aria-label="Interruption recovery cue"
+      className="mb-6 rounded-md border border-emerald-200 bg-emerald-50 p-5 text-emerald-950"
+    >
+      <p className="inline-flex items-center gap-2 font-medium text-sm">
+        <RotateCcw aria-hidden="true" size={16} />
+        Resume cue
+      </p>
+      <h2 className="mt-2 font-semibold text-2xl">{task.title}</h2>
+      <p className="mt-2 max-w-2xl text-sm">
+        {runtime.actualMinutes} saved minute{runtime.actualMinutes === 1 ? '' : 's'} in{' '}
+        {runtime.state}. Review the recovery cue in Execution before adding planning context.
+      </p>
+      <button
+        className="mt-4 inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-medium text-sm text-white hover:bg-emerald-800"
+        onClick={onOpen}
+        type="button"
+      >
+        Review recovery in Execution
+        <ArrowRight aria-hidden="true" size={16} />
+      </button>
+    </section>
+  );
+}
+
 export function OverviewPage() {
   const dailyFlow = useDailyFlow();
   const hierarchy = useHierarchyNav();
+  const navigate = useNavigate();
   const currentLayerCopy = LAYER_SCAN_COPY[hierarchy.currentLayer];
   const primaryVision =
     hierarchy.currentLayer === 'vision' ? (hierarchy.entities[0] ?? null) : null;
+  const persistedRuntime = readCurrentPersistedTaskRuntime();
+  const persistedRuntimeTask = persistedRuntime
+    ? findHierarchyEntity(persistedRuntime.taskId)
+    : null;
 
   function startExecution(entity: V2Entity) {
+    setExecutionActionRole(entity.id, 'current');
     dailyFlow.send({ type: 'START_EXECUTION', taskId: entity.id });
   }
 
@@ -87,11 +134,25 @@ export function OverviewPage() {
         </div>
       </section>
 
+      {persistedRuntime && persistedRuntimeTask ? (
+        <OverviewRecoveryBridge
+          onOpen={() => navigate('/execution/plan')}
+          runtime={persistedRuntime}
+          task={persistedRuntimeTask}
+        />
+      ) : null}
+
       {hierarchy.currentLayer === 'vision' ? (
         <VisionOverviewPanel entity={primaryVision} onOpen={hierarchy.drillDown} />
       ) : null}
 
+      <OverviewSignalsPanel
+        currentLayer={hierarchy.currentLayer}
+        visibleEntityCount={hierarchy.entities.length}
+      />
       <LearningSnapshotPanel />
+      <ReleaseMetricsPanel />
+      {hierarchy.currentLayer === 'task' ? <TaskOverviewModesPanel /> : null}
 
       <EntityList
         currentLayer={hierarchy.currentLayer}

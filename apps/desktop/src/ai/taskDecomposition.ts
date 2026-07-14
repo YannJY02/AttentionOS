@@ -24,6 +24,7 @@ function createStepTitle(prefix: string, taskTitle: string): string {
 export async function createLocalTaskDecompositionSuggestion(
   task: V2Entity,
   contextEntities: readonly V2Entity[],
+  clarificationText = '',
 ): Promise<TaskDecompositionSuggestion> {
   const store = new InMemoryVectorStore();
   await store.upsert(
@@ -40,18 +41,26 @@ export async function createLocalTaskDecompositionSuggestion(
   const agent = createAttentionAgent({
     decomposer: async () => ({
       title: `Break down ${task.title}`,
-      rationale: 'Split the active task into reviewable execution steps.',
+      rationale: [
+        'Split the active task into reviewable execution steps.',
+        clarificationText.trim() ? `Human clarification: ${clarificationText.trim()}` : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
       steps: [
         {
           title: createStepTitle('Clarify outcome', task.title),
+          rationale: 'Name the observable outcome before adding more work.',
           estimatedMinutes: 10,
         },
         {
           title: createStepTitle('Draft execution checklist', task.title),
+          rationale: 'Turn the work into concrete checks that can be reviewed.',
           estimatedMinutes: 15,
         },
         {
           title: createStepTitle('Review completion criteria', task.title),
+          rationale: 'Confirm the task has a clear stopping point before Focus.',
           estimatedMinutes: 10,
         },
       ],
@@ -78,7 +87,7 @@ export async function createLocalTaskDecompositionSuggestion(
   });
 
   return agent.decomposeTask({
-    content: task.content,
+    content: [task.content, clarificationText.trim()].filter(Boolean).join('\n\nClarification: '),
     taskId: task.id,
     title: task.title,
   });

@@ -36,6 +36,7 @@
       "!**/.turbo",
       "!**/.gstack",
       "!**/.agents/skills/gstack",
+      "!**/src-tauri/gen/schemas",
       "!**/src-tauri/target",
       "!**/coverage",
       "!**/playwright-report",

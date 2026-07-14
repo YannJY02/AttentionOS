@@ -77,7 +77,7 @@ Do not archive or rewrite these without explicit user confirmation:
 - Product or workflow baseline files.
 - Accepted decisions.
 - `docs/governance/project-state.md`.
-- `AGENTS.md`, `CLAUDE.md`, or `README.md` authority claims.
+- `AGENTS.md` or `README.md` authority claims.
 
 ## 5. Verification Checklist
 

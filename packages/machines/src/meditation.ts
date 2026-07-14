@@ -35,8 +35,14 @@ export const meditationMachine = setup({
     setStartedAt: assign({ startedAt: () => new Date().toISOString() }),
     addElapsed: assign({
       elapsedMs: ({ context, event }) =>
-        event.type === 'TICK' ? context.elapsedMs + event.deltaMs : context.elapsedMs,
+        event.type === 'TICK'
+          ? Math.min(context.durationMs, context.elapsedMs + event.deltaMs)
+          : context.elapsedMs,
     }),
+  },
+  guards: {
+    reachesDuration: ({ context, event }) =>
+      event.type === 'TICK' && context.elapsedMs + event.deltaMs >= context.durationMs,
   },
 }).createMachine({
   id: 'meditation',
@@ -55,10 +61,16 @@ export const meditationMachine = setup({
       on: {
         PAUSE: 'paused',
         COMPLETE: 'completed',
-        TICK: {
-          // Stay in meditating, accumulate time
-          actions: 'addElapsed',
-        },
+        TICK: [
+          {
+            actions: 'addElapsed',
+            guard: 'reachesDuration',
+            target: 'completed',
+          },
+          {
+            actions: 'addElapsed',
+          },
+        ],
       },
     },
     paused: {

@@ -65,6 +65,9 @@ importers:
       '@attentionos/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@attentionos/attention-engine':
+        specifier: workspace:*
+        version: link:../../packages/attention-engine
       '@attentionos/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -77,9 +80,6 @@ importers:
       '@tauri-apps/api':
         specifier: ^2
         version: 2.10.1
-      '@tauri-apps/plugin-opener':
-        specifier: ^2
-        version: 2.5.3
       '@xstate/react':
         specifier: ^6.1.0
         version: 6.1.0(@types/react@19.2.14)(react@19.2.4)(xstate@5.28.0)
@@ -220,10 +220,16 @@ importers:
       '@attentionos/core':
         specifier: workspace:*
         version: link:../core
+      '@attentionos/sdk':
+        specifier: workspace:*
+        version: link:../sdk
     devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/policy-engine:
     dependencies:
@@ -247,6 +253,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/storage:
     dependencies:
@@ -1086,9 +1095,6 @@ packages:
     resolution: {integrity: sha512-jQNGF/5quwORdZSSLtTluyKQ+o6SMa/AUICfhf4egCGFdMHqWssApVgYSbg+jmrZoc8e1DscNvjTnXtlHLS11g==}
     engines: {node: '>= 10'}
     hasBin: true
-
-  '@tauri-apps/plugin-opener@2.5.3':
-    resolution: {integrity: sha512-CCcUltXMOfUEArbf3db3kCE7Ggy1ExBEBl51Ko2ODJ6GDYHRp1nSNlQm5uNCFY5k7/ufaK5Ib3Du/Zir19IYQQ==}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -2796,10 +2802,6 @@ snapshots:
       '@tauri-apps/cli-win32-arm64-msvc': 2.10.1
       '@tauri-apps/cli-win32-ia32-msvc': 2.10.1
       '@tauri-apps/cli-win32-x64-msvc': 2.10.1
-
-  '@tauri-apps/plugin-opener@2.5.3':
-    dependencies:
-      '@tauri-apps/api': 2.10.1
 
   '@testing-library/dom@10.4.1':
     dependencies:

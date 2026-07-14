@@ -4,6 +4,8 @@ import type {
   V2WorkflowStage,
   WorkflowOptimizationSuggestion,
 } from '@attentionos/core';
+import { queuePersistAppState } from './persistence';
+import { recordMalformedStorageEntry } from './storageRecovery';
 
 export const AI_SUGGESTIONS_STORAGE_KEY = 'attentionos.ai.suggestions.v1';
 
@@ -16,8 +18,24 @@ function parseSuggestions(raw: string | null): StoredAISuggestion[] {
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+
+    recordMalformedStorageEntry({
+      error: new Error('AI suggestions are not an array.'),
+      fallback: 'Hiding malformed suggestions until the payload is reviewed.',
+      payload: raw,
+      storageKey: AI_SUGGESTIONS_STORAGE_KEY,
+    });
+    return [];
+  } catch (error) {
+    recordMalformedStorageEntry({
+      error,
+      fallback: 'Hiding malformed suggestions until the payload is reviewed.',
+      payload: raw,
+      storageKey: AI_SUGGESTIONS_STORAGE_KEY,
+    });
     return [];
   }
 }
@@ -59,6 +77,7 @@ export function saveAISuggestion<TSuggestion extends StoredAISuggestion>(
     : [...suggestions, suggestion];
 
   localStorage.setItem(AI_SUGGESTIONS_STORAGE_KEY, JSON.stringify(nextSuggestions));
+  queuePersistAppState();
   return suggestion;
 }
 

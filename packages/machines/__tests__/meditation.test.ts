@@ -92,6 +92,18 @@ describe('meditationMachine — TICK accumulates elapsed time', () => {
     actor.stop();
   });
 
+  it('completes and clamps elapsed time when duration is reached', () => {
+    const actor = makeActor(5000);
+    actor.start();
+    actor.send({ type: 'START' });
+    actor.send({ type: 'TICK', deltaMs: 3000 });
+    actor.send({ type: 'TICK', deltaMs: 3000 });
+
+    expect(actor.getSnapshot().value).toBe('completed');
+    expect(actor.getSnapshot().context.elapsedMs).toBe(5000);
+    actor.stop();
+  });
+
   it('TICK is ignored when paused', () => {
     const actor = makeActor();
     actor.start();

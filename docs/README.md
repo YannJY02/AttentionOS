@@ -7,20 +7,23 @@ This is the canonical entry point for AttentionOS documentation.
 1. `governance/project-state.md` — current recovery state, active work, blockers, and next action.
 2. `product/MASTER_PRODUCT_PLAN.zh-CN.md` — product and vision baseline.
 3. `workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` — workflow semantic baseline.
-4. `plans/2026-05-10-attentionos-experience-alignment-blueprint.md` — draft blueprint for the experience-alignment workflow and `/gstack` skill gates.
-5. `plans/2026-05-13-attentionos-integration-polish-regression-slice.md` — implemented and QA-verified final integration polish and regression pass.
-6. `plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md` — implemented and QA-verified AI suggestion placement and HITL clarity slice.
-7. `plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` — implemented and QA-verified Overview read-only scan redesign slice.
-8. `plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` — implemented and QA-verified Ritual semantic correction slice.
-9. `plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` — implemented and QA-verified Execution Plan/Focus slice for the accepted experience work.
-10. `plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` — historical review-gate blocker and record of the owner-approved chat fallback.
-11. `plans/2026-05-09-phase-4-intake.md` — draft Phase 4 intake for protocol and extension scope.
-12. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — verified Phase 3 implementation ledger.
-13. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
-14. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
-15. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
-16. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
-17. `agents/README.md` — project-local skill configuration for Matt Pocock and gstack workflows.
+4. `plans/2026-05-23-attentionos-release-candidate-requirements-ledger.md` — active release-candidate coverage ledger across the product baseline, workflow baseline, and original user-source requirements.
+5. `plans/2026-05-24-attentionos-release-readiness-report.md` — final release-candidate readiness report for the current local macOS build.
+6. `plans/2026-05-24-attentionos-release-candidate-owner-decision-packet.md` — owner reply record and remaining release-candidate validation boundaries.
+7. `plans/2026-05-10-attentionos-experience-alignment-blueprint.md` — draft blueprint for the experience-alignment workflow and `/gstack` skill gates.
+8. `plans/2026-05-13-attentionos-integration-polish-regression-slice.md` — implemented and QA-verified final integration polish and regression pass.
+9. `plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md` — implemented and QA-verified AI suggestion placement and HITL clarity slice.
+10. `plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` — implemented and QA-verified Overview read-only scan redesign slice.
+11. `plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` — implemented and QA-verified Ritual semantic correction slice.
+12. `plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` — implemented and QA-verified Execution Plan/Focus slice for the accepted experience work.
+13. `plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` — historical review-gate blocker and record of the owner-approved chat fallback.
+14. `plans/2026-05-09-phase-4-intake.md` — draft Phase 4 intake for protocol and extension scope.
+15. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — verified Phase 3 implementation ledger.
+16. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
+17. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
+18. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
+19. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
+20. `agents/README.md` — repository-specific routing for agent workflows and globally configured Matt skills.
 
 ## Documentation Map
 
@@ -66,7 +69,6 @@ documentation governance check before the normal project check.
 The repo root should stay mostly code-facing. Keep only these documentation-like exceptions outside `docs/`:
 
 - `README.md` — thin GitHub/platform entrypoint pointing here.
-- `CLAUDE.md` — tool-discovery instruction file.
 - `AGENTS.md` — repo-local AI-agent instruction file.
 
 Do not recreate root-level `plans/`, `decisions/`, `sources-or-raw/`, `work/`, `archive/`, `.ai/`, `project-state.md`, or `changelog.md`.

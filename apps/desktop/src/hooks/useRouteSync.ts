@@ -29,7 +29,13 @@ export function useRouteSync(dailyFlow: DailyFlowApi): void {
     const pathChanged = previousPath.current !== location.pathname;
     const stageChanged = previousStage.current !== dailyFlow.stage;
 
-    if (pathChanged && routeStage && routeStage !== dailyFlow.stage) {
+    if (!routeStage) {
+      previousPath.current = location.pathname;
+      previousStage.current = dailyFlow.stage;
+      return;
+    }
+
+    if (pathChanged && routeStage !== dailyFlow.stage) {
       dailyFlow.send({ type: 'RESTORE_STAGE', stage: routeStage });
     } else if (stageChanged && routeStage !== dailyFlow.stage) {
       navigate(routeForStage(dailyFlow.stage), { replace: true });

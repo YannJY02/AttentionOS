@@ -1,6 +1,12 @@
 import { taskLifecycleMachine } from '@attentionos/machines';
 import { useMachine } from '@xstate/react';
+import { useEffect, useRef } from 'react';
 import { logTaskLifecycleTransition } from '../storage/audit';
+import {
+  clearPersistedTaskRuntime,
+  readPersistedTaskRuntime,
+  savePersistedTaskRuntime,
+} from '../storage/taskRuntime';
 
 type TaskLifecycleState = 'planning' | 'executing' | 'reviewing' | 'paused' | 'done' | 'cancelled';
 type TaskLifecycleEvent =
@@ -69,6 +75,39 @@ export function useTaskLifecycle({
     input: { estimatedMinutes, taskId, title },
   });
   const state = snapshot.value as TaskLifecycleState;
+  const restoredTaskIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (restoredTaskIdRef.current === taskId) {
+      return;
+    }
+
+    restoredTaskIdRef.current = taskId;
+    const persisted = readPersistedTaskRuntime(taskId);
+
+    if (!persisted || persisted.state === 'planning') {
+      return;
+    }
+
+    if (persisted.state === 'done' || persisted.state === 'cancelled') {
+      clearPersistedTaskRuntime(taskId);
+      return;
+    }
+
+    send({ type: 'START_EXECUTION' });
+
+    if (persisted.actualMinutes > 0) {
+      send({ type: 'TICK', minutes: persisted.actualMinutes });
+    }
+
+    if (persisted.state === 'paused') {
+      send({ type: 'PAUSE' });
+    }
+
+    if (persisted.state === 'reviewing') {
+      send({ type: 'SUBMIT_FOR_REVIEW' });
+    }
+  }, [send, taskId]);
 
   function sendLifecycleEvent(event: TaskLifecycleEvent) {
     const nextState = nextStateByEvent[state][event];
@@ -80,6 +119,16 @@ export function useTaskLifecycle({
     send({ type: event });
     logTaskLifecycleTransition({ event, from: state, targetId: taskId, to: nextState });
 
+    if (nextState === 'done' || nextState === 'cancelled') {
+      clearPersistedTaskRuntime(taskId);
+    } else {
+      savePersistedTaskRuntime({
+        actualMinutes: snapshot.context.actualMinutes,
+        state: nextState,
+        taskId,
+      });
+    }
+
     if (nextState === 'done') {
       onDone?.();
     }
@@ -90,7 +139,13 @@ export function useTaskLifecycle({
       return;
     }
 
+    const nextActualMinutes = snapshot.context.actualMinutes + 5;
     send({ type: 'TICK', minutes: 5 });
+    savePersistedTaskRuntime({
+      actualMinutes: nextActualMinutes,
+      state,
+      taskId,
+    });
   }
 
   return {

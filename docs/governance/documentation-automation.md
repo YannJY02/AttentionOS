@@ -15,7 +15,7 @@ requiring the owner to mention document management in every prompt.
 
 It checks:
 
-- Root documentation stays limited to `README.md`, `CLAUDE.md`, and `AGENTS.md`.
+- Root documentation stays limited to `README.md` and `AGENTS.md`.
 - `docs/` root contains only `docs/README.md`.
 - There is exactly one developer todo file: `docs/work/todo.md`.
 - Long-lived Markdown or text docs are not placed beside code in `apps/` or `packages/`.

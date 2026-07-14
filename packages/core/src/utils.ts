@@ -1,7 +1,10 @@
-import { randomUUID } from 'node:crypto';
-
 export function createId(prefix: string): string {
-  return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
+  const randomPart =
+    globalThis.crypto && 'randomUUID' in globalThis.crypto
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+
+  return `${prefix}_${randomPart.replace(/-/g, '').slice(0, 12)}`;
 }
 
 export function clamp(value: number, min = 0, max = 1): number {

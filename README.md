@@ -5,7 +5,6 @@ AttentionOS is a personal attention and workflow/context system.
 ## Entry Points
 
 - Repo-local AI agent instructions: `AGENTS.md`
-- Project instructions for AI agents: `CLAUDE.md`
 - Documentation index and authority map: `docs/README.md`
 - Current recovery state: `docs/governance/project-state.md`
 - Current product baseline: `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md`

@@ -1,29 +1,43 @@
 # Domain Docs
 
-AttentionOS does not use a root `CONTEXT.md` as the domain authority. Use the
-governed documentation map instead.
+How the engineering skills should consume this repo's domain documentation when exploring the codebase.
 
-## Layout
+## Before exploring, read these
 
-This is a single product context with multiple governed source surfaces:
+- **`CONTEXT-MAP.md`** at the repo root — it points to one `CONTEXT.md` per context. Read each one relevant to the topic.
+- **`docs/adr/`** — read system-wide ADRs that touch the area you're about to work in.
+- **Context-scoped ADRs** — check `src/<context>/docs/adr/` or the equivalent context path identified by `CONTEXT-MAP.md`.
 
-1. `docs/README.md` — canonical documentation entrypoint.
-2. `docs/governance/project-state.md` — current recovery state, active work,
-   blockers, and next action.
-3. `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md` — product and vision baseline.
-4. `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` — workflow semantic
-   baseline.
-5. `docs/decisions/` — accepted decisions.
-6. `docs/plans/` — active plans, contracts, ledgers, and draft references.
-7. `docs/sources-or-raw/` — read-only source evidence.
+If any of these files don't exist, **proceed silently**. Don't flag their absence or suggest creating them upfront. The `/domain-modeling` skill creates them lazily when terms or decisions actually get resolved.
 
-## Consumer Rules
+## File structure
 
-- Follow the authority order in `AGENTS.md` when documents disagree.
-- Prefer current product/workflow baselines and accepted decisions over old
-  roadmap or archive material.
-- Treat `docs/plans/2026-03-21-attentionos-v2-architecture-design.md` as a
-  draft architecture reference, not an accepted override.
-- Do not rewrite raw sources under `docs/sources-or-raw/`.
-- Route new long-lived documentation through `docs/` and update indexes,
-  project state, changelog, and maintenance log when required by governance.
+This repository uses a multi-context layout:
+
+```text
+/
+├── CONTEXT-MAP.md
+├── docs/adr/                          ← system-wide decisions
+├── apps/
+│   └── <context>/
+│       ├── CONTEXT.md
+│       └── docs/adr/                  ← context-specific decisions
+└── packages/
+    └── <context>/
+        ├── CONTEXT.md
+        └── docs/adr/
+```
+
+`CONTEXT-MAP.md` is the routing authority. Do not infer that every workspace package deserves a separate context; add contexts only when `/domain-modeling` establishes a real domain boundary.
+
+## Use the glossary's vocabulary
+
+When output names a domain concept—in an issue title, refactor proposal, hypothesis, or test name—use the term defined in the relevant `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+
+If a needed concept isn't in the glossary, reconsider whether the language belongs to the project or note the gap for `/domain-modeling`.
+
+## Flag ADR conflicts
+
+If output contradicts an existing ADR, surface it explicitly rather than silently overriding:
+
+> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_

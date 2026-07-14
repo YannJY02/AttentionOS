@@ -1,7 +1,7 @@
 # AttentionOS Agent Instructions
 
 This file is the repo-local instruction authority for AI agents working in
-AttentionOS. Use it together with `CLAUDE.md` and `docs/README.md`.
+AttentionOS. Use it together with `docs/README.md`.
 
 ## Documentation Governance
 
@@ -23,7 +23,6 @@ Keep long-lived documentation under `docs/`.
 Allowed root documentation-like files:
 
 - `README.md` for the GitHub/platform entrypoint.
-- `CLAUDE.md` for Claude/ECC-oriented project instructions.
 - `AGENTS.md` for repo-local AI-agent instructions.
 
 Do not recreate root-level `plans/`, `decisions/`, `sources-or-raw/`, `work/`,
@@ -76,24 +75,58 @@ Use this order:
 - `.githooks/pre-commit` is prepared to run `pnpm docs:check` before commits after `pnpm hooks:install`.
 - Automation may report or block obvious documentation drift, but it must not silently accept decisions, rewrite raw sources, modify product/workflow baselines, or change this `AGENTS.md` file.
 
-## Agent Skills
+## Project Development
 
-This repository has project-local Matt Pocock engineering skills installed under
-`.agents/skills/` and project-local gstack skills under `.agents/skills/gstack*`.
+- AttentionOS V2 is a personal attention and workflow/context system. Start from
+  `docs/README.md` and `docs/governance/project-state.md` before changing code.
+- Treat the product and workflow baselines linked above as authoritative. The
+  architecture plan remains a draft reference unless the owner accepts it.
+- Search current documentation and existing implementation before adding code.
+- Keep behavior changes small and leave a targeted regression check for
+  non-trivial logic.
+- The workspace is a pnpm/Turborepo monorepo. The desktop app lives under
+  `apps/desktop`; shared implementation lives under `packages/`.
+
+Common commands:
+
+```bash
+pnpm dev
+pnpm test:run
+pnpm build
+pnpm check
+pnpm lint
+pnpm docs:check
+```
+
+## Task Completion Git Workflow
+
+- Before marking a task or tracked issue complete, automatically commit only
+  that task's scoped repository changes and push the current task branch.
+- When the checkout contains unrelated or pre-existing changes, isolate the task
+  on a `codex/` branch or separate worktree; never stage unrelated changes.
+- Run the relevant checks before committing, allow configured hooks to run, and
+  use a normal push. Never force-push or skip hooks unless the owner explicitly
+  requests it.
+- Read-only or tracker-only work with no repository changes does not create an
+  empty commit.
+- If a safe isolated commit or normal push cannot be completed, keep the task or
+  issue open and request owner intervention instead of claiming completion.
+
+## Agent Skills
 
 ### Issue Tracker
 
-Use GitHub Issues for tracked implementation work on
-`YannJY02/AttentionOS`. See `docs/agents/issue-tracker.md`.
+Issues and PRDs are tracked in GitHub Issues for `YannJY02/AttentionOS`.
+External pull requests are not a triage request surface. See
+`docs/agents/issue-tracker.md`.
 
 ### Triage Labels
 
-Use the default Matt Pocock triage label vocabulary unless the owner creates
-repo-specific GitHub labels later. See `docs/agents/triage-labels.md`.
+Use the five canonical Matt Pocock triage labels without overrides. See
+`docs/agents/triage-labels.md`.
 
 ### Domain Docs
 
-AttentionOS uses the governed `docs/` authority map instead of a root
-`CONTEXT.md`. Skills that ask for domain context should start from
-`docs/README.md`, then follow product, workflow, decision, and plan authority
-from there. See `docs/agents/domain.md`.
+This repository uses a multi-context layout, routed through a root
+`CONTEXT-MAP.md` with context-specific `CONTEXT.md` files and ADRs. See
+`docs/agents/domain.md`.

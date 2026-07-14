@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { EXECUTION_AUDIT_STORAGE_KEY } from '../storage/audit';
+import { TASK_RUNTIME_STORAGE_KEY } from '../storage/taskRuntime';
 import { useTaskLifecycle } from './useTaskLifecycle';
 
 function TaskLifecycleHarness() {
@@ -33,6 +34,7 @@ function TaskLifecycleHarness() {
 describe('useTaskLifecycle', () => {
   it('initializes a task in planning and only ticks while executing', () => {
     localStorage.removeItem(EXECUTION_AUDIT_STORAGE_KEY);
+    localStorage.removeItem(TASK_RUNTIME_STORAGE_KEY);
 
     render(<TaskLifecycleHarness />);
 
@@ -48,6 +50,7 @@ describe('useTaskLifecycle', () => {
 
   it('logs valid lifecycle transitions to the execution audit store', () => {
     localStorage.removeItem(EXECUTION_AUDIT_STORAGE_KEY);
+    localStorage.removeItem(TASK_RUNTIME_STORAGE_KEY);
 
     render(<TaskLifecycleHarness />);
 
@@ -67,5 +70,26 @@ describe('useTaskLifecycle', () => {
       from: 'reviewing',
       to: 'done',
     });
+  });
+
+  it('restores persisted task runtime state and clears it on completion', async () => {
+    localStorage.setItem(
+      TASK_RUNTIME_STORAGE_KEY,
+      JSON.stringify({
+        actualMinutes: 10,
+        state: 'reviewing',
+        taskId: 'task-wire-overview',
+        updatedAt: '2026-05-24T00:00:00.000Z',
+      }),
+    );
+
+    render(<TaskLifecycleHarness />);
+
+    expect(await screen.findByRole('heading', { name: 'reviewing' })).toBeInTheDocument();
+    expect(screen.getByText('Actual minutes: 10')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
+
+    expect(localStorage.getItem(TASK_RUNTIME_STORAGE_KEY)).toBeNull();
   });
 });
