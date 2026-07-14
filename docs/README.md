@@ -1,85 +1,29 @@
 # AttentionOS Documentation
 
-This is the canonical entry point for AttentionOS documentation.
+This directory contains durable decisions, stable baselines, immutable source
+evidence, and agent-routing conventions. It does not track active work.
 
-## Read First
+Start with the repository [Context Map](../CONTEXT-MAP.md). Use
+[GitHub Issues](https://github.com/YannJY02/AttentionOS/issues) and the
+[Wayfinder map](https://github.com/YannJY02/AttentionOS/issues/8) for current
+tasks, requirement gaps, status, and sequencing.
 
-1. `governance/project-state.md` — current recovery state, active work, blockers, and next action.
-2. `product/MASTER_PRODUCT_PLAN.zh-CN.md` — product and vision baseline.
-3. `workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` — workflow semantic baseline.
-4. `plans/2026-05-23-attentionos-release-candidate-requirements-ledger.md` — active release-candidate coverage ledger across the product baseline, workflow baseline, and original user-source requirements.
-5. `plans/2026-05-24-attentionos-release-readiness-report.md` — final release-candidate readiness report for the current local macOS build.
-6. `plans/2026-05-24-attentionos-release-candidate-owner-decision-packet.md` — owner reply record and remaining release-candidate validation boundaries.
-7. `plans/2026-05-10-attentionos-experience-alignment-blueprint.md` — draft blueprint for the experience-alignment workflow and `/gstack` skill gates.
-8. `plans/2026-05-13-attentionos-integration-polish-regression-slice.md` — implemented and QA-verified final integration polish and regression pass.
-9. `plans/2026-05-13-attentionos-ai-hitl-clarity-slice.md` — implemented and QA-verified AI suggestion placement and HITL clarity slice.
-10. `plans/2026-05-13-attentionos-overview-readonly-scan-slice.md` — implemented and QA-verified Overview read-only scan redesign slice.
-11. `plans/2026-05-13-attentionos-ritual-semantic-correction-slice.md` — implemented and QA-verified Ritual semantic correction slice.
-12. `plans/2026-05-13-attentionos-experience-alignment-implementation-slice.md` — implemented and QA-verified Execution Plan/Focus slice for the accepted experience work.
-13. `plans/2026-05-10-attentionos-experience-alignment-review-gate-blocker.md` — historical review-gate blocker and record of the owner-approved chat fallback.
-14. `plans/2026-05-09-phase-4-intake.md` — draft Phase 4 intake for protocol and extension scope.
-15. `plans/2026-05-09-phase-3-evolutionary-learning-ledger.md` — verified Phase 3 implementation ledger.
-16. `plans/2026-05-09-phase-2-completion-ledger.md` — Phase 2 AI reasoning closeout ledger.
-17. `governance/ai-generated-doc-workflow.md` — required routing, naming, update, and archive workflow for AI-generated docs.
-18. `work/todo.md` — non-authoritative developer intake queue for early ideas and untriaged work.
-19. `governance/documentation-automation.md` — low-risk automation and check triggers for documentation governance.
-20. `agents/README.md` — repository-specific routing for agent workflows and globally configured Matt skills.
+## Durable Documentation
 
-## Documentation Map
+| Area | Path | Authority |
+|---|---|---|
+| System decisions | [adr/](adr/) | Accepted cross-context architecture and governance decisions |
+| Product baseline | [product/MASTER_PRODUCT_PLAN.zh-CN.md](product/MASTER_PRODUCT_PLAN.zh-CN.md) | Stable product principles and scope |
+| Workflow baseline | [workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md](workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md) | Canonical workflow language and semantics |
+| Source evidence | [sources-or-raw/](sources-or-raw/) | Immutable original evidence; never rewrite |
+| Agent routing | [agents/](agents/) | Repository-specific issue, label, and domain-document conventions |
 
-| Area | Path | Purpose | Authority |
-|---|---|---|---|
-| Product baseline | `product/` | Product identity, principles, roadmap, metrics | Current product/design/development baseline |
-| Workflow semantics | `workflow/` | Three-stage/five-layer workflow model | Active source of truth for workflow language |
-| Original user sources | `sources-or-raw/` | Raw requirement prompts preserved from early design | Source evidence |
-| Implementation plans | `plans/` | Architecture, phase plans, phase ledgers, and contracts | Depends on file status |
-| App docs | `apps/` | Application/package docs that should not live beside code | Derived from package files and implementation |
-| Agent skill config | `agents/` | Project-local skill setup, issue tracker, triage labels, and domain context pointers | Derived tooling configuration; subordinate to root agent instructions and governance state |
-| Historical roadmap notes | `roadmap-execution/` | Historical references kept separate from active plans | Historical/source context only |
-| Developer intake | `work/todo.md` | Daily ideas, rough requirements, and small reminders | Non-authoritative intake queue |
-| Governance state | `governance/`, `decisions/`, `work/`, `archive/` | Recovery, proposed decisions, audits, maintenance logs, and controlled evolution | `governance/project-state.md` is recovery; `governance/` reports are non-authoritative |
+Context-specific vocabulary and decisions live beside the owning context:
 
-## Plans Directory Rule
+- [Attention Workflow context](../packages/workflow/CONTEXT.md)
+- [Attention Guidance context](../packages/guidance/CONTEXT.md)
 
-`docs/plans/` is the only active plans directory. Do not create a root-level `plans/` directory again.
+Historical plans, ledgers, reports, and governance logs remain available in Git
+history. They are not duplicated as a current control plane.
 
-Use status labels in the document body:
-
-- `Active` or `Current`: still guides implementation.
-- `Draft` or `待审批`: reference only until accepted.
-- `Historical`: retained for evidence and recovery, not the current plan.
-
-## Code-Adjacent Documentation Rule
-
-Do not put long-lived documentation in code package directories. Application and package notes belong under `docs/apps/` or another documented `docs/` subdirectory.
-
-## AI-Generated Documentation Rule
-
-AI-generated documentation must follow `governance/ai-generated-doc-workflow.md`.
-
-In short: classify first, route into `docs/`, use standardized names, update the relevant indexes/state/logs, archive applied or superseded generated proposals, and verify references before finishing.
-
-For day-to-day development, use `work/todo.md` as the only developer intake queue and `governance/development-document-lifecycle.md` as the lifecycle rule for prompts, blueprints, verification notes, audits, handoffs, and archive closeout.
-
-Run `pnpm docs:check` after documentation changes. `pnpm check` includes this
-documentation governance check before the normal project check.
-
-## Root Exceptions
-
-The repo root should stay mostly code-facing. Keep only these documentation-like exceptions outside `docs/`:
-
-- `README.md` — thin GitHub/platform entrypoint pointing here.
-- `AGENTS.md` — repo-local AI-agent instruction file.
-
-Do not recreate root-level `plans/`, `decisions/`, `sources-or-raw/`, `work/`, `archive/`, `.ai/`, `project-state.md`, or `changelog.md`.
-
-## Governance Rule
-
-Do not resolve documentation conflicts by recency alone. Use this order:
-
-1. Source evidence and command output.
-2. Accepted decisions in `decisions/`.
-3. `governance/project-state.md`.
-4. Active plans and working notes under `docs/plans/`.
-5. `governance/` audit reports and proposals.
-6. Archive or historical notes.
+Run `pnpm docs:check` after documentation changes.

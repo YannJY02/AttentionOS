@@ -1,91 +1,67 @@
 # AttentionOS Agent Instructions
 
 This file is the repo-local instruction authority for AI agents working in
-AttentionOS. Use it together with `docs/README.md`.
+AttentionOS.
 
-## Documentation Governance
+## Matt Documentation Workflow
 
-- Documentation entrypoint: `docs/README.md`.
-- Current recovery entrypoint: `docs/governance/project-state.md`.
-- Accepted authority map: `docs/decisions/2026-05-09-doc-governance-authority-map.md`.
-- Product and vision baseline: `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md`.
-- Workflow semantic baseline: `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md`.
-- Draft architecture reference: `docs/plans/2026-03-21-attentionos-v2-architecture-design.md` unless the owner explicitly accepts it.
-- Current Phase 2 implementation state: `docs/plans/2026-05-09-phase-2-completion-ledger.md` and `docs/plans/2026-05-09-phase-2-ai-reasoning-contract.md`.
-- Developer intake queue: `docs/work/todo.md`. This is non-authoritative and must not become a second project state or plans directory.
-- Development document lifecycle: `docs/governance/development-document-lifecycle.md`.
-- Documentation automation: `docs/governance/documentation-automation.md`.
+- Start with `CONTEXT-MAP.md`, then read the relevant context's `CONTEXT.md` and
+  ADRs under its `docs/adr/` directory.
+- Read `docs/adr/` for durable system-wide decisions that affect the work.
+- GitHub Issues and the Wayfinder map are the only active-work, requirement-gap,
+  and task-status authority for `YannJY02/AttentionOS`.
+- `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md` is the stable product baseline.
+- `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md` is the stable workflow
+  semantic baseline.
+- `docs/sources-or-raw/` is immutable source evidence. Do not rewrite it.
+- Put a durable context-specific decision in the nearest
+  `<context>/docs/adr/` directory. Put a cross-context decision in `docs/adr/`.
+- Update `CONTEXT-MAP.md` or the relevant `CONTEXT.md` only when routing,
+  vocabulary, ownership, invariants, or public seams change.
+- Do not create project-state files, plan ledgers, todo documents, changelogs,
+  maintenance logs, archive governance, or another issue tracker. Git preserves
+  history; GitHub Issues/Wayfinder coordinates current work.
+- Run `pnpm docs:check` after documentation changes. Automation may detect
+  drift, but it must not silently accept decisions or rewrite stable baselines
+  or raw evidence.
 
 ## Root Documentation Boundary
 
-Keep long-lived documentation under `docs/`.
+The only long-lived documentation-like files allowed at the repository root are:
 
-Allowed root documentation-like files:
-
-- `README.md` for the GitHub/platform entrypoint.
-- `AGENTS.md` for repo-local AI-agent instructions.
+- `README.md` — GitHub/platform entrypoint.
+- `AGENTS.md` — repo-local AI-agent instructions.
+- `CONTEXT-MAP.md` — domain-context routing authority.
 
 Do not recreate root-level `plans/`, `decisions/`, `sources-or-raw/`, `work/`,
-`archive/`, `.ai/`, `project-state.md`, or `changelog.md`.
+`archive/`, `.ai/`, `project-state.md`, `changelog.md`, or `todo.md`.
 
-## AI-Generated Documentation Workflow
+## Architecture Boundaries
 
-Whenever an AI agent creates, moves, or materially edits documentation, follow
-`docs/governance/ai-generated-doc-workflow.md`.
-
-Minimum required actions:
-
-1. Classify the file before writing it.
-2. Route it to the correct `docs/` subdirectory.
-3. Use the naming standard in the workflow document.
-4. Use `docs/work/todo.md` only for early intake and untriaged developer tasks.
-5. For large tasks, promote confirmed work into `docs/plans/` instead of expanding `todo.md`.
-6. Update the nearest README or index.
-7. Update `docs/governance/project-state.md` only when current truth, active work, blockers, or next action changed.
-8. Append `docs/governance/changelog.md` for durable user-facing or project-facing changes.
-9. Append `docs/governance/maintenance-log.md` for governance maintenance actions.
-10. Move accepted, applied, or superseded AI-generated proposals and temporary working docs to `docs/archive/`.
-11. Run `pnpm docs:check` and targeted reference checks before finishing.
-
-## Authority Order
-
-When documents disagree, do not choose by recency, length, or formatting polish.
-Use this order:
-
-1. Immutable source evidence and fresh command output.
-2. Accepted decisions in `docs/decisions/`.
-3. `docs/governance/project-state.md`.
-4. Active plans and working notes under `docs/plans/` and `docs/work/`.
-5. Governance reports, stale reports, and proposals under `docs/governance/`.
-6. Archived or historical material under `docs/archive/`.
-
-## Permission Boundaries
-
-- `docs/sources-or-raw/` is read-only evidence. Do not rewrite raw sources.
-- `docs/work/todo.md` is the only developer todo file. Keep it short, and route confirmed work to plans, decisions, project-state, changelog, or archive.
-- AI may draft decisions with `status: proposed`, but must not mark them accepted, rejected, or superseded without explicit user confirmation.
-- AI may archive generated proposals after they are accepted or applied.
-- AI must not archive raw sources, accepted baselines, or key current-state documents without explicit user confirmation.
-- Editing this `AGENTS.md` changes future-agent authority. Draft changes in `docs/governance/proposed-updates/` unless the user explicitly asks to update repo-local instructions.
-
-## Documentation Automation
-
-- Run `pnpm docs:check` after documentation-related changes.
-- `pnpm check` includes `pnpm docs:check` before the normal Turbo check.
-- `.githooks/pre-commit` is prepared to run `pnpm docs:check` before commits after `pnpm hooks:install`.
-- Automation may report or block obvious documentation drift, but it must not silently accept decisions, rewrite raw sources, modify product/workflow baselines, or change this `AGENTS.md` file.
+- Attention Workflow lives in `packages/workflow` and is the sole owner and
+  mutator of workflow state.
+- Attention Guidance lives in `packages/guidance`, consumes immutable
+  `WorkflowFacts`, and returns estimates, suggestions, metrics, and reminder
+  policy without mutating workflow state.
+- Concrete persistence, filesystem, Tauri, notification, and AI-provider I/O
+  belongs behind explicit adapters in `apps/desktop/src/adapters`.
+- Desktop may depend on Workflow and Guidance; Guidance may depend on Workflow;
+  Workflow must not depend on Guidance or desktop; packages must not import
+  desktop internals.
+- Import packages through their public entrypoints. Do not recreate removed
+  legacy packages or private-subpath dependencies.
 
 ## Project Development
 
-- AttentionOS V2 is a personal attention and workflow/context system. Start from
-  `docs/README.md` and `docs/governance/project-state.md` before changing code.
-- Treat the product and workflow baselines linked above as authoritative. The
-  architecture plan remains a draft reference unless the owner accepts it.
-- Search current documentation and existing implementation before adding code.
+- AttentionOS V2 is a personal attention and workflow/context system. Start
+  from `CONTEXT-MAP.md` before changing code.
+- Treat the linked product and workflow baselines as authoritative. Use current
+  code, tests, command output, and accepted ADRs to resolve implementation facts.
+- Search current documentation and implementation before adding code.
 - Keep behavior changes small and leave a targeted regression check for
   non-trivial logic.
 - The workspace is a pnpm/Turborepo monorepo. The desktop app lives under
-  `apps/desktop`; shared implementation lives under `packages/`.
+  `apps/desktop`; shared domain implementation lives under `packages/`.
 
 Common commands:
 
@@ -96,6 +72,7 @@ pnpm build
 pnpm check
 pnpm lint
 pnpm docs:check
+pnpm boundaries:check
 ```
 
 ## Task Completion Git Workflow
@@ -127,6 +104,6 @@ Use the five canonical Matt Pocock triage labels without overrides. See
 
 ### Domain Docs
 
-This repository uses a multi-context layout, routed through a root
-`CONTEXT-MAP.md` with context-specific `CONTEXT.md` files and ADRs. See
+This repository uses a multi-context layout, routed through `CONTEXT-MAP.md`
+with context-specific `CONTEXT.md` files and ADRs. See
 `docs/agents/domain.md`.

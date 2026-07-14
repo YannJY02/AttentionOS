@@ -23,8 +23,8 @@
 ## 2. 语义来源（回顾入口）
 
 1. 用户原始需求：`docs/sources-or-raw/user-original-long-prompts.zh-CN.md`
-2. 历史 roadmap 执行入口：`docs/roadmap-execution/README.md`
-3. 当前仓库未保留旧 Sprint E/F/G/H 原始文件；若后续恢复，放入 `docs/roadmap-execution/` 并更新索引。
+2. 当前工作与需求缺口：GitHub Issues 与 Wayfinder map。
+3. 历史 Sprint、roadmap、计划和验收记录：Git 历史；不再作为当前控制面保留副本。
 
 ---
 
