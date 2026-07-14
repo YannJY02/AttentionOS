@@ -1,4 +1,5 @@
-import type { TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
+import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   AI_SUGGESTIONS_STORAGE_KEY,

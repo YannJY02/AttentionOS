@@ -1,4 +1,4 @@
-import type { V2Entity } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 import { ChevronRight } from 'lucide-react';
 
 interface HierarchyBreadcrumbProps {

@@ -1,5 +1,4 @@
-import type { HierarchyLayer, V2Entity } from '@attentionos/core';
-import { hierarchyNavMachine } from '@attentionos/machines';
+import { type HierarchyLayer, hierarchyNavMachine, type V2Entity } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { useMemo } from 'react';
 import { findHierarchyEntity, listHierarchyEntities } from '../storage/hierarchy';

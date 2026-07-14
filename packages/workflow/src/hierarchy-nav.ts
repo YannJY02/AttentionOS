@@ -1,5 +1,5 @@
-import type { HierarchyLayer } from '@attentionos/core';
 import { assign, setup } from 'xstate';
+import type { HierarchyLayer } from './types';
 
 // ── Context ───────────────────────────────────────────────────────────────────
 

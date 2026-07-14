@@ -1,4 +1,4 @@
-import type { V2AuditLogEntry } from '@attentionos/core';
+import type { V2AuditLogEntry } from '@attentionos/workflow';
 import { queuePersistAppState } from './persistence';
 import { recordMalformedStorageEntry } from './storageRecovery';
 

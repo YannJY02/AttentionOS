@@ -2,6 +2,7 @@
 
 ## 2026-07-14
 
+- Added `packages/workflow` as the owner of canonical workflow types, immutable Workflow Facts, hierarchy rules, validation, and state machines; desktop hierarchy storage now delegates domain mutations to that package.
 - Removed the disconnected server, Supabase, storage, SDK, MCP, sync, and policy placeholder surfaces from the accepted desktop-only runtime; preserved their prior implementation in the normalization baseline and Git history.
 - Required completed tasks and tracked issues with repository changes to end with a scoped automatic commit and normal push, while forbidding unrelated staging, empty tracker-only commits, skipped hooks, and force pushes.
 - Consolidated repo-local AI instructions into `AGENTS.md`, removed `CLAUDE.md`, and updated active documentation and checks to use the single instruction authority.

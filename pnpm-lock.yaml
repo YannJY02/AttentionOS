@@ -71,9 +71,9 @@ importers:
       '@attentionos/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@attentionos/machines':
+      '@attentionos/workflow':
         specifier: workspace:*
-        version: link:../../packages/machines
+        version: link:../../packages/workflow
       '@tailwindcss/vite':
         specifier: ^4.2.4
         version: 4.2.4(vite@7.3.1(@types/node@25.5.0)(jiti@2.7.0)(lightningcss@1.32.0))
@@ -172,6 +172,10 @@ importers:
         version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/core:
+    dependencies:
+      '@attentionos/workflow':
+        specifier: workspace:*
+        version: link:../workflow
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -182,9 +186,19 @@ importers:
 
   packages/machines:
     dependencies:
-      '@attentionos/core':
+      '@attentionos/workflow':
         specifier: workspace:*
-        version: link:../core
+        version: link:../workflow
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@25.5.0)(happy-dom@17.6.3)(jiti@2.7.0)(lightningcss@1.32.0)
+
+  packages/workflow:
+    dependencies:
       xstate:
         specifier: ^5.28.0
         version: 5.28.0

@@ -1,9 +1,9 @@
 import type {
   AISuggestion,
   TaskDecompositionSuggestion,
-  V2WorkflowStage,
   WorkflowOptimizationSuggestion,
 } from '@attentionos/core';
+import type { V2WorkflowStage } from '@attentionos/workflow';
 import { queuePersistAppState } from './persistence';
 import { recordMalformedStorageEntry } from './storageRecovery';
 

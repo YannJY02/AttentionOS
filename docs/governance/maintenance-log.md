@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-07-14 14:15 CST
+
+- Task: execute Wayfinder ticket #16 by establishing the Attention Workflow context package.
+- Ownership moved: canonical workflow types/constants, immutable Workflow Facts, hierarchy validation and pure state changes, and the existing XState machines with their regression tests.
+- Desktop boundary: `apps/desktop/src/storage/hierarchy.ts` now performs local persistence and audit side effects while delegating hierarchy changes to the Workflow public API.
+- Compatibility boundary: `packages/core` temporarily re-exports Workflow types and `packages/machines` temporarily re-exports Workflow machines; both remain scheduled for deletion in issue #19.
+
 ## 2026-07-14 14:03 CST
 
 - Task: execute Wayfinder ticket #15 by removing disconnected infrastructure from the accepted desktop-only runtime.

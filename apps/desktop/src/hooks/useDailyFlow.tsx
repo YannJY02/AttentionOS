@@ -1,4 +1,4 @@
-import { dailyFlowMachine } from '@attentionos/machines';
+import { dailyFlowMachine } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import type { EventFrom, SnapshotFrom } from 'xstate';

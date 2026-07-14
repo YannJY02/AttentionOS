@@ -1,4 +1,4 @@
-import type { V2WorkflowStage } from '@attentionos/core';
+import type { V2WorkflowStage } from './types';
 
 export type AgentDailyFlowEvent =
   | { readonly type: 'START_EXECUTION'; readonly taskId: string }

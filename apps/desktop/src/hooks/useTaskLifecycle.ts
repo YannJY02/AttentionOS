@@ -1,4 +1,4 @@
-import { taskLifecycleMachine } from '@attentionos/machines';
+import { taskLifecycleMachine } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { useEffect, useRef } from 'react';
 import { logTaskLifecycleTransition } from '../storage/audit';

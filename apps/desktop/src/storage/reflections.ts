@@ -1,4 +1,4 @@
-import type { V2Entity } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 import { queuePersistAppState } from './persistence';
 
 export const REFLECTION_STORAGE_KEY = 'attentionos.reflections.v1';

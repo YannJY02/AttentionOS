@@ -1,4 +1,5 @@
-import type { V2AttentionObservationRecord, V2AuditLogEntry, V2Entity } from '@attentionos/core';
+import type { V2AttentionObservationRecord } from '@attentionos/core';
+import type { V2AuditLogEntry, V2Entity } from '@attentionos/workflow';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AI_SUGGESTIONS_STORAGE_KEY } from './aiSuggestions';
 import { EXECUTION_AUDIT_STORAGE_KEY } from './audit';

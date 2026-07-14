@@ -1,4 +1,4 @@
-import type { HierarchyLayer, V2Entity } from '@attentionos/core';
+import type { HierarchyLayer, V2Entity } from '@attentionos/workflow';
 import { ChevronRight, Play } from 'lucide-react';
 
 interface EntityCardProps {

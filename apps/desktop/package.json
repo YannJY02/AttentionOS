@@ -14,7 +14,7 @@
     "@attentionos/ai": "workspace:*",
     "@attentionos/attention-engine": "workspace:*",
     "@attentionos/core": "workspace:*",
-    "@attentionos/machines": "workspace:*",
+    "@attentionos/workflow": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@tauri-apps/api": "^2",
     "@xstate/react": "^6.1.0",

@@ -1,4 +1,4 @@
-import type { V2Entity } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 import { ArrowRight, ArrowUp, Layers3, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useDailyFlow } from '../hooks/useDailyFlow';

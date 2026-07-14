@@ -5,7 +5,8 @@ import {
   createRetriever,
   InMemoryVectorStore,
 } from '@attentionos/ai/src/browser';
-import type { TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
+import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 
 function textToVector(input: string): readonly number[] {
   const normalized = input.toLowerCase();

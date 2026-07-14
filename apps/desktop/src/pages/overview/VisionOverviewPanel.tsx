@@ -1,4 +1,4 @@
-import type { V2Entity } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 import { CalendarDays, Flag, Milestone, Route } from 'lucide-react';
 
 interface VisionMilestone {

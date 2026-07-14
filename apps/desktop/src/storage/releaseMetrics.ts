@@ -1,4 +1,4 @@
-import type { V2AuditLogEntry, V2Entity } from '@attentionos/core';
+import type { V2AuditLogEntry, V2Entity } from '@attentionos/workflow';
 import { readAISuggestions } from './aiSuggestions';
 import { readExecutionAuditEntries } from './audit';
 import { readHierarchyEntities } from './hierarchy';

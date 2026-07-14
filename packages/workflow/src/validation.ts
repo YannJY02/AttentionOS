@@ -1,4 +1,4 @@
-import type { TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
+import type { TaskDecompositionProposal, V2Entity } from './types';
 
 const HIERARCHY_LAYERS = new Set(['vision', 'area', 'goal', 'project', 'task']);
 const PROJECT_SIGNALS = new Set(['deliverable', 'multi_block', 'context_switch', 'branching']);
@@ -10,7 +10,7 @@ interface HierarchyValidationOptions {
 }
 
 export function validateTaskDecompositionSuggestion(
-  suggestion: TaskDecompositionSuggestion,
+  suggestion: TaskDecompositionProposal,
 ): string[] {
   const errors: string[] = [];
 

@@ -1,4 +1,9 @@
-import type { TaskDecompositionSuggestion, V2AuditLogEntry, V2Entity } from '@attentionos/core';
+import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import {
+  type V2AuditLogEntry,
+  type V2Entity,
+  validateTaskDecompositionSuggestion,
+} from '@attentionos/workflow';
 import {
   markTaskDecompositionApplied,
   markTaskDecompositionRejected,
@@ -15,9 +20,8 @@ import {
   archiveAISuggestionCreatedTasks,
   restoreArchivedAISuggestionTasks,
 } from '../storage/hierarchy';
-import { validateTaskDecompositionSuggestion } from '../storage/taskValidation';
 
-export { validateTaskDecompositionSuggestion } from '../storage/taskValidation';
+export { validateTaskDecompositionSuggestion } from '@attentionos/workflow';
 
 interface ApproveTaskDecompositionInput {
   readonly reviewer?: string;

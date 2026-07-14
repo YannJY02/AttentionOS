@@ -1,4 +1,4 @@
-import type { HierarchyLayer } from '@attentionos/core';
+import type { HierarchyLayer } from '@attentionos/workflow';
 import { AlertTriangle, GitBranch, Inbox, TrendingUp } from 'lucide-react';
 import { getLearningSnapshot } from '../../storage/learning';
 import { listRitualFollowUpInputs } from '../../storage/reflections';

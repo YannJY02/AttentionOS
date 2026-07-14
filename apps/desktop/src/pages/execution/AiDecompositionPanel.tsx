@@ -1,4 +1,5 @@
-import type { TaskDecompositionSuggestion, V2Entity } from '@attentionos/core';
+import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import type { V2Entity } from '@attentionos/workflow';
 import { Bot, CheckCircle2, RotateCcw, ShieldCheck, WandSparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { createLocalTaskDecompositionSuggestion } from '../../ai/taskDecomposition';

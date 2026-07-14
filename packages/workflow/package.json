@@ -1,5 +1,5 @@
 {
-  "name": "@attentionos/core",
+  "name": "@attentionos/workflow",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "test": "vitest run --reporter=verbose"
   },
   "dependencies": {
-    "@attentionos/workflow": "workspace:*"
+    "xstate": "^5.28.0"
   },
   "devDependencies": {
     "typescript": "catalog:",

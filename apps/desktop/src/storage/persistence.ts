@@ -1,5 +1,5 @@
+import { validateHierarchySnapshotPayload } from '@attentionos/workflow';
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import { validateHierarchySnapshotPayload } from './taskValidation';
 
 export const APP_STATE_SNAPSHOT_STORAGE_KEY = 'attentionos.persistence.snapshot.v1';
 export const APP_STATE_BACKUP_STORAGE_KEY = 'attentionos.persistence.backups.v1';

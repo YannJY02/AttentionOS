@@ -1,4 +1,4 @@
-import { meditationMachine } from '@attentionos/machines';
+import { meditationMachine } from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { Pause, Play, SkipForward } from 'lucide-react';
 import { useEffect, useRef } from 'react';

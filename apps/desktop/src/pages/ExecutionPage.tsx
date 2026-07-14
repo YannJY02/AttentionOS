@@ -1,9 +1,9 @@
-import type { V2Entity } from '@attentionos/core';
 import {
   type ExecutionMode,
   executionModeMachine,
   hasExecutionFocusTarget,
-} from '@attentionos/machines';
+  type V2Entity,
+} from '@attentionos/workflow';
 import { useMachine } from '@xstate/react';
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';

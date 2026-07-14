@@ -12,12 +12,11 @@ import type {
   EntityType,
   HierarchyLayer,
   RelationType,
-  V2AttentionObservationRecord,
   V2AuditLogEntry,
   V2Edge,
   V2Entity,
   V2WorkflowStage,
-} from '../src/v2-types';
+} from '../src/types';
 
 // ── Type-level tests ──────────────────────────────────────────────────────────
 
@@ -53,13 +52,6 @@ describe('V2AuditLogEntry type shape', () => {
     expectTypeOf<V2AuditLogEntry>().toHaveProperty('actor');
     expectTypeOf<V2AuditLogEntry>().toHaveProperty('action');
     expectTypeOf<V2AuditLogEntry>().toHaveProperty('details');
-  });
-});
-
-describe('V2AttentionObservationRecord type shape', () => {
-  it('has score and breakdown', () => {
-    expectTypeOf<V2AttentionObservationRecord>().toHaveProperty('score');
-    expectTypeOf<V2AttentionObservationRecord>().toHaveProperty('breakdown');
   });
 });
 

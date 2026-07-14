@@ -1,4 +1,4 @@
-import type { HierarchyLayer, V2Entity } from '@attentionos/core';
+import type { HierarchyLayer, V2Entity } from '@attentionos/workflow';
 import { EntityCard } from './EntityCard';
 
 const EMPTY_COPY: Record<HierarchyLayer, { readonly body: string; readonly title: string }> = {

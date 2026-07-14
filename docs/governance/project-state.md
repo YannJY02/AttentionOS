@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-07-14 14:03 CST
+Updated: 2026-07-14 14:15 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -25,6 +25,7 @@ Status: active
 - This repo is AttentionOS V2, a personal attention and workflow/context system. Evidence: `AGENTS.md`, `package.json`, and the product baseline.
 - Repository normalization is active under Wayfinder map [#8](https://github.com/YannJY02/AttentionOS/issues/8) on `codex/attentionos-normalization`; commit `b251c57` is the preserved pre-migration rollback baseline.
 - The accepted runtime is the local desktop app. Issue #15 removed the disconnected server, Supabase, storage, SDK, MCP, sync, and policy placeholder surfaces; older plans and logs that name them are historical baseline evidence, not current runtime ownership.
+- `packages/workflow` is now the owner of canonical workflow types, immutable Workflow Facts, hierarchy validation/mutation rules, and the Ritual/Overview/Execution state machines. Desktop hierarchy storage keeps only local persistence and audit side effects; the temporary `packages/machines` and `packages/core` compatibility surfaces remain until their later retirement ticket.
 - The product and vision baseline is `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md`, which declares itself the product/design/development/acceptance baseline.
 - The workflow semantic baseline is `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md`, which declares the three-stage/five-layer model as active source of truth.
 - Original user prompt evidence is categorized under `docs/sources-or-raw/user-original-long-prompts.zh-CN.md`.
@@ -132,7 +133,7 @@ Status: active
 
 ## Active Work
 
-- Follow the native dependency chain in Wayfinder map #8. The next unblocked slice is #16, which moves existing Workflow behavior into `packages/workflow` without changing product behavior.
+- Follow the native dependency chain in Wayfinder map #8. The next unblocked slice is #17, which moves attention estimation, suggestions, metrics, and reminder policy into `packages/guidance` without changing product behavior.
 - Keep all project documentation discoverable through `docs/README.md` and prevent new root-level documentation sprawl.
 - Keep `docs/governance/proposed-updates/` as a pending-only queue; archive applied proposals under `docs/archive/governance/proposed-updates/`.
 - Keep `docs/work/todo.md` short and route confirmed work into the proper authority surface.
@@ -156,4 +157,4 @@ Status: active
 
 ## Next Action
 
-Execute Wayfinder ticket #16: establish the Attention Workflow context package and migrate existing Workflow ownership with targeted regression checks.
+Execute Wayfinder ticket #17: establish the Attention Guidance context package and migrate existing Guidance ownership with targeted regression checks.
