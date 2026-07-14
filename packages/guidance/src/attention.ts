@@ -1,15 +1,15 @@
 import type {
-  ActiveProbeResult,
   AttentionEstimate,
   AttentionObservation,
   AttentionState,
-  PassiveSignal,
+  ReportedBehaviorSignal,
+  ReportedPerformanceSignal,
 } from './types';
 
 export interface EstimatorInput {
   observation?: AttentionObservation;
-  passiveSignal?: PassiveSignal;
-  probe?: ActiveProbeResult;
+  reportedBehaviorSignal?: ReportedBehaviorSignal;
+  reportedPerformance?: ReportedPerformanceSignal;
   now?: Date;
 }
 
@@ -45,7 +45,7 @@ function scoreSubjective(observation?: AttentionObservation): number {
   return clamp(0.35 * clarity + 0.3 * energy + 0.25 * distractibility + 0.1 * stress);
 }
 
-function scorePassive(signal?: PassiveSignal): number {
+function scoreReportedBehavior(signal?: ReportedBehaviorSignal): number {
   if (!signal) {
     return 0.5;
   }
@@ -61,18 +61,15 @@ function scorePassive(signal?: PassiveSignal): number {
   );
 }
 
-function scoreBehavior(probe?: ActiveProbeResult): number {
-  if (!probe) {
+function scoreReportedPerformance(signal?: ReportedPerformanceSignal): number {
+  if (!signal) {
     return 0.5;
   }
 
-  const rtScore = clamp((1800 - probe.reactionTimeMs) / 1400);
-  const inhibitionScore = clamp(1 - probe.inhibitionErrorRate);
-  const difficultyPenalty = probe.selfReportedDifficulty
-    ? clamp(normalizeLikertToUnit(probe.selfReportedDifficulty)) * 0.2
-    : 0;
+  const rtScore = clamp((1800 - signal.reactionTimeMs) / 1400);
+  const inhibitionScore = clamp(1 - signal.inhibitionErrorRate);
 
-  return clamp(0.6 * rtScore + 0.4 * inhibitionScore - difficultyPenalty);
+  return clamp(0.6 * rtScore + 0.4 * inhibitionScore);
 }
 
 function classifyState(score: number, subjectiveEnergy?: number): AttentionState {
@@ -93,33 +90,39 @@ function classifyState(score: number, subjectiveEnergy?: number): AttentionState
 
 export function estimateAttentionState(input: EstimatorInput): AttentionEstimate {
   const subjectiveScore = scoreSubjective(input.observation);
-  const passiveScore = scorePassive(input.passiveSignal ?? input.observation?.passive);
-  const behavioralScore = scoreBehavior(input.probe);
+  const reportedBehaviorScore = scoreReportedBehavior(
+    input.reportedBehaviorSignal ?? input.observation?.reportedBehavior,
+  );
+  const reportedPerformanceScore = scoreReportedPerformance(input.reportedPerformance);
 
-  const score = clamp(0.45 * subjectiveScore + 0.3 * passiveScore + 0.25 * behavioralScore);
+  const score = clamp(
+    0.45 * subjectiveScore + 0.3 * reportedBehaviorScore + 0.25 * reportedPerformanceScore,
+  );
 
   const availableSignals = [
     input.observation,
-    input.passiveSignal ?? input.observation?.passive,
-    input.probe,
+    input.reportedBehaviorSignal ?? input.observation?.reportedBehavior,
+    input.reportedPerformance,
   ].filter(Boolean).length;
 
   const confidence = clamp(0.4 + availableSignals * 0.2);
-  const uncertainty = clamp(1 - confidence + Math.abs(subjectiveScore - passiveScore) * 0.2);
+  const uncertainty = clamp(
+    1 - confidence + Math.abs(subjectiveScore - reportedBehaviorScore) * 0.2,
+  );
 
   const state = classifyState(score, input.observation?.subjective.energy);
   const reasons: string[] = [];
 
-  if (passiveScore < 0.45) {
-    reasons.push('High switching or fragmented sessions detected.');
+  if (reportedBehaviorScore < 0.45) {
+    reasons.push('User-reported switching or fragmented sessions are high.');
   }
 
   if (subjectiveScore < 0.45) {
     reasons.push('Self-report indicates low energy or high distractibility.');
   }
 
-  if (behavioralScore < 0.45) {
-    reasons.push('Probe suggests slower reaction or inhibition strain.');
+  if (reportedPerformanceScore < 0.45) {
+    reasons.push('User-reported reaction or inhibition measures indicate strain.');
   }
 
   if (reasons.length === 0) {
@@ -136,13 +139,13 @@ export function estimateAttentionState(input: EstimatorInput): AttentionEstimate
     reasons,
     breakdown: {
       subjectiveScore,
-      passiveScore,
-      behavioralScore,
+      reportedBehaviorScore,
+      reportedPerformanceScore,
     },
   };
 }
 
-export function suggestProbeCadence(state: AttentionState): {
+export function suggestCalibrationCadence(state: AttentionState): {
   recommendedInMinutes: number;
   reason: string;
 } {
@@ -150,22 +153,22 @@ export function suggestProbeCadence(state: AttentionState): {
     case 'focused':
       return {
         recommendedInMinutes: 180,
-        reason: 'User is stable; keep probe cadence low to avoid interruptions.',
+        reason: 'User is stable; keep calibration check-ins infrequent to avoid interruptions.',
       };
     case 'drifting':
       return {
         recommendedInMinutes: 90,
-        reason: 'Mild drift detected; medium cadence helps early correction.',
+        reason: 'Mild drift detected; a later calibration check-in may support correction.',
       };
     case 'overloaded':
       return {
         recommendedInMinutes: 60,
-        reason: 'Overload risk is elevated; check again after short intervention.',
+        reason: 'Overload risk is elevated; calibrate again after a short intervention.',
       };
     case 'fatigued':
       return {
         recommendedInMinutes: 120,
-        reason: 'Fatigue state; avoid over-testing and prioritize recovery.',
+        reason: 'Fatigue state; avoid repeated check-ins and prioritize recovery.',
       };
   }
 }

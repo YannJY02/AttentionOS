@@ -7,13 +7,13 @@ export interface SubjectiveAttentionReport {
   readonly stress?: number;
 }
 
-export type PassiveForegroundCategory = 'work' | 'communication' | 'social' | 'learning' | 'other';
+export type ReportedForegroundCategory = 'work' | 'communication' | 'social' | 'learning' | 'other';
 
-export interface PassiveSignal {
+export interface ReportedBehaviorSignal {
   readonly timestamp: string;
   readonly appSwitchesLast15Min: number;
   readonly fragmentedSessionCount: number;
-  readonly foregroundCategory: PassiveForegroundCategory;
+  readonly foregroundCategory: ReportedForegroundCategory;
   readonly hourOfDay: number;
 }
 
@@ -21,23 +21,20 @@ export interface AttentionObservation {
   readonly id: string;
   readonly timestamp: string;
   readonly subjective: SubjectiveAttentionReport;
-  readonly passive?: PassiveSignal;
-  readonly source: 'cli' | 'integration' | 'plugin';
+  readonly reportedBehavior?: ReportedBehaviorSignal;
+  readonly source: 'manual' | 'integration' | 'plugin';
 }
 
-export interface ActiveProbeResult {
-  readonly id: string;
+export interface ReportedPerformanceSignal {
   readonly timestamp: string;
   readonly reactionTimeMs: number;
   readonly inhibitionErrorRate: number;
-  readonly trialCount: number;
-  readonly selfReportedDifficulty?: number;
 }
 
 export interface AttentionFeatureBreakdown {
   readonly subjectiveScore: number;
-  readonly passiveScore: number;
-  readonly behavioralScore: number;
+  readonly reportedBehaviorScore: number;
+  readonly reportedPerformanceScore: number;
 }
 
 export interface AttentionEstimate {
@@ -52,6 +49,7 @@ export interface AttentionEstimate {
 }
 
 export interface V2AttentionObservationRecord {
+  readonly source: 'manual_calibration' | 'legacy_manual_calibration';
   readonly id: string;
   readonly state: AttentionState;
   readonly score: number;

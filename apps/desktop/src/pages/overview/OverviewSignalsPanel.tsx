@@ -19,9 +19,13 @@ function pluralize(count: number, singular: string, plural = `${singular}s`): st
 function riskLabel(snapshot: ReturnType<typeof getLearningSnapshot>): string {
   const { attention, tasks } = snapshot.report;
 
+  if (attention.sampleCount === 0 && tasks.oversizedActiveTaskCount === 0) {
+    return 'Needs calibration';
+  }
+
   if (
-    attention.overloadedRatio >= 0.33 ||
-    attention.averageScore < 0.6 ||
+    (attention.sampleCount > 0 &&
+      (attention.overloadedRatio >= 0.33 || attention.averageScore < 0.6)) ||
     tasks.oversizedActiveTaskCount > 0
   ) {
     return 'Elevated risk';
@@ -39,8 +43,8 @@ export function OverviewSignalsPanel({
   const markedRitualInputs = listRitualFollowUpInputs();
   const attentionSamples =
     attention.sampleCount > 0
-      ? `${pluralize(attention.sampleCount, 'attention sample')} in the current window`
-      : 'No attention samples yet';
+      ? `${pluralize(attention.sampleCount, 'user-provided attention sample')} in the current window`
+      : 'No user-provided attention observations';
 
   return (
     <section
@@ -55,8 +59,10 @@ export function OverviewSignalsPanel({
           </p>
           <h2 className="mt-2 font-semibold text-xl text-stone-950">{riskLabel(snapshot)}</h2>
           <p className="mt-2 text-sm text-stone-600">
-            {formatPercent(attention.overloadedRatio)} overloaded or fatigued samples;{' '}
-            {tasks.oversizedActiveTaskCount} oversized active tasks.
+            {attention.sampleCount > 0
+              ? `${formatPercent(attention.overloadedRatio)} overloaded or fatigued samples`
+              : 'No user-provided attention observations'}
+            ; {tasks.oversizedActiveTaskCount} oversized active tasks.
           </p>
         </div>
 
@@ -66,11 +72,20 @@ export function OverviewSignalsPanel({
             Trend
           </p>
           <h2 className="mt-2 font-semibold text-xl text-stone-950">
-            {formatPercent(attention.averageScore)} average attention
+            {attention.sampleCount > 0
+              ? `${formatPercent(attention.averageScore)} average attention`
+              : 'No attention data'}
           </h2>
           <p className="mt-2 text-sm text-stone-600">
-            {attentionSamples}; {formatPercent(attention.volatility)} volatility;{' '}
-            {formatPercent(tasks.completionRatio)} completion.
+            {attentionSamples};{' '}
+            {attention.sampleCount > 0
+              ? `${formatPercent(attention.volatility)} volatility`
+              : 'complete a manual calibration in Settings'}
+            ;{' '}
+            {tasks.totalTasks > 0
+              ? `${formatPercent(tasks.completionRatio)} task completion`
+              : 'no task completion evidence'}
+            .
           </p>
         </div>
 

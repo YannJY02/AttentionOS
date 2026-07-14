@@ -1,7 +1,7 @@
 import { createReleaseMetricsSnapshot, type ReleaseMetricsSnapshot } from '@attentionos/guidance';
 import { readAISuggestions } from './aiSuggestions';
 import { readExecutionAuditEntries } from './audit';
-import { readHierarchyEntities } from './hierarchy';
+import { readUserHierarchyEntities } from './hierarchy';
 import { getLearningSnapshot, readLearningObservations } from './learning';
 import { readReflections } from './reflections';
 import { readReminderSettings } from './reminderSettings';
@@ -18,7 +18,7 @@ export function getReleaseMetricsSnapshot(): ReleaseMetricsSnapshot {
     suggestions: readAISuggestions(),
     workflow: {
       auditEntries: readExecutionAuditEntries(),
-      entities: readHierarchyEntities(),
+      entities: readUserHierarchyEntities(),
     },
   });
 }

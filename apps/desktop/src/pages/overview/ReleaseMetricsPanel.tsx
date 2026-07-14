@@ -5,6 +5,7 @@ import {
 } from '../../adapters/storage/releaseMetrics';
 
 const STATUS_STYLES = {
+  'no-data': 'border-stone-200 bg-stone-100 text-stone-700',
   review: 'border-rose-200 bg-rose-50 text-rose-900',
   steady: 'border-emerald-200 bg-emerald-50 text-emerald-900',
   watch: 'border-amber-200 bg-amber-50 text-amber-900',
@@ -29,6 +30,11 @@ function MetricTile({ metric }: { readonly metric: ReleaseMetric }) {
 
 export function ReleaseMetricsPanel() {
   const snapshot = getReleaseMetricsSnapshot();
+  const needsAttentionCalibration = snapshot.outcomeMetrics.some(
+    (metric) =>
+      (metric.id === 'attention-ratio' || metric.id === 'switching-pressure') &&
+      metric.status === 'no-data',
+  );
 
   return (
     <section
@@ -49,6 +55,12 @@ export function ReleaseMetricsPanel() {
           {snapshot.generatedAt.slice(0, 10)}
         </p>
       </div>
+
+      {needsAttentionCalibration ? (
+        <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 text-sm">
+          Complete a manual calibration in Settings before AttentionOS reports attention outcomes.
+        </p>
+      ) : null}
 
       <div className="mt-5 grid gap-3 md:grid-cols-5">
         {snapshot.outcomeMetrics.map((metric) => (

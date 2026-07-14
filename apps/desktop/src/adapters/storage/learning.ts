@@ -4,14 +4,14 @@ import {
   type BehaviorPatternReport,
   createWorkflowOptimizationSuggestions,
   estimateAttentionState,
-  type PassiveForegroundCategory,
-  suggestProbeCadence,
+  type ReportedForegroundCategory,
+  suggestCalibrationCadence,
   type V2AttentionObservationRecord,
   type WorkflowOptimizationSuggestion,
 } from '@attentionos/guidance';
 import { readAISuggestions, saveWorkflowOptimizationSuggestion } from './aiSuggestions';
 import { readExecutionAuditEntries } from './audit';
-import { readHierarchyEntities } from './hierarchy';
+import { readUserHierarchyEntities } from './hierarchy';
 import { queuePersistAppState } from './persistence';
 import { recordMalformedStorageEntry } from './storageRecovery';
 
@@ -23,19 +23,16 @@ export interface AttentionCalibrationInput {
   readonly correctedState?: AttentionState;
   readonly distractibility: number;
   readonly energy: number;
-  readonly foregroundCategory: PassiveForegroundCategory;
+  readonly foregroundCategory: ReportedForegroundCategory;
   readonly fragmentedSessionCount: number;
   readonly inhibitionErrorRate: number;
   readonly reactionTimeMs: number;
-  readonly selfReportedDifficulty?: number;
-  readonly stress?: number;
-  readonly trialCount: number;
 }
 
 export interface AttentionCalibrationResult {
   readonly correctedFrom?: AttentionState;
   readonly observation: V2AttentionObservationRecord;
-  readonly probeCadence: ReturnType<typeof suggestProbeCadence>;
+  readonly calibrationCadence: ReturnType<typeof suggestCalibrationCadence>;
 }
 
 const DEFAULT_WINDOW = {
@@ -43,47 +40,69 @@ const DEFAULT_WINDOW = {
   startedAt: '2026-01-01T00:00:00.000Z',
 };
 
-const DEFAULT_ATTENTION_OBSERVATIONS: readonly V2AttentionObservationRecord[] = [
-  {
-    id: 'obs-focus-default',
-    state: 'focused',
-    score: 0.82,
-    confidence: 0.88,
-    breakdown: {
-      behavioralScore: 0.82,
-      passiveScore: 0.78,
-      subjectiveScore: 0.86,
-    },
-    reasons: ['completed a bounded task block'],
-    observedAt: '2026-05-09T08:30:00.000Z',
-  },
-  {
-    id: 'obs-overload-default',
-    state: 'overloaded',
-    score: 0.36,
-    confidence: 0.84,
-    breakdown: {
-      behavioralScore: 0.34,
-      passiveScore: 0.4,
-      subjectiveScore: 0.34,
-    },
-    reasons: ['rapid context switching'],
-    observedAt: '2026-05-09T10:30:00.000Z',
-  },
-];
+const LEGACY_SYNTHETIC_OBSERVATION_IDS = new Set(['obs-focus-default', 'obs-overload-default']);
 
-function parseObservations(raw: string | null): V2AttentionObservationRecord[] | null {
+interface ParsedObservations {
+  readonly changed: boolean;
+  readonly observations: readonly V2AttentionObservationRecord[];
+}
+
+interface LegacyStoredAttentionObservation
+  extends Omit<V2AttentionObservationRecord, 'breakdown' | 'source'> {
+  readonly source?: V2AttentionObservationRecord['source'];
+  readonly breakdown: {
+    readonly behavioralScore?: number;
+    readonly passiveScore?: number;
+    readonly reportedBehaviorScore?: number;
+    readonly reportedPerformanceScore?: number;
+    readonly subjectiveScore: number;
+  };
+}
+
+function normalizeStoredObservation(
+  observation: LegacyStoredAttentionObservation,
+): V2AttentionObservationRecord | null {
+  if (LEGACY_SYNTHETIC_OBSERVATION_IDS.has(observation.id)) {
+    return null;
+  }
+
+  const {
+    behavioralScore,
+    passiveScore,
+    reportedBehaviorScore,
+    reportedPerformanceScore,
+    ...breakdown
+  } = observation.breakdown;
+  return {
+    ...observation,
+    breakdown: {
+      ...breakdown,
+      reportedBehaviorScore: reportedBehaviorScore ?? passiveScore ?? 0.5,
+      reportedPerformanceScore: reportedPerformanceScore ?? behavioralScore ?? 0.5,
+    },
+    source: observation.source ?? 'legacy_manual_calibration',
+  };
+}
+
+function parseObservations(raw: string | null): ParsedObservations | null {
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed;
+      const observations = (parsed as LegacyStoredAttentionObservation[])
+        .map(normalizeStoredObservation)
+        .filter((observation): observation is V2AttentionObservationRecord => observation !== null);
+
+      return {
+        changed: JSON.stringify(observations) !== raw,
+        observations,
+      };
     }
 
     recordMalformedStorageEntry({
       error: new Error('Learning observations are not an array.'),
-      fallback: 'Using default attention observations until reviewed.',
+      fallback: 'Ignoring attention outcomes until a manual calibration is recorded.',
       payload: raw,
       storageKey: LEARNING_OBSERVATIONS_STORAGE_KEY,
     });
@@ -91,7 +110,7 @@ function parseObservations(raw: string | null): V2AttentionObservationRecord[] |
   } catch (error) {
     recordMalformedStorageEntry({
       error,
-      fallback: 'Using default attention observations until reviewed.',
+      fallback: 'Ignoring attention outcomes until a manual calibration is recorded.',
       payload: raw,
       storageKey: LEARNING_OBSERVATIONS_STORAGE_KEY,
     });
@@ -129,13 +148,26 @@ function correctedScore(state: AttentionState, estimatedScore: number): number {
 }
 
 export function readLearningObservations(): V2AttentionObservationRecord[] {
-  const parsed = parseObservations(localStorage.getItem(LEARNING_OBSERVATIONS_STORAGE_KEY));
-  if (parsed) return parsed;
+  const raw = localStorage.getItem(LEARNING_OBSERVATIONS_STORAGE_KEY);
+  if (!raw) return [];
 
-  const defaults = [...DEFAULT_ATTENTION_OBSERVATIONS];
-  localStorage.setItem(LEARNING_OBSERVATIONS_STORAGE_KEY, JSON.stringify(defaults));
-  queuePersistAppState();
-  return defaults;
+  const parsed = parseObservations(raw);
+  if (!parsed) {
+    localStorage.removeItem(LEARNING_OBSERVATIONS_STORAGE_KEY);
+    queuePersistAppState();
+    return [];
+  }
+
+  if (parsed.changed) {
+    if (parsed.observations.length > 0) {
+      localStorage.setItem(LEARNING_OBSERVATIONS_STORAGE_KEY, JSON.stringify(parsed.observations));
+    } else {
+      localStorage.removeItem(LEARNING_OBSERVATIONS_STORAGE_KEY);
+    }
+    queuePersistAppState();
+  }
+
+  return [...parsed.observations];
 }
 
 export function getLatestAttentionObservation(): V2AttentionObservationRecord | null {
@@ -155,29 +187,25 @@ export function recordAttentionCalibration(
     now,
     observation: {
       id: createObservationId(),
-      passive: {
+      reportedBehavior: {
         appSwitchesLast15Min: Math.max(0, input.appSwitchesLast15Min),
         foregroundCategory: input.foregroundCategory,
         fragmentedSessionCount: Math.max(0, input.fragmentedSessionCount),
         hourOfDay: now.getHours(),
         timestamp,
       },
-      source: 'cli',
+      source: 'manual',
       subjective: {
         clarity: input.clarity,
         distractibility: input.distractibility,
         energy: input.energy,
-        stress: input.stress,
       },
       timestamp,
     },
-    probe: {
-      id: createObservationId(),
+    reportedPerformance: {
       inhibitionErrorRate: clampUnit(input.inhibitionErrorRate),
       reactionTimeMs: Math.max(0, input.reactionTimeMs),
-      selfReportedDifficulty: input.selfReportedDifficulty,
       timestamp,
-      trialCount: Math.max(1, input.trialCount),
     },
   });
 
@@ -192,6 +220,7 @@ export function recordAttentionCalibration(
   }
 
   const observation: V2AttentionObservationRecord = {
+    source: 'manual_calibration',
     id: createObservationId(),
     breakdown: estimate.breakdown,
     confidence: correctedFrom ? Math.min(estimate.confidence, 0.72) : estimate.confidence,
@@ -210,7 +239,7 @@ export function recordAttentionCalibration(
   return {
     correctedFrom,
     observation,
-    probeCadence: suggestProbeCadence(state),
+    calibrationCadence: suggestCalibrationCadence(state),
   };
 }
 
@@ -226,7 +255,7 @@ export function getLearningSnapshot(): LearningSnapshot {
     window: DEFAULT_WINDOW,
     workflow: {
       auditEntries: readExecutionAuditEntries(),
-      entities: readHierarchyEntities(),
+      entities: readUserHierarchyEntities(),
     },
   });
 

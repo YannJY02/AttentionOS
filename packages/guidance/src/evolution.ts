@@ -168,7 +168,10 @@ export function createWorkflowOptimizationSuggestions(
     );
   }
 
-  if (report.attention.overloadedRatio >= 0.33 || report.attention.averageScore < 0.6) {
+  if (
+    report.attention.sampleCount > 0 &&
+    (report.attention.overloadedRatio >= 0.33 || report.attention.averageScore < 0.6)
+  ) {
     actions.push({
       label: 'Protect the next execution block from context switching.',
       metadata: {

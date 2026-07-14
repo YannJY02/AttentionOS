@@ -3,7 +3,7 @@ import type { BehaviorPatternReport } from './evolution-types';
 import { calculateReminderPromptBudget, type ReminderPolicySettings } from './reminders';
 import type { SuggestionStatus, V2AttentionObservationRecord } from './types';
 
-export type ReleaseMetricStatus = 'steady' | 'watch' | 'review';
+export type ReleaseMetricStatus = 'steady' | 'watch' | 'review' | 'no-data';
 
 export interface ReleaseMetric {
   readonly detail: string;
@@ -109,26 +109,43 @@ export function createReleaseMetricsSnapshot({
   const reminderPromptBudget = calculateReminderPromptBudget(reminderSettings);
   const manualCapturePerCompletion = ratio(manualCaptureCount, Math.max(completionCount, 1));
   const misjudgmentRatio = ratio(rejectedSuggestionCount, reviewableSuggestionCount);
+  const hasAttentionObservations = observations.length > 0;
+  const hasFocusStarts = startCount > 0;
+  const hasTasks = hierarchyTasks.length > 0;
+  const hasSuggestionReviews = reviewableSuggestionCount > 0;
 
   return {
     generatedAt,
     outcomeMetrics: [
       {
-        detail: `${focusedSampleCount} focused / ${observations.length} attention samples; average score ${formatPercent(learningReport.attention.averageScore)}`,
+        detail: hasAttentionObservations
+          ? `${focusedSampleCount} focused / ${observations.length} user-provided calibration samples; average score ${formatPercent(learningReport.attention.averageScore)}`
+          : 'No user-provided attention observations.',
         id: 'attention-ratio',
         label: 'Attention ratio',
-        status: learningReport.attention.averageScore >= 0.7 ? 'steady' : 'watch',
-        value: formatPercent(ratio(focusedSampleCount, observations.length)),
+        status: hasAttentionObservations
+          ? learningReport.attention.averageScore >= 0.7
+            ? 'steady'
+            : 'watch'
+          : 'no-data',
+        value: hasAttentionObservations
+          ? formatPercent(ratio(focusedSampleCount, observations.length))
+          : 'No data',
       },
       {
-        detail: `${switchingSignalCount} switching signal${switchingSignalCount === 1 ? '' : 's'}; volatility ${formatPercent(learningReport.attention.volatility)}`,
+        detail: hasAttentionObservations
+          ? `${switchingSignalCount} user-reported switching signal${switchingSignalCount === 1 ? '' : 's'}; volatility ${formatPercent(learningReport.attention.volatility)}`
+          : 'No user-provided attention observations.',
         id: 'switching-pressure',
         label: 'Switching pressure',
-        status:
-          switchingSignalCount > 0 || learningReport.attention.volatility >= 0.25
+        status: hasAttentionObservations
+          ? switchingSignalCount > 0 || learningReport.attention.volatility >= 0.25
             ? 'watch'
-            : 'steady',
-        value: formatPercent(ratio(switchingSignalCount, observations.length)),
+            : 'steady'
+          : 'no-data',
+        value: hasAttentionObservations
+          ? formatPercent(ratio(switchingSignalCount, observations.length))
+          : 'No data',
       },
       {
         detail: `${recoveryCueCount} resume cue${recoveryCueCount === 1 ? '' : 's'} after pause or interruption`,
@@ -138,21 +155,32 @@ export function createReleaseMetricsSnapshot({
         value: recoveryCueCount.toString(),
       },
       {
-        detail: `${completionCount} completed focus transition${completionCount === 1 ? '' : 's'} / ${startCount} start${startCount === 1 ? '' : 's'}`,
+        detail: hasFocusStarts
+          ? `${completionCount} completed focus transition${completionCount === 1 ? '' : 's'} / ${startCount} start${startCount === 1 ? '' : 's'}`
+          : 'No focus starts recorded yet.',
         id: 'focus-success',
         label: 'Focus success',
-        status: startCount === 0 || ratio(completionCount, startCount) >= 0.5 ? 'steady' : 'watch',
-        value: formatPercent(ratio(completionCount, startCount)),
+        status: hasFocusStarts
+          ? ratio(completionCount, startCount) >= 0.5
+            ? 'steady'
+            : 'watch'
+          : 'no-data',
+        value: hasFocusStarts ? formatPercent(ratio(completionCount, startCount)) : 'No data',
       },
       {
-        detail: `${completedTaskCount} completed / ${hierarchyTasks.length} task-layer item${hierarchyTasks.length === 1 ? '' : 's'}`,
+        detail: hasTasks
+          ? `${completedTaskCount} completed / ${hierarchyTasks.length} task-layer item${hierarchyTasks.length === 1 ? '' : 's'}`
+          : 'No task-layer items recorded yet.',
         id: 'plan-fulfillment',
         label: 'Plan fulfillment',
-        status:
-          hierarchyTasks.length === 0 || ratio(completedTaskCount, hierarchyTasks.length) >= 0.25
+        status: hasTasks
+          ? ratio(completedTaskCount, hierarchyTasks.length) >= 0.25
             ? 'steady'
-            : 'watch',
-        value: formatPercent(ratio(completedTaskCount, hierarchyTasks.length)),
+            : 'watch'
+          : 'no-data',
+        value: hasTasks
+          ? formatPercent(ratio(completedTaskCount, hierarchyTasks.length))
+          : 'No data',
       },
     ],
     guardrailMetrics: [
@@ -184,11 +212,17 @@ export function createReleaseMetricsSnapshot({
         value: `${autoAppliedSuggestionCount} auto`,
       },
       {
-        detail: `${rejectedSuggestionCount} rejected / ${reviewableSuggestionCount} reviewed; ${lowConfidenceSampleCount} low-confidence attention sample${lowConfidenceSampleCount === 1 ? '' : 's'}`,
+        detail: hasSuggestionReviews
+          ? `${rejectedSuggestionCount} rejected / ${reviewableSuggestionCount} reviewed; ${lowConfidenceSampleCount} low-confidence manual calibration sample${lowConfidenceSampleCount === 1 ? '' : 's'}`
+          : `No reviewed AI suggestions; ${lowConfidenceSampleCount} low-confidence manual calibration sample${lowConfidenceSampleCount === 1 ? '' : 's'}`,
         id: 'misjudgment',
         label: 'Misjudgment signal',
-        status: misjudgmentRatio >= 0.5 || lowConfidenceSampleCount > 0 ? 'watch' : 'steady',
-        value: formatPercent(misjudgmentRatio),
+        status: hasSuggestionReviews
+          ? misjudgmentRatio >= 0.5 || lowConfidenceSampleCount > 0
+            ? 'watch'
+            : 'steady'
+          : 'no-data',
+        value: hasSuggestionReviews ? formatPercent(misjudgmentRatio) : 'No data',
       },
     ],
   };

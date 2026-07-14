@@ -34,6 +34,14 @@ export const HIERARCHY_STORAGE_KEY = 'attentionos.hierarchy.v1';
 export const EXECUTION_FOCUS_CANDIDATE_STORAGE_KEY = 'attentionos.execution.focusCandidate.v1';
 
 const CREATED_AT = '2026-03-24T00:00:00.000Z';
+const BUILT_IN_EXAMPLE_EVIDENCE_SOURCE = 'built-in-example';
+const BUILT_IN_EXAMPLE_ENTITY_IDS = new Set([
+  'vision-personal-context-os',
+  'area-product-development',
+  'goal-phase-1-deterministic-core',
+  'project-desktop-workflow-scaffold',
+  'task-wire-overview',
+]);
 
 interface AISuggestionTaskMutationInput {
   readonly suggestionId: string;
@@ -55,6 +63,7 @@ export const DEFAULT_HIERARCHY_ENTITIES: readonly V2Entity[] = [
       'Long-term direction for protecting attention across work, recovery, and personal context.',
     status: 'active',
     properties: {
+      evidenceSource: BUILT_IN_EXAMPLE_EVIDENCE_SOURCE,
       horizon: '2026 operating direction',
       reflectionCadence: 'Weekly direction check',
       nextCheckpoint: 'Validate whether Overview points clearly into Execution.',
@@ -90,7 +99,7 @@ export const DEFAULT_HIERARCHY_ENTITIES: readonly V2Entity[] = [
     title: 'Product development',
     content: 'Shape the product around attention-first workflow transitions.',
     status: 'active',
-    properties: {},
+    properties: { evidenceSource: BUILT_IN_EXAMPLE_EVIDENCE_SOURCE },
     workflowStage: 'overview',
     parentId: 'vision-personal-context-os',
     createdAt: CREATED_AT,
@@ -103,7 +112,7 @@ export const DEFAULT_HIERARCHY_ENTITIES: readonly V2Entity[] = [
     title: 'Coherent stage experience',
     content: 'Make Ritual, Overview, and Execution feel like one attention workflow.',
     status: 'active',
-    properties: {},
+    properties: { evidenceSource: BUILT_IN_EXAMPLE_EVIDENCE_SOURCE },
     workflowStage: 'overview',
     parentId: 'area-product-development',
     createdAt: CREATED_AT,
@@ -116,7 +125,7 @@ export const DEFAULT_HIERARCHY_ENTITIES: readonly V2Entity[] = [
     title: 'Overview scan redesign',
     content: 'Make the hierarchy scan readable before the user enters focused work.',
     status: 'active',
-    properties: {},
+    properties: { evidenceSource: BUILT_IN_EXAMPLE_EVIDENCE_SOURCE },
     workflowStage: 'overview',
     parentId: 'goal-phase-1-deterministic-core',
     createdAt: CREATED_AT,
@@ -129,7 +138,10 @@ export const DEFAULT_HIERARCHY_ENTITIES: readonly V2Entity[] = [
     title: 'Clarify overview scan',
     content: 'Show layer context, direction, and the next bridge into execution.',
     status: 'active',
-    properties: { estimatedMinutes: 25 },
+    properties: {
+      estimatedMinutes: 25,
+      evidenceSource: BUILT_IN_EXAMPLE_EVIDENCE_SOURCE,
+    },
     workflowStage: 'overview',
     parentId: 'project-desktop-workflow-scaffold',
     createdAt: CREATED_AT,
@@ -203,6 +215,14 @@ export function readHierarchyEntities(): V2Entity[] {
   localStorage.setItem(HIERARCHY_STORAGE_KEY, JSON.stringify(defaults));
   queuePersistAppState();
   return defaults;
+}
+
+export function readUserHierarchyEntities(): V2Entity[] {
+  return readHierarchyEntities().filter(
+    (entity) =>
+      entity.properties.evidenceSource !== BUILT_IN_EXAMPLE_EVIDENCE_SOURCE &&
+      !BUILT_IN_EXAMPLE_ENTITY_IDS.has(entity.id),
+  );
 }
 
 export function findHierarchyEntity(id: string): V2Entity | null {

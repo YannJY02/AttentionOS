@@ -14,12 +14,28 @@ import { LEARNING_OBSERVATIONS_STORAGE_KEY } from '../adapters/storage/learning'
 import { REFLECTION_STORAGE_KEY } from '../adapters/storage/reflections';
 import { TASK_RUNTIME_STORAGE_KEY } from '../adapters/storage/taskRuntime';
 
+const TEST_REPORTED_ATTENTION_OBSERVATION = {
+  breakdown: {
+    reportedBehaviorScore: 0.36,
+    reportedPerformanceScore: 0.38,
+    subjectiveScore: 0.4,
+  },
+  confidence: 0.7,
+  id: 'test-manual-calibration',
+  observedAt: '2026-05-24T02:20:00.000Z',
+  reasons: ['User-reported switching is high.'],
+  score: 0.38,
+  source: 'manual_calibration',
+  state: 'overloaded',
+} as const;
+
 function renderApp(
   initialEntry: string,
   options: {
     hierarchyEntities?: readonly unknown[];
     keepContextCaptures?: boolean;
     keepReflections?: boolean;
+    learningObservations?: readonly unknown[];
   } = {},
 ) {
   localStorage.removeItem(AI_SUGGESTIONS_STORAGE_KEY);
@@ -36,6 +52,12 @@ function renderApp(
   }
   if (options.hierarchyEntities) {
     localStorage.setItem(HIERARCHY_STORAGE_KEY, JSON.stringify(options.hierarchyEntities));
+  }
+  if (options.learningObservations) {
+    localStorage.setItem(
+      LEARNING_OBSERVATIONS_STORAGE_KEY,
+      JSON.stringify(options.learningObservations),
+    );
   }
 
   render(
@@ -546,7 +568,7 @@ describe('ExecutionPage task workflow', () => {
   });
 
   it('reviews a Phase 3 workflow optimization suggestion through HITL controls', async () => {
-    renderApp('/overview');
+    renderApp('/overview', { learningObservations: [TEST_REPORTED_ATTENTION_OBSERVATION] });
     await startOverviewTask();
 
     fireEvent.click(screen.getByRole('button', { name: /review workflow pattern/i }));
@@ -579,7 +601,7 @@ describe('ExecutionPage task workflow', () => {
   });
 
   it('rejects a Phase 3 workflow optimization suggestion through HITL controls', async () => {
-    renderApp('/overview');
+    renderApp('/overview', { learningObservations: [TEST_REPORTED_ATTENTION_OBSERVATION] });
     await startOverviewTask();
 
     fireEvent.click(screen.getByRole('button', { name: /review workflow pattern/i }));

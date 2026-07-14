@@ -232,9 +232,10 @@ describe('OverviewPage hierarchy workflow', () => {
     renderOverviewPage({
       learningObservations: [
         {
+          source: 'manual_calibration',
           breakdown: {
-            behavioralScore: 0.38,
-            passiveScore: 0.4,
+            reportedPerformanceScore: 0.38,
+            reportedBehaviorScore: 0.4,
             subjectiveScore: 0.36,
           },
           confidence: 0.84,
@@ -271,7 +272,7 @@ describe('OverviewPage hierarchy workflow', () => {
     expect(signals).toHaveTextContent(/elevated risk/i);
     expect(signals).toHaveTextContent(/100% overloaded or fatigued samples/i);
     expect(signals).toHaveTextContent(/38% average attention/i);
-    expect(signals).toHaveTextContent(/1 attention sample/i);
+    expect(signals).toHaveTextContent(/1 user-provided attention sample/i);
     expect(signals).toHaveTextContent(/1 marked ritual input/i);
     expect(signals).toHaveTextContent(/1 vision item visible/i);
     expect(signals).toHaveTextContent(/read-only orientation/i);
@@ -356,9 +357,10 @@ describe('OverviewPage hierarchy workflow', () => {
       hierarchyEntities: [taskOne, taskTwo],
       learningObservations: [
         {
+          source: 'manual_calibration',
           breakdown: {
-            behavioralScore: 0.88,
-            passiveScore: 0.8,
+            reportedPerformanceScore: 0.88,
+            reportedBehaviorScore: 0.8,
             subjectiveScore: 0.92,
           },
           confidence: 0.9,
@@ -369,9 +371,10 @@ describe('OverviewPage hierarchy workflow', () => {
           state: 'focused',
         },
         {
+          source: 'manual_calibration',
           breakdown: {
-            behavioralScore: 0.38,
-            passiveScore: 0.36,
+            reportedPerformanceScore: 0.38,
+            reportedBehaviorScore: 0.36,
             subjectiveScore: 0.4,
           },
           confidence: 0.55,
@@ -418,6 +421,26 @@ describe('OverviewPage hierarchy workflow', () => {
     expect(metrics).toHaveTextContent(/0 auto/i);
     expect(metrics).toHaveTextContent(/misjudgment signal/i);
     expect(within(metrics).queryByRole('button')).toBeNull();
+  });
+
+  it('shows calibration states instead of fabricated attention outcomes on fresh data', () => {
+    renderOverviewPage({ hierarchyEntities: [] });
+
+    const signals = screen.getByRole('region', {
+      name: /overview risks, trends, and context signals/i,
+    });
+    expect(signals).toHaveTextContent(/needs calibration/i);
+    expect(signals).toHaveTextContent(/no user-provided attention observations/i);
+    expect(signals).not.toHaveTextContent(/0% average attention/i);
+
+    const learningSnapshot = screen.getByRole('region', { name: /learning snapshot/i });
+    expect(learningSnapshot).toHaveTextContent(/attention trend/i);
+    expect(learningSnapshot).toHaveTextContent(/no data/i);
+    expect(learningSnapshot).toHaveTextContent(/complete a manual calibration/i);
+
+    const metrics = screen.getByRole('region', { name: /release metrics and guardrails/i });
+    expect(metrics).toHaveTextContent(/manual calibration/i);
+    expect(metrics).toHaveTextContent(/no data/i);
   });
 
   it('shows a bounded interruption recovery cue when returning to Overview', async () => {

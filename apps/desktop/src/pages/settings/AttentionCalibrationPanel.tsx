@@ -1,4 +1,4 @@
-import type { AttentionState, PassiveForegroundCategory } from '@attentionos/guidance';
+import type { AttentionState, ReportedForegroundCategory } from '@attentionos/guidance';
 import { Gauge, Save } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -13,7 +13,7 @@ const ATTENTION_STATES: readonly AttentionState[] = [
   'fatigued',
 ];
 
-const FOREGROUND_CATEGORIES: readonly PassiveForegroundCategory[] = [
+const FOREGROUND_CATEGORIES: readonly ReportedForegroundCategory[] = [
   'work',
   'communication',
   'social',
@@ -27,25 +27,36 @@ function percent(value: number): string {
 
 export function AttentionCalibrationPanel() {
   const [form, setForm] = useState({
-    appSwitchesLast15Min: '2',
-    clarity: '4',
+    appSwitchesLast15Min: '',
+    clarity: '',
     correctedState: '',
-    distractibility: '3',
-    energy: '3',
-    foregroundCategory: 'work' as PassiveForegroundCategory,
-    fragmentedSessionCount: '1',
-    inhibitionErrorRate: '0.05',
-    reactionTimeMs: '650',
-    selfReportedDifficulty: '2',
-    stress: '3',
-    trialCount: '8',
+    distractibility: '',
+    energy: '',
+    foregroundCategory: '' as ReportedForegroundCategory | '',
+    fragmentedSessionCount: '',
+    inhibitionErrorRate: '',
+    reactionTimeMs: '',
   });
   const [latest, setLatest] = useState(() => getLatestAttentionObservation());
   const [status, setStatus] = useState(
-    'Manual calibration combines self-report and behavior signals without passive monitoring.',
+    'Enter each calibration field yourself. AttentionOS does not monitor apps in the background.',
   );
+  const isComplete =
+    form.appSwitchesLast15Min !== '' &&
+    form.clarity !== '' &&
+    form.distractibility !== '' &&
+    form.energy !== '' &&
+    form.foregroundCategory !== '' &&
+    form.fragmentedSessionCount !== '' &&
+    form.inhibitionErrorRate !== '' &&
+    form.reactionTimeMs !== '';
 
   function saveCalibration() {
+    if (!isComplete || form.foregroundCategory === '') {
+      setStatus('Enter each calibration field before saving an attention observation.');
+      return;
+    }
+
     const result = recordAttentionCalibration({
       appSwitchesLast15Min: Number(form.appSwitchesLast15Min),
       clarity: Number(form.clarity),
@@ -56,9 +67,6 @@ export function AttentionCalibrationPanel() {
       fragmentedSessionCount: Number(form.fragmentedSessionCount),
       inhibitionErrorRate: Number(form.inhibitionErrorRate),
       reactionTimeMs: Number(form.reactionTimeMs),
-      selfReportedDifficulty: Number(form.selfReportedDifficulty),
-      stress: Number(form.stress),
-      trialCount: Number(form.trialCount),
     });
 
     setLatest(result.observation);
@@ -81,8 +89,8 @@ export function AttentionCalibrationPanel() {
             Correct the local attention estimate
           </h2>
           <p className="mt-2 text-sm text-stone-600">
-            This writes a local observation from subjective ratings, manual behavior signals, and a
-            tiny probe. It does not enable background sensing.
+            This writes a local observation only after you enter every rating and behavior measure.
+            It does not enable background sensing.
           </p>
         </div>
         {latest ? (
@@ -137,7 +145,7 @@ export function AttentionCalibrationPanel() {
           />
         </label>
         <label className="block font-medium text-sm text-stone-800" htmlFor="attention-switches">
-          App switches last 15 min
+          App switches you recall in the last 15 min
           <input
             className="mt-2 w-full rounded-md border border-stone-300 p-2 font-normal text-sm"
             id="attention-switches"
@@ -150,7 +158,7 @@ export function AttentionCalibrationPanel() {
           />
         </label>
         <label className="block font-medium text-sm text-stone-800" htmlFor="attention-fragments">
-          Fragmented sessions
+          Fragmented sessions you noticed
           <input
             className="mt-2 w-full rounded-md border border-stone-300 p-2 font-normal text-sm"
             id="attention-fragments"
@@ -163,18 +171,19 @@ export function AttentionCalibrationPanel() {
           />
         </label>
         <label className="block font-medium text-sm text-stone-800" htmlFor="attention-category">
-          Current context
+          Current context you select
           <select
             className="mt-2 w-full rounded-md border border-stone-300 p-2 font-normal text-sm"
             id="attention-category"
             onChange={(event) =>
               setForm((current) => ({
                 ...current,
-                foregroundCategory: event.target.value as PassiveForegroundCategory,
+                foregroundCategory: event.target.value as ReportedForegroundCategory,
               }))
             }
             value={form.foregroundCategory}
           >
+            <option value="">Select a context</option>
             {FOREGROUND_CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {category}
@@ -183,7 +192,7 @@ export function AttentionCalibrationPanel() {
           </select>
         </label>
         <label className="block font-medium text-sm text-stone-800" htmlFor="attention-reaction">
-          Probe reaction time ms
+          Reaction time you enter (ms)
           <input
             className="mt-2 w-full rounded-md border border-stone-300 p-2 font-normal text-sm"
             id="attention-reaction"
@@ -196,7 +205,7 @@ export function AttentionCalibrationPanel() {
           />
         </label>
         <label className="block font-medium text-sm text-stone-800" htmlFor="attention-inhibition">
-          Probe inhibition error rate
+          Inhibition error rate you enter
           <input
             className="mt-2 w-full rounded-md border border-stone-300 p-2 font-normal text-sm"
             id="attention-inhibition"
@@ -232,7 +241,8 @@ export function AttentionCalibrationPanel() {
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
-          className="inline-flex items-center gap-2 rounded-md bg-stone-950 px-4 py-2 font-medium text-sm text-white"
+          className="inline-flex items-center gap-2 rounded-md bg-stone-950 px-4 py-2 font-medium text-sm text-white disabled:cursor-not-allowed disabled:bg-stone-300"
+          disabled={!isComplete}
           onClick={saveCalibration}
           type="button"
         >

@@ -4,6 +4,25 @@ test('reviews a Phase 3 workflow optimization suggestion', async ({ page }) => {
   await page.goto('/overview');
   await page.evaluate(() => {
     localStorage.clear();
+    localStorage.setItem(
+      'attentionos.learning.observations.v1',
+      JSON.stringify([
+        {
+          breakdown: {
+            behavioralScore: 0.38,
+            reportedBehaviorScore: 0.36,
+            subjectiveScore: 0.4,
+          },
+          confidence: 0.7,
+          id: 'e2e-manual-calibration',
+          observedAt: '2026-05-24T02:20:00.000Z',
+          reasons: ['User-reported switching is high.'],
+          score: 0.38,
+          source: 'manual_calibration',
+          state: 'overloaded',
+        },
+      ]),
+    );
   });
   await page.reload();
 

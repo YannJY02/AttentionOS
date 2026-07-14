@@ -21,9 +21,13 @@ export function LearningSnapshotPanel() {
             Attention trend
           </p>
           <p className="mt-2 font-semibold text-2xl text-stone-950">
-            {formatPercent(attention.averageScore)}
+            {attention.sampleCount > 0 ? formatPercent(attention.averageScore) : 'No data'}
           </p>
-          <p className="mt-1 text-sm text-stone-500">{attention.dominantState ?? 'unknown'}</p>
+          <p className="mt-1 text-sm text-stone-500">
+            {attention.sampleCount > 0
+              ? attention.dominantState
+              : 'Complete a manual calibration in Settings'}
+          </p>
         </div>
         <div>
           <p className="inline-flex items-center gap-2 font-medium text-sm text-stone-500">
@@ -31,9 +35,11 @@ export function LearningSnapshotPanel() {
             Completion
           </p>
           <p className="mt-2 font-semibold text-2xl text-stone-950">
-            {formatPercent(tasks.completionRatio)}
+            {tasks.totalTasks > 0 ? formatPercent(tasks.completionRatio) : 'No data'}
           </p>
-          <p className="mt-1 text-sm text-stone-500">{tasks.completedTasks} done</p>
+          <p className="mt-1 text-sm text-stone-500">
+            {tasks.totalTasks > 0 ? `${tasks.completedTasks} done` : 'No task evidence yet'}
+          </p>
         </div>
         <div>
           <p className="inline-flex items-center gap-2 font-medium text-sm text-stone-500">
@@ -41,7 +47,7 @@ export function LearningSnapshotPanel() {
             AI adoption
           </p>
           <p className="mt-2 font-semibold text-2xl text-stone-950">
-            {formatPercent(adoption.adoptionRate)}
+            {adoption.reviewableSuggestions > 0 ? formatPercent(adoption.adoptionRate) : 'No data'}
           </p>
           <p className="mt-1 text-sm text-stone-500">
             {snapshot.pendingOptimizationCount} pending optimization

@@ -14,20 +14,30 @@ const WINDOW = {
 
 const attention: V2AttentionObservationRecord[] = [
   {
+    source: 'manual_calibration',
     id: 'obs-1',
     state: 'focused',
     score: 0.82,
     confidence: 0.9,
-    breakdown: { behavioralScore: 0.8, passiveScore: 0.75, subjectiveScore: 0.9 },
+    breakdown: {
+      reportedPerformanceScore: 0.8,
+      reportedBehaviorScore: 0.75,
+      subjectiveScore: 0.9,
+    },
     reasons: ['timer completed'],
     observedAt: '2026-05-09T08:30:00.000Z',
   },
   {
+    source: 'manual_calibration',
     id: 'obs-2',
     state: 'overloaded',
     score: 0.34,
     confidence: 0.86,
-    breakdown: { behavioralScore: 0.3, passiveScore: 0.4, subjectiveScore: 0.32 },
+    breakdown: {
+      reportedPerformanceScore: 0.3,
+      reportedBehaviorScore: 0.4,
+      subjectiveScore: 0.32,
+    },
     reasons: ['rapid task switching'],
     observedAt: '2026-05-09T10:30:00.000Z',
   },
@@ -151,5 +161,21 @@ describe('Phase 3 evolutionary learning', () => {
       reviewableSuggestions: 2,
       adoptionRate: 0.5,
     });
+  });
+
+  it('does not create attention guidance from an empty calibration window', () => {
+    const report = analyzeBehaviorPatterns({
+      attention: [],
+      suggestions: [],
+      window: WINDOW,
+      workflow: { auditEntries: [], entities: [] },
+    });
+
+    expect(report.attention).toMatchObject({
+      averageScore: 0,
+      dominantState: null,
+      sampleCount: 0,
+    });
+    expect(createWorkflowOptimizationSuggestions(report)).toEqual([]);
   });
 });

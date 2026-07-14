@@ -3,7 +3,11 @@ import type { V2AuditLogEntry, V2Entity } from '@attentionos/workflow';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AI_SUGGESTIONS_STORAGE_KEY } from './aiSuggestions';
 import { EXECUTION_AUDIT_STORAGE_KEY } from './audit';
-import { HIERARCHY_STORAGE_KEY } from './hierarchy';
+import {
+  DEFAULT_HIERARCHY_ENTITIES,
+  HIERARCHY_STORAGE_KEY,
+  readUserHierarchyEntities,
+} from './hierarchy';
 import { LEARNING_OBSERVATIONS_STORAGE_KEY } from './learning';
 import { REFLECTION_STORAGE_KEY } from './reflections';
 import { getReleaseMetricsSnapshot } from './releaseMetrics';
@@ -43,12 +47,39 @@ describe('release metrics snapshot', () => {
     localStorage.clear();
   });
 
+  it('reports no data instead of outcome percentages without supporting evidence', () => {
+    const snapshot = getReleaseMetricsSnapshot();
+
+    expect(snapshot.outcomeMetrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'attention-ratio', status: 'no-data', value: 'No data' }),
+        expect.objectContaining({ id: 'switching-pressure', status: 'no-data', value: 'No data' }),
+        expect.objectContaining({ id: 'focus-success', status: 'no-data', value: 'No data' }),
+        expect.objectContaining({ id: 'plan-fulfillment', status: 'no-data', value: 'No data' }),
+      ]),
+    );
+    expect(snapshot.guardrailMetrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'misjudgment', status: 'no-data', value: 'No data' }),
+      ]),
+    );
+    expect(localStorage.getItem(LEARNING_OBSERVATIONS_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem(HIERARCHY_STORAGE_KEY)).toContain(
+      DEFAULT_HIERARCHY_ENTITIES[0]?.id,
+    );
+    expect(readUserHierarchyEntities()).toEqual([]);
+    expect(snapshot.outcomeMetrics.find((metric) => metric.id === 'attention-ratio')?.detail).toBe(
+      'No user-provided attention observations.',
+    );
+  });
+
   it('derives outcome and guardrail metrics from local observations, audit, tasks, and settings', () => {
     const observations: V2AttentionObservationRecord[] = [
       {
+        source: 'manual_calibration',
         breakdown: {
-          behavioralScore: 0.88,
-          passiveScore: 0.8,
+          reportedPerformanceScore: 0.88,
+          reportedBehaviorScore: 0.8,
           subjectiveScore: 0.92,
         },
         confidence: 0.9,
@@ -59,9 +90,10 @@ describe('release metrics snapshot', () => {
         state: 'focused',
       },
       {
+        source: 'manual_calibration',
         breakdown: {
-          behavioralScore: 0.38,
-          passiveScore: 0.36,
+          reportedPerformanceScore: 0.38,
+          reportedBehaviorScore: 0.36,
           subjectiveScore: 0.4,
         },
         confidence: 0.55,

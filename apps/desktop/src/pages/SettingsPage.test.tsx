@@ -226,6 +226,24 @@ describe('SettingsPage data controls', () => {
       await screen.findByRole('heading', { name: /correct the local attention estimate/i }),
     ).toBeInTheDocument();
 
+    fireEvent.change(screen.getByLabelText(/^clarity$/i), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText(/^energy$/i), { target: { value: '3' } });
+    fireEvent.change(screen.getByLabelText(/^distractibility$/i), { target: { value: '3' } });
+    fireEvent.change(screen.getByLabelText(/app switches you recall/i), {
+      target: { value: '2' },
+    });
+    fireEvent.change(screen.getByLabelText(/fragmented sessions you noticed/i), {
+      target: { value: '1' },
+    });
+    fireEvent.change(screen.getByLabelText(/current context you select/i), {
+      target: { value: 'work' },
+    });
+    fireEvent.change(screen.getByLabelText(/reaction time you enter/i), {
+      target: { value: '650' },
+    });
+    fireEvent.change(screen.getByLabelText(/inhibition error rate you enter/i), {
+      target: { value: '0.05' },
+    });
     fireEvent.change(screen.getByLabelText(/correction/i), {
       target: { value: 'overloaded' },
     });
@@ -239,11 +257,12 @@ describe('SettingsPage data controls', () => {
       expect.arrayContaining([
         expect.objectContaining({
           breakdown: expect.objectContaining({
-            behavioralScore: expect.any(Number),
-            passiveScore: expect.any(Number),
+            reportedBehaviorScore: expect.any(Number),
+            reportedPerformanceScore: expect.any(Number),
             subjectiveScore: expect.any(Number),
           }),
           reasons: expect.arrayContaining([expect.stringMatching(/user corrected estimate/i)]),
+          source: 'manual_calibration',
           state: 'overloaded',
         }),
       ]),
@@ -251,6 +270,22 @@ describe('SettingsPage data controls', () => {
     expect(localStorage.getItem(APP_STATE_SNAPSHOT_STORAGE_KEY)).toContain(
       LEARNING_OBSERVATIONS_STORAGE_KEY,
     );
+  });
+
+  it('does not save an attention outcome before the user provides calibration fields', async () => {
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const saveButton = await screen.findByRole('button', {
+      name: /save attention calibration/i,
+    });
+
+    expect(saveButton).toBeDisabled();
+    expect(localStorage.getItem(LEARNING_OBSERVATIONS_STORAGE_KEY)).toBeNull();
+    expect(screen.getByText(/enter each calibration field/i)).toBeInTheDocument();
   });
 
   it('shows the no-surveillance integration boundary', async () => {
