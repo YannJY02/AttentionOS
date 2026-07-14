@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-07-14 14:03 CST
+
+- Task: execute Wayfinder ticket #15 by removing disconnected infrastructure from the accepted desktop-only runtime.
+- Files removed: `apps/server`, `packages/storage`, `packages/sdk`, `packages/mcp`, `packages/sync`, `packages/policy-engine`, and `supabase`.
+- Files updated: the root Vitest project list, lockfile, project state, changelog, and this maintenance log.
+- Boundary: immutable raw evidence and historical plans/logs remain untouched; their references describe the preserved pre-migration baseline rather than current runtime ownership.
+
 ## 2026-07-14 07:55 CST
 
 - Task: add the owner-approved automatic commit-and-push completion rule to `AGENTS.md`.

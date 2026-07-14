@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-07-14 07:55 CST
+Updated: 2026-07-14 14:03 CST
 Status: active
 
 ## Documentation Governance Mapping
@@ -23,6 +23,8 @@ Status: active
 ## Current Truth
 
 - This repo is AttentionOS V2, a personal attention and workflow/context system. Evidence: `AGENTS.md`, `package.json`, and the product baseline.
+- Repository normalization is active under Wayfinder map [#8](https://github.com/YannJY02/AttentionOS/issues/8) on `codex/attentionos-normalization`; commit `b251c57` is the preserved pre-migration rollback baseline.
+- The accepted runtime is the local desktop app. Issue #15 removed the disconnected server, Supabase, storage, SDK, MCP, sync, and policy placeholder surfaces; older plans and logs that name them are historical baseline evidence, not current runtime ownership.
 - The product and vision baseline is `docs/product/MASTER_PRODUCT_PLAN.zh-CN.md`, which declares itself the product/design/development/acceptance baseline.
 - The workflow semantic baseline is `docs/workflow/WORKFLOW_CANONICAL_MODEL.zh-CN.md`, which declares the three-stage/five-layer model as active source of truth.
 - Original user prompt evidence is categorized under `docs/sources-or-raw/user-original-long-prompts.zh-CN.md`.
@@ -130,6 +132,7 @@ Status: active
 
 ## Active Work
 
+- Follow the native dependency chain in Wayfinder map #8. The next unblocked slice is #16, which moves existing Workflow behavior into `packages/workflow` without changing product behavior.
 - Keep all project documentation discoverable through `docs/README.md` and prevent new root-level documentation sprawl.
 - Keep `docs/governance/proposed-updates/` as a pending-only queue; archive applied proposals under `docs/archive/governance/proposed-updates/`.
 - Keep `docs/work/todo.md` short and route confirmed work into the proper authority surface.
@@ -153,4 +156,4 @@ Status: active
 
 ## Next Action
 
-Owner can test the rebuilt local RC at `apps/desktop/src-tauri/target/release/bundle/macos/AttentionOS.app` or the DMG at `apps/desktop/src-tauri/target/release/bundle/dmg/AttentionOS_0.1.0_aarch64.dmg`. The next engineering step beyond local RC is Developer ID signing/notarization after owner-provided credentials and explicit authorization.
+Execute Wayfinder ticket #16: establish the Attention Workflow context package and migrate existing Workflow ownership with targeted regression checks.

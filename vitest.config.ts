@@ -7,8 +7,6 @@ export default defineConfig({
       'packages/*/vitest.config.ts',
       // apps/desktop (DOM 环境)
       'apps/desktop/vitest.config.ts',
-      // apps/server (Node sidecar)
-      'apps/server/vitest.config.ts',
     ],
   },
 });
