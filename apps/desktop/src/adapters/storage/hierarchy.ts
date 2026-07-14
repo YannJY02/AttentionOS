@@ -1,4 +1,4 @@
-import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import type { TaskDecompositionSuggestion } from '@attentionos/guidance';
 import {
   applyTaskDecompositionChange,
   archiveProposalCreatedTasksChange,

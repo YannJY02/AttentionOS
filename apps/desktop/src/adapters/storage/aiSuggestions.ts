@@ -1,12 +1,15 @@
-import type { AISuggestion, TaskDecompositionSuggestion } from '@attentionos/core';
-import type { WorkflowOptimizationSuggestion } from '@attentionos/guidance';
+import type {
+  GuidanceSuggestion,
+  TaskDecompositionSuggestion,
+  WorkflowOptimizationSuggestion,
+} from '@attentionos/guidance';
 import type { V2WorkflowStage } from '@attentionos/workflow';
 import { queuePersistAppState } from './persistence';
 import { recordMalformedStorageEntry } from './storageRecovery';
 
 export const AI_SUGGESTIONS_STORAGE_KEY = 'attentionos.ai.suggestions.v1';
 
-type StoredAISuggestion = AISuggestion<object>;
+type StoredAISuggestion = GuidanceSuggestion<object>;
 
 function parseSuggestions(raw: string | null): StoredAISuggestion[] {
   if (!raw) {

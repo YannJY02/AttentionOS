@@ -1,5 +1,14 @@
 # Maintenance Log
 
+## 2026-07-14 14:39 CST
+
+- Task: execute Wayfinder ticket [Retire emptied legacy packages and enforce dependency directions](https://github.com/YannJY02/AttentionOS/issues/19).
+- Packages removed: `packages/core`, `packages/machines`, `packages/attention-engine`, and `packages/ai`; the workspace now contains only Workflow and Guidance packages plus the desktop app.
+- Retained behavior: task-decomposition suggestion types moved to Guidance, while the existing deterministic local split, context ranking, never-process guard, HITL approval, audit, and rollback behavior remain in desktop adapters.
+- Enforcement: `pnpm boundaries:check` is now part of `pnpm check` and rejects legacy packages, private source-subpath imports, reverse desktop imports, and dependency directions outside desktop -> Workflow/Guidance and Guidance -> Workflow.
+- Dependency result: `pnpm install` pruned 64 packages associated with the unconsumed AI framework and compatibility packages.
+- Verification: 35 Vitest files / 205 tests, workspace check, build, lint, docs, boundary guard, Rust `cargo check`, and 16 Playwright E2E tests passed. The first E2E run under concurrent full-suite load exceeded one 2500 ms performance budget by 48 ms; the complete no-load rerun passed with that step at 517 ms, so no budget or product code was changed.
+
 ## 2026-07-14 14:33 CST
 
 - Task: execute Wayfinder ticket [Move desktop I/O behind explicit adapters](https://github.com/YannJY02/AttentionOS/issues/18).

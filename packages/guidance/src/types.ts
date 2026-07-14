@@ -68,10 +68,13 @@ export type SuggestionStatus = 'pending' | 'approved' | 'rejected' | 'applied';
 
 export interface GuidanceContextEvidence {
   readonly id: string;
+  readonly entityId?: string;
   readonly text: string;
   readonly score: number;
   readonly privacyLevel: PrivacyLevel;
   readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly modelId?: string;
+  readonly modelVersion?: string;
 }
 
 export interface GuidanceSuggestion<TPayload extends object = Record<string, unknown>> {
@@ -97,3 +100,19 @@ export type CreateGuidanceSuggestionInput<TPayload extends object> = Omit<
   GuidanceSuggestion<TPayload>,
   'id' | 'createdAt' | 'updatedAt' | 'reviewedAt' | 'reviewedBy'
 >;
+
+export interface TaskDecompositionStep {
+  readonly title: string;
+  readonly rationale?: string;
+  readonly estimatedMinutes?: number;
+  readonly dependsOn?: readonly string[];
+}
+
+export interface TaskDecompositionPayload {
+  readonly steps: readonly TaskDecompositionStep[];
+}
+
+export type TaskDecompositionSuggestion = GuidanceSuggestion<TaskDecompositionPayload> & {
+  readonly kind: 'task_decomposition';
+  readonly payload: TaskDecompositionPayload;
+};

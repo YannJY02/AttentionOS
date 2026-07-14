@@ -1,4 +1,4 @@
-import type { TaskDecompositionSuggestion } from '@attentionos/core';
+import type { TaskDecompositionSuggestion } from '@attentionos/guidance';
 import type { V2Entity } from '@attentionos/workflow';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {

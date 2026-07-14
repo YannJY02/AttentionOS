@@ -1,5 +1,7 @@
-import type { TaskDecompositionSuggestion } from '@attentionos/core';
-import type { WorkflowOptimizationSuggestion } from '@attentionos/guidance';
+import type {
+  TaskDecompositionSuggestion,
+  WorkflowOptimizationSuggestion,
+} from '@attentionos/guidance';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   AI_SUGGESTIONS_STORAGE_KEY,

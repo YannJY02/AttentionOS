@@ -2,6 +2,7 @@
 
 ## 2026-07-14
 
+- Removed the superseded `core`, `machines`, `attention-engine`, and generic `ai` packages after retaining task-split behavior in the desktop adapter and moving suggestion types to Guidance; added a checked one-way dependency rule to `pnpm check` and pruned 64 dependencies.
 - Moved concrete localStorage, Tauri persistence/recovery, portable file handling, and local AI execution under `apps/desktop/src/adapters`, keeping tests beside their adapters and removing browser recovery-event details from UI callers.
 - Added `packages/guidance` as the owner of pure attention estimation, guidance suggestions, learning/outcome metrics, and reminder policy; it consumes immutable Workflow Facts while desktop code retains all persistence and platform I/O.
 - Added `packages/workflow` as the owner of canonical workflow types, immutable Workflow Facts, hierarchy rules, validation, and state machines; desktop hierarchy storage now delegates domain mutations to that package.
