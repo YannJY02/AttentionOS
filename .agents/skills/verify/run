@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import net from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const subcmd = process.argv[2] || "all";
+const outIdx = process.argv.indexOf("--out");
+const OUT = path.resolve(outIdx !== -1 && process.argv[outIdx + 1] ? process.argv[outIdx + 1] : "/tmp/attentionos-verify");
+const PUB = path.join(OUT, "public");
+const STATE_FILE = path.join(OUT, "instance.json");
+const STEPS_FILE = path.join(OUT, "steps.json");
+
+mkdirSync(PUB, { recursive: true });
+
+function loadSteps() {
+  try {
+    return existsSync(STEPS_FILE) ? JSON.parse(readFileSync(STEPS_FILE, "utf8")) : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordStep(name, status, exitCode, startedAt, detail = "") {
+  const steps = loadSteps().filter((s) => s.name !== name);
+  steps.push({ name, status, exitCode, startedAt, endedAt: new Date().toISOString(), detail });
+  writeFileSync(STEPS_FILE, JSON.stringify(steps, null, 2));
+}
+
+function runCmd(cmd, args, envExtra = {}) {
+  const res = spawnSync(cmd, args, {
+    cwd: ROOT,
+    env: { ...process.env, ...envExtra },
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  return { code: res.status ?? 1, stdout: res.stdout || "", stderr: res.stderr || "" };
+}
+
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.listen(0, "127.0.0.1", () => {
+      const addr = srv.address();
+      const port = typeof addr === "object" && addr ? addr.port : 0;
+      srv.close(() => resolve(port));
+    });
+    srv.on("error", reject);
+  });
+}
+
+async function waitHttp(url, timeoutMs = 25000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return true;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return false;
+}
+
+async function doctor() {
+  const startedAt = new Date().toISOString();
+  const verifyRes = runCmd("pnpm", ["verify"]);
+  writeFileSync(path.join(OUT, "doctor-verify.log"), verifyRes.stdout + "\n" + verifyRes.stderr);
+  if (verifyRes.code !== 0) {
+    recordStep("doctor", "failed", verifyRes.code, startedAt, "pnpm verify failed");
+    throw new Error(`pnpm verify failed (exit ${verifyRes.code}):\n${verifyRes.stderr || verifyRes.stdout}`);
+  }
+  const buildRes = runCmd("pnpm", ["build"]);
+  writeFileSync(path.join(OUT, "doctor-build.log"), buildRes.stdout + "\n" + buildRes.stderr);
+  if (buildRes.code !== 0) {
+    recordStep("doctor", "failed", buildRes.code, startedAt, "pnpm build failed");
+    throw new Error(`pnpm build failed (exit ${buildRes.code}):\n${buildRes.stderr || buildRes.stdout}`);
+  }
+  recordStep("doctor", "passed", 0, startedAt, "pnpm verify + pnpm build passed");
+}
+
+async function launch() {
+  const startedAt = new Date().toISOString();
+  const port = await freePort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const logFile = path.join(OUT, "vite.log");
+  const child = spawn(
+    "pnpm",
+    ["--filter", "@attentionos/desktop", "exec", "vite", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
+    {
+      cwd: ROOT,
+      detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let logs = "";
+  child.stdout.on("data", (d) => {
+    logs += d.toString();
+    writeFileSync(logFile, logs);
+  });
+  child.stderr.on("data", (d) => {
+    logs += d.toString();
+    writeFileSync(logFile, logs);
+  });
+  child.unref();
+
+  writeFileSync(STATE_FILE, JSON.stringify({ pid: child.pid, port, baseUrl, startedAt }, null, 2));
+  const ready = await waitHttp(baseUrl, 25000);
+  if (!ready) {
+    await cleanup();
+    recordStep("launch", "failed", 2, startedAt, `Vite failed to come up on ${baseUrl}`);
+    throw new Error(`Vite did not respond on ${baseUrl}`);
+  }
+  recordStep("launch", "passed", 0, startedAt, baseUrl);
+}
+
+async function drive() {
+  const startedAt = new Date().toISOString();
+  if (!existsSync(STATE_FILE)) throw new Error("No active instance.json; run launch first");
+  const { baseUrl } = JSON.parse(readFileSync(STATE_FILE, "utf8"));
+
+  const pwRes = runCmd("pnpm", ["exec", "playwright", "test", "--project=chromium"], {
+    VERIFY_BASE_URL: baseUrl,
+  });
+  writeFileSync(path.join(OUT, "playwright.log"), pwRes.stdout + "\n" + pwRes.stderr);
+  if (pwRes.code !== 0) {
+    recordStep("drive", "failed", pwRes.code, startedAt, "playwright suite failed");
+    throw new Error(`Playwright tests failed (exit ${pwRes.code}):\n${pwRes.stdout}\n${pwRes.stderr}`);
+  }
+
+  const shotPath = path.join(PUB, "overview-proof.png");
+  const shotScript = `
+    import { chromium } from '@playwright/test';
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 1280, height: 820 } });
+    await page.goto(${JSON.stringify(baseUrl + "/overview")}, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: ${JSON.stringify(shotPath)}, fullPage: true });
+    await browser.close();
+  `;
+  const shotRes = runCmd("node", ["--input-type=module", "-e", shotScript]);
+  if (shotRes.code !== 0 || !existsSync(shotPath)) {
+    recordStep("drive", "failed", 1, startedAt, "screenshot capture failed");
+    throw new Error(`Screenshot capture failed: ${shotRes.stderr}`);
+  }
+  recordStep("drive", "passed", 0, startedAt, "e2e passed + overview-proof.png captured");
+}
+
+async function evidence() {
+  const startedAt = new Date().toISOString();
+  const headSHA = runCmd("git", ["rev-parse", "HEAD"]).stdout.trim();
+  const dirty = runCmd("git", ["status", "--porcelain"]).stdout.trim();
+  const steps = loadSteps();
+  const artifacts = [];
+  for (const name of ["overview-proof.png"]) {
+    const p = path.join(PUB, name);
+    if (existsSync(p)) {
+      const buf = readFileSync(p);
+      artifacts.push({
+        name,
+        bytes: statSync(p).size,
+        sha256: createHash("sha256").update(buf).digest("hex"),
+        classification: "public-synthetic",
+      });
+    }
+  }
+  const allPassed = steps.length > 0 && steps.every((s) => s.status === "passed");
+  recordStep("evidence", "passed", 0, startedAt, `artifacts=${artifacts.length}`);
+  const manifest = {
+    version: 1,
+    repo: "YannJY02/AttentionOS",
+    headSHA,
+    dirtyWorkingTree: Boolean(dirty),
+    generatedAt: new Date().toISOString(),
+    outcome: allPassed ? "passed" : "failed",
+    coverage: ["docs-governance", "typecheck", "vitest", "playwright-e2e-chromium", "live-screenshot"],
+    nonCoverage: ["tauri-rust-native-shell"],
+    steps: loadSteps(),
+    artifacts,
+  };
+  writeFileSync(path.join(PUB, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+}
+
+async function cleanup() {
+  const startedAt = new Date().toISOString();
+  if (existsSync(STATE_FILE)) {
+    try {
+      const { pid } = JSON.parse(readFileSync(STATE_FILE, "utf8"));
+      if (pid) {
+        try {
+          process.kill(-pid, "SIGTERM");
+        } catch {
+          try {
+            process.kill(pid, "SIGTERM");
+          } catch {}
+        }
+      }
+    } catch {}
+    rmSync(STATE_FILE, { force: true });
+  }
+  recordStep("cleanup", "passed", 0, startedAt, "owned server terminated; public evidence preserved");
+}
+
+async function main() {
+  if (subcmd === "doctor") await doctor();
+  else if (subcmd === "launch") await launch();
+  else if (subcmd === "drive") await drive();
+  else if (subcmd === "evidence") await evidence();
+  else if (subcmd === "cleanup") await cleanup();
+  else if (subcmd === "all") {
+    rmSync(STEPS_FILE, { force: true });
+    let err = null;
+    try {
+      await doctor();
+      await launch();
+      await drive();
+    } catch (e) {
+      err = e;
+    } finally {
+      try {
+        await cleanup();
+      } catch {}
+      await evidence();
+    }
+    if (err) throw err;
+  } else {
+    throw new Error(`Unknown subcommand: ${subcmd}`);
+  }
+}
+
+main().catch((err) => {
+  process.stderr.write(`[verify:attentionos] ${err?.message || err}\n`);
+  process.exit(1);
+});

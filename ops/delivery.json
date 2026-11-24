@@ -1,0 +1,29 @@
+{
+  "repo": "YannJY02/AttentionOS",
+  "internal": [],
+  "admin_merge": [],
+  "check": { "workflow": "check.yml", "job": "check" },
+  "review": {
+    "points": "ops/review.md",
+    "status": "agent-review",
+    "xhigh": [
+      ".github/**/*",
+      ".agents/skills/verify/**/*",
+      "ops/**/*",
+      "AGENTS.md",
+      "apps/**/*",
+      "packages/**/*",
+      "docs/decisions/**/*",
+      "docs/governance/**/*",
+      "pnpm-lock.yaml"
+    ],
+    "command": [
+      "/Users/yann.jy/.nvm/versions/node/v25.5.0/bin/node",
+      "/Users/yann.jy/.local/share/ceo-factory/v1/heterogeneous-reviewer.mjs",
+      "--input",
+      "{input}",
+      "--policy",
+      "panel-v1"
+    ]
+  }
+}
