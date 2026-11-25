@@ -1,0 +1,659 @@
+#!/usr/bin/env node
+import { spawn, spawnSync } from "node:child_process";
+import { closeSync, existsSync, fstatSync, ftruncateSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
+import net from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+// Hooks and worktree managers can export Git locators for a different checkout.
+const VERIFY_ENV = { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_"))), GIT_OPTIONAL_LOCKS: "0" };
+const subcmd = process.argv[2] || "all";
+const outIdx = process.argv.indexOf("--out");
+const treeKey = createHash("sha256").update(ROOT).digest("hex").slice(0, 12);
+const requestedOut = outIdx !== -1 && process.argv[outIdx + 1] ? process.argv[outIdx + 1] : `/tmp/attentionos-verify-${process.getuid()}-${treeKey}`;
+const OUT = physicalPath(path.resolve(requestedOut));
+const PUB = path.join(OUT, "public");
+const STATE_FILE = path.join(OUT, "instance.json");
+const LEASE_FILE = path.join(OUT, "server-lease.json");
+const STEPS_FILE = path.join(OUT, "steps.json");
+const META_FILE = path.join(OUT, "run-meta.json");
+const LOCK_FILE = path.join(OUT, ".verify.lock");
+const DESKTOP = path.join(ROOT, "apps/desktop");
+const VITE = path.join(DESKTOP, "node_modules/vite/bin/vite.js");
+const SHOT = "overview-proof.png";
+const REQUIRED_STEPS = ["doctor", "launch", "drive", "cleanup"];
+
+function physicalPath(candidate) {
+  const suffix = [];
+  while (!lstatSync(candidate, { throwIfNoEntry: false })) {
+    suffix.unshift(path.basename(candidate));
+    candidate = path.dirname(candidate);
+  }
+  // realpath also rejects a dangling link rather than interpreting it as a new directory.
+  return path.join(realpathSync(candidate), ...suffix);
+}
+
+function prepareOutput() {
+  const top = runCmd("git", ["rev-parse", "--show-toplevel"]);
+  if (top.code !== 0 || realpathSync(top.stdout.trimEnd()) !== realpathSync(ROOT)) {
+    throw new Error("Git must resolve to the checkout containing the verifier");
+  }
+  const listed = runCmd("git", ["worktree", "list", "--porcelain", "-z"]);
+  if (listed.code !== 0) throw new Error("Cannot locate the protected project worktrees");
+  const checkouts = listed.stdout.split("\0").filter((record) => record.startsWith("worktree "))
+    .map((record) => record.slice("worktree ".length)).filter((file) => existsSync(file)).map((file) => realpathSync(file));
+  if ([realpathSync(ROOT), ...checkouts].some((repo) => OUT === repo || OUT.startsWith(repo + path.sep) || repo.startsWith(OUT + path.sep))) {
+    throw new Error("Choose an output directory outside the project worktrees");
+  }
+  mkdirSync(OUT, { recursive: true, mode: 0o700 });
+  if (statSync(OUT).uid !== process.getuid() || (statSync(OUT).mode & 0o077)) throw new Error("Choose a private output directory (mode 0700)");
+  const outputs = [PUB, META_FILE, LEASE_FILE, STATE_FILE, STEPS_FILE, LOCK_FILE, path.join(PUB, "manifest.json"), path.join(PUB, SHOT),
+    ...["vite.log", "doctor-verify.log", "doctor-build.log", "artifact-meta.json", "playwright-report.json", "playwright.log", "test-results"]
+      .map((name) => path.join(OUT, name))];
+  const directories = new Set([PUB, path.join(OUT, "test-results")]);
+  for (const file of outputs) {
+    const entry = lstatSync(file, { throwIfNoEntry: false });
+    if (entry && (directories.has(file) ? !entry.isDirectory() : !entry.isFile() || entry.nlink !== 1)) {
+      throw new Error("Verification output entries must be private regular files and directories");
+    }
+  }
+  mkdirSync(PUB, { recursive: true });
+}
+
+process.umask(0o077);
+prepareOutput();
+
+class VerifyError extends Error {
+  constructor(message, exitCode = 1) {
+    super(message);
+    this.exitCode = exitCode;
+  }
+}
+
+function runCmd(cmd, args, envExtra = {}) {
+  const res = spawnSync(cmd, args, {
+    cwd: ROOT,
+    env: { ...VERIFY_ENV, ...envExtra },
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  return { code: res.status ?? 1, stdout: res.stdout || "", stderr: res.stderr || "" };
+}
+
+function git(args) {
+  const result = runCmd("git", args);
+  if (result.code !== 0) throw new VerifyError("Cannot verify Git working tree");
+  return result.stdout;
+}
+
+function checkout() {
+  const entries = git(["ls-files", "-v", "-z"]).split("\0");
+  // A lowercase status or S can hide tracked worktree changes from Git status.
+  const maskedIndex = entries.some((entry) => /^[a-zS] /.test(entry));
+  return { headSHA: git(["rev-parse", "HEAD"]).trim(), dirty: Boolean(git(["status", "--porcelain", "--untracked-files=all", "-z"])), maskedIndex };
+}
+
+function loadMeta() {
+  if (!existsSync(META_FILE)) throw new VerifyError("Start a verification run with doctor or all", 2);
+  return JSON.parse(readFileSync(META_FILE, "utf8"));
+}
+
+function startRun() {
+  const meta = {
+    runId: `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}`,
+    headSHA: checkout().headSHA,
+    startedAt: new Date().toISOString(),
+  };
+  writeJson(META_FILE, meta);
+}
+
+function acquireLock() {
+  let fd;
+  let created = true;
+  try {
+    fd = openSync(LOCK_FILE, "wx+", 0o600);
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    created = false;
+    try { fd = openSync(LOCK_FILE, "r+"); } catch (err) {
+      if (err.code === "ENOENT") return acquireLock();
+      throw err;
+    }
+  }
+  // Both processes share the same open file description. The kernel releases
+  // the lock when the parent exits, including after SIGKILL.
+  const script = [
+    "import fcntl, sys",
+    "try: fcntl.flock(3, fcntl.LOCK_EX | fcntl.LOCK_NB)",
+    "except BlockingIOError: sys.exit(2)",
+  ].join("\n");
+  const result = spawnSync("python3", ["-c", script], { env: VERIFY_ENV, stdio: ["ignore", "ignore", "pipe", fd] });
+  if (result.status !== 0) {
+    closeSync(fd);
+    throw new VerifyError(result.status === 2 ? "Another verifier owns this output directory" : "Python 3 is required to lock the output directory", 2);
+  }
+  if (!created) {
+    let holder;
+    try { holder = JSON.parse(readFileSync(LOCK_FILE, "utf8")); } catch {}
+    const hasPid = (entry) => Number.isSafeInteger(entry?.pid) && entry.pid > 0;
+    // The legacy wx owner has no kernel lock. Its published PID (or its still
+    // open file while publishing) must be respected. A dead partial marker is
+    // safe to reuse only after confirming that this process is its sole holder.
+    if (!hasPid(holder)) {
+      const open = runCmd("lsof", ["-nP", "-t", LOCK_FILE]);
+      if (open.code !== 0 || open.stdout.trim().split(/\s+/).some((pid) => Number(pid) !== process.pid)) {
+        closeSync(fd);
+        throw new VerifyError("Another verifier is publishing its lock", 2);
+      }
+      try { holder = JSON.parse(readFileSync(LOCK_FILE, "utf8")); } catch {}
+    }
+    if (hasPid(holder) && holder.protocol !== 2) {
+      const owner = runCmd("ps", ["-p", String(holder.pid), "-o", "lstart="]);
+      const started = Date.parse(owner.stdout.trim());
+      // Old verifiers may be invoked as "node run" or through a symlink. An
+      // existing process predating the marker cannot safely be classified by argv.
+      if (owner.code !== 1 && (owner.code !== 0 || !Number.isFinite(started) || started <= fstatSync(fd).mtimeMs + 1000)) {
+        closeSync(fd);
+        throw new VerifyError("An earlier verifier is still using this output directory", 2);
+      }
+    }
+    const current = existsSync(LOCK_FILE) ? statSync(LOCK_FILE) : null;
+    if (!current || current.ino !== fstatSync(fd).ino) {
+      closeSync(fd);
+      return acquireLock();
+    }
+  }
+  ftruncateSync(fd, 0);
+  writeSync(fd, JSON.stringify({ pid: process.pid, protocol: 2 }), 0, "utf8");
+  return fd;
+}
+
+function writeAtomic(file, contents) {
+  const temp = `${file}.${randomBytes(8).toString("hex")}.tmp`;
+  writeFileSync(temp, contents, { flag: "wx", mode: 0o600 });
+  renameSync(temp, file);
+}
+
+function writeJson(file, value) {
+  writeAtomic(file, JSON.stringify(value, null, 2));
+}
+
+function readJson(file) {
+  return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+}
+
+function loadSteps() {
+  try {
+    return existsSync(STEPS_FILE) ? JSON.parse(readFileSync(STEPS_FILE, "utf8")) : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordStep(name, status, exitCode, startedAt, detail = "", attemptId) {
+  const meta = loadMeta();
+  const actual = checkout();
+  if (status === "passed" && (actual.dirty || actual.maskedIndex || actual.headSHA !== meta.headSHA)) {
+    throw new VerifyError(`Checkout changed or is dirty during ${name}`);
+  }
+  const steps = loadSteps().filter((s) => s.name !== name);
+  steps.push({
+    name,
+    runId: meta.runId,
+    headSHA: actual.headSHA,
+    status,
+    exitCode,
+    startedAt,
+    endedAt: new Date().toISOString(),
+    detail,
+    ...(attemptId && { attemptId }),
+  });
+  writeJson(STEPS_FILE, steps);
+}
+
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.listen(0, "127.0.0.1", () => {
+      const addr = srv.address();
+      const port = typeof addr === "object" && addr ? addr.port : 0;
+      srv.close(() => resolve(port));
+    });
+    srv.on("error", reject);
+  });
+}
+
+function canBindPort(port) {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.once("error", (error) => {
+      if (error.code === "EADDRINUSE") resolve(false);
+      else reject(error);
+    });
+    probe.listen({ port, host: "127.0.0.1", exclusive: true }, () => {
+      probe.close((error) => error ? reject(error) : resolve(true));
+    });
+  });
+}
+
+async function waitForOwnedHttp(lease, timeoutMs = 25000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (ownsListener(lease)) {
+      try {
+        const res = await fetch(serverUrl(lease.port), { redirect: "manual", signal: AbortSignal.timeout(1000) });
+        if (res.ok && ownsListener(lease)) return true;
+      } catch {}
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+  return false;
+}
+
+function validPort(port) {
+  return Number.isSafeInteger(port) && port > 0 && port <= 65535;
+}
+
+function serverUrl(port) {
+  return `http://127.0.0.1:${port}`;
+}
+
+function viteArgs(port, token) {
+  const args = [VITE, "--host", "127.0.0.1", "--port", String(port), "--strictPort"];
+  return token ? [`--conditions=sf-verify-${token}`, ...args] : args;
+}
+
+function validLease(lease) {
+  return lease && typeof lease.runId === "string" && lease.runId.length > 0
+    && /^[a-f0-9]{32}$/.test(lease.token || "") && validPort(lease.port)
+    && lease.baseUrl === serverUrl(lease.port) && Number.isSafeInteger(lease.pid) && lease.pid > 0;
+}
+
+function matchesInstance(lease, state) {
+  return validLease(lease) && validLease(state) && state.phase === "running"
+    && ["runId", "token", "pid", "port", "baseUrl", "startedAt"].every((key) => lease[key] === state[key]);
+}
+
+function listenerPid(pid, port) {
+  const listener = runCmd("lsof", ["-nP", "-a", "-p", String(pid), `-iTCP@127.0.0.1:${port}`, "-sTCP:LISTEN", "-Fp"]);
+  const owners = listener.stdout.split("\n").filter((line) => line.startsWith("p"));
+  return listener.code === 0 && owners.length === 1 && owners[0] === `p${pid}`;
+}
+
+function processInOutput(state) {
+  if (!state || !Number.isSafeInteger(state.pid) || state.pid <= 0 || !validPort(state.port)
+      || state.baseUrl !== serverUrl(state.port) || !existsSync(path.join(OUT, "vite.log"))) return null;
+  if ("token" in state && !/^[a-f0-9]{32}$/.test(state.token || "")) return null;
+  const pid = String(state.pid);
+  const ps = runCmd("ps", ["-ww", "-p", pid, "-o", "uid=,pgid=,command="]);
+  const match = ps.stdout.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/);
+  if (!match || Number(match[1]) !== process.getuid() || Number(match[2]) !== state.pid
+      || !match[3].endsWith(viteArgs(state.port, state.token).join(" "))) return null;
+  // A lease or mirror from a different verifier can identify its PID and command.
+  // Only this output directory owns the descriptors inherited from our launch.
+  const files = runCmd("lsof", ["-nP", "-a", "-p", pid, "-d", "cwd,1,2", "-Ffn"]);
+  if (files.code !== 0) return null;
+  const paths = new Map();
+  let fd;
+  for (const line of files.stdout.split("\n")) {
+    if (line.startsWith("f")) fd = line.slice(1);
+    if (line.startsWith("n")) paths.set(fd, line.slice(1));
+  }
+  const named = (fd, wanted) => {
+    const candidate = paths.get(fd);
+    return candidate && existsSync(candidate) && realpathSync(candidate) === realpathSync(wanted);
+  };
+  return named("cwd", DESKTOP) && named("1", path.join(OUT, "vite.log")) && named("2", path.join(OUT, "vite.log"))
+    ? state.pid : null;
+}
+
+function ownedPid(lease) {
+  if (!/^[a-f0-9]{32}$/.test(lease?.token || "") || !validPort(lease.port)) return null;
+  if (lease.pid) return processInOutput(lease);
+  const ps = runCmd("pgrep", ["-f", `sf-verify-${lease.token}`]);
+  if (ps.code !== 0 && ps.code !== 1) throw new VerifyError("Cannot identify the verification server", 3);
+  return ps.stdout.trim().split(/\s+/).map(Number).find((pid) => pid > 0 && processInOutput({ ...lease, pid })) || null;
+}
+
+function ownsListener(lease) {
+  return validLease(lease) && ownedPid(lease) === lease.pid && listenerPid(lease.pid, lease.port);
+}
+
+function recoverableMirrorPid(state) {
+  const pid = processInOutput(state);
+  return pid && listenerPid(pid, state.port) ? pid : null;
+}
+
+async function doctor() {
+  const startedAt = new Date().toISOString();
+  loadMeta();
+  if (Number(process.versions.node.split(".")[0]) < 22) throw new VerifyError("Node 22 or later is required", 2);
+  const verifyRes = runCmd("pnpm", ["verify"]);
+  writeFileSync(path.join(OUT, "doctor-verify.log"), verifyRes.stdout + "\n" + verifyRes.stderr);
+  if (verifyRes.code !== 0) {
+    throw new VerifyError("pnpm verify failed; see doctor-verify.log", verifyRes.code);
+  }
+  const buildRes = runCmd("pnpm", ["build"]);
+  writeFileSync(path.join(OUT, "doctor-build.log"), buildRes.stdout + "\n" + buildRes.stderr);
+  if (buildRes.code !== 0) {
+    throw new VerifyError("pnpm build failed; see doctor-build.log", buildRes.code);
+  }
+  recordStep("doctor", "passed", 0, startedAt, "pnpm verify + pnpm build passed");
+}
+
+async function launch() {
+  const startedAt = new Date().toISOString();
+  const meta = loadMeta();
+  await cleanup(false);
+  if (runCmd("lsof", ["-v"]).code !== 0) throw new VerifyError("lsof is required to identify the verification server", 2);
+  const port = await freePort();
+  const baseUrl = serverUrl(port);
+  const lease = { runId: meta.runId, startedAt, port, baseUrl, token: randomBytes(16).toString("hex"), phase: "starting" };
+  writeJson(LEASE_FILE, lease);
+  const logFile = path.join(OUT, "vite.log");
+  const logFd = openSync(logFile, "a");
+  let child;
+  try {
+    child = spawn(
+      process.execPath,
+      viteArgs(port, lease.token),
+      {
+        cwd: DESKTOP,
+        env: VERIFY_ENV,
+        detached: true,
+        stdio: ["ignore", logFd, logFd],
+      },
+    );
+  } finally {
+    closeSync(logFd);
+  }
+  child.unref();
+
+  lease.pid = child.pid;
+  lease.phase = "running";
+  writeJson(LEASE_FILE, lease);
+  writeJson(STATE_FILE, lease);
+  const ready = await waitForOwnedHttp(lease);
+  if (!ready) {
+    await cleanup(false);
+    throw new VerifyError(`Vite did not respond on ${baseUrl}`, 2);
+  }
+  recordStep("launch", "passed", 0, startedAt, baseUrl);
+}
+
+async function drive() {
+  const startedAt = new Date().toISOString();
+  const meta = loadMeta();
+  if (!existsSync(STATE_FILE)) throw new VerifyError("No active instance.json; run launch first", 2);
+  const state = readJson(STATE_FILE);
+  const lease = readJson(LEASE_FILE);
+  if (!matchesInstance(lease, state) || lease.phase !== "running" || lease.runId !== meta.runId || !ownsListener(lease)) {
+    throw new VerifyError("Owned test server no longer matches this run");
+  }
+  // Children only receive their own private paths. A retry never adopts a
+  // surviving child’s files, including when an earlier verifier was killed.
+  const attempt = mkdtempSync(path.join(OUT, ".drive-"));
+  const attemptId = path.basename(attempt);
+  try {
+    const { reportRaw, shotBytes, count } = collectBrowserProof(lease, attempt);
+    const artifact = screenshotArtifact(shotBytes);
+    if (!artifact) throw new VerifyError("Screenshot capture produced an invalid PNG");
+    writeAtomic(path.join(OUT, "playwright-report.json"), reportRaw);
+    writeAtomic(path.join(PUB, SHOT), shotBytes);
+    writeJson(path.join(OUT, "artifact-meta.json"), {
+      runId: meta.runId, headSHA: meta.headSHA, attemptId, artifact,
+      reportSHA256: createHash("sha256").update(reportRaw).digest("hex"),
+    });
+    recordStep("drive", "passed", 0, startedAt, `e2e passed (${count} tests, 0 skipped) + ${SHOT}`, attemptId);
+  } catch (error) {
+    clearPublishedBrowserProof();
+    const hint = `Private diagnostics: ${attemptId}/ under --out`;
+    writeFileSync(path.join(OUT, "playwright.log"), `\n${hint}\n`, { flag: "a" });
+    const reason = error instanceof VerifyError ? error.message : "Browser verification failed";
+    throw new VerifyError(`${reason}. ${hint}`, error.exitCode || 1);
+  }
+  rmSync(attempt, { recursive: true, force: true });
+}
+
+function clearPublishedBrowserProof() {
+  rmSync(path.join(OUT, "artifact-meta.json"), { force: true });
+  rmSync(path.join(OUT, "playwright-report.json"), { force: true });
+  rmSync(path.join(PUB, SHOT), { force: true });
+}
+
+function collectBrowserProof(lease, attempt) {
+  const baseUrl = serverUrl(lease.port);
+  const pwJsonFile = path.join(attempt, "playwright-report.json");
+
+  const pwRes = runCmd(
+    "pnpm",
+    ["exec", "playwright", "test", "--project=chromium", "--forbid-only", "--output", path.join(attempt, "test-results"), "--reporter=json"],
+    {
+      VERIFY_BASE_URL: baseUrl,
+      PLAYWRIGHT_JSON_OUTPUT_NAME: pwJsonFile,
+    },
+  );
+  const browserLog = pwRes.stdout + "\n" + pwRes.stderr;
+  writeFileSync(path.join(attempt, "playwright.log"), browserLog);
+  writeFileSync(path.join(OUT, "playwright.log"), browserLog);
+  if (pwRes.code !== 0) {
+    throw new VerifyError("Playwright tests failed; see playwright.log", pwRes.code);
+  }
+
+  if (!existsSync(pwJsonFile)) throw new VerifyError("Playwright did not produce a report for this attempt");
+  const reportRaw = readFileSync(pwJsonFile);
+  const report = JSON.parse(reportRaw.toString("utf8"));
+  const passed = new Set();
+  function collect(suites) {
+    for (const suite of suites) {
+      for (const spec of suite.specs || []) {
+        const valid = spec.tests.some((test) => test.projectName === "chromium"
+          && test.expectedStatus === "passed" && test.status === "expected"
+          && test.results.length > 0 && test.results.every((attempt) => attempt.status === "passed"));
+        if (valid) passed.add(`${spec.file}#${spec.title}`);
+      }
+      collect(suite.suites || []);
+    }
+  }
+  collect(report.suites);
+  const required = [
+    "smoke.spec.ts#runs the Phase 1 ritual to execution workflow",
+    "smoke.spec.ts#keeps the canonical stage navigation usable at 390px width",
+    "evolution-learning.spec.ts#reviews a Phase 3 workflow optimization suggestion",
+  ];
+  const pwStats = report.stats;
+  if (!pwStats || pwStats.unexpected || pwStats.skipped || pwStats.flaky || !required.every((name) => passed.has(name))) {
+    throw new VerifyError("A required Chromium journey did not pass on every attempt");
+  }
+
+  if (!ownsListener(lease)) throw new VerifyError("The verified server lost its listening socket");
+  const shotPath = path.join(attempt, SHOT);
+  const shotScript = `
+    import { chromium } from '@playwright/test';
+    const browser = await chromium.launch();
+    try {
+      const page = await browser.newPage({ viewport: { width: 1280, height: 820 } });
+      const target = new URL('/overview', ${JSON.stringify(baseUrl)});
+      const assertOverview = () => {
+        const actual = new URL(page.url());
+        if (actual.origin !== target.origin || actual.pathname !== target.pathname) throw new Error('Unexpected overview origin or route');
+      };
+      await page.goto(target.href, { waitUntil: 'networkidle' });
+      assertOverview();
+      await page.getByRole('heading', { name: 'Overview', exact: true }).waitFor({ state: 'visible' });
+      assertOverview();
+      await page.screenshot({ path: ${JSON.stringify(shotPath)}, fullPage: true });
+      assertOverview();
+    } finally {
+      await browser.close();
+    }
+  `;
+  const shotRes = runCmd("node", ["--input-type=module", "-e", shotScript]);
+  if (shotRes.code !== 0 || !existsSync(shotPath) || !ownsListener(lease)) {
+    writeFileSync(path.join(attempt, "screenshot.log"), shotRes.stdout + "\n" + shotRes.stderr);
+    throw new VerifyError("Screenshot capture failed", shotRes.code || 1);
+  }
+  return { reportRaw, shotBytes: readFileSync(shotPath), count: pwStats.expected };
+}
+
+async function waitForRelease(lease, timeoutMs, identify = ownedPid) {
+  const deadline = Date.now() + timeoutMs;
+  do {
+    if (!identify(lease) && await canBindPort(lease.port)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  } while (Date.now() < deadline);
+  return false;
+}
+
+function signalOwned(lease, signal, identify = ownedPid) {
+  const pid = identify(lease);
+  if (!pid) return;
+  try {
+    process.kill(-pid, signal);
+  } catch (err) {
+    if (err.code !== "ESRCH") throw err;
+    if (identify(lease) === pid) process.kill(pid, signal);
+  }
+}
+
+async function cleanup(record = true) {
+  const startedAt = new Date().toISOString();
+  const lease = readJson(LEASE_FILE);
+  const state = readJson(STATE_FILE);
+  const meta = loadMeta();
+  if (lease?.phase === "released" && validLease(lease)) {
+    if (state && !matchesInstance(lease, state)) throw new VerifyError("State conflicts with the recorded server release", 3);
+    if (record && lease.runId !== meta.runId) throw new VerifyError("Release belongs to a different verification run", 3);
+    if (state) rmSync(STATE_FILE, { force: true });
+  } else if (state || (lease && ["starting", "running"].includes(lease.phase))) {
+    const active = lease || state;
+    if (!validPort(active.port)) throw new VerifyError("Invalid verification port", 3);
+    const identify = lease ? ownedPid : recoverableMirrorPid;
+    const intact = lease?.phase === "running" && matchesInstance(lease, state);
+    signalOwned(active, "SIGTERM", identify);
+    if (!await waitForRelease(active, 6000, identify)) {
+      signalOwned(active, "SIGKILL", identify);
+      if (!await waitForRelease(active, 1500, identify)) throw new VerifyError(`Port ${active.port} could not be reclaimed`, 3);
+    }
+    writeJson(LEASE_FILE, { ...active, phase: intact ? "released" : "unverified" });
+    rmSync(STATE_FILE, { force: true });
+    if (record && (!intact || lease.runId !== meta.runId)) {
+      throw new VerifyError("Recovered a server with incomplete launch evidence. Start a new run.", 3);
+    }
+  } else if (record) {
+    const launched = loadSteps().some((s) => s.name === "launch" && s.runId === meta.runId && s.status === "passed");
+    if (launched) throw new VerifyError("Missing server identity or confirmed release for this run", 3);
+  }
+  if (record) recordStep("cleanup", "passed", 0, startedAt, "owned server verified stopped and port released");
+}
+
+function screenshotArtifact(buf) {
+  if (buf.length < 24 || buf.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a") return null;
+  return {
+    name: SHOT, path: `public/${SHOT}`, kind: "screenshot", bytes: buf.length,
+    sha256: createHash("sha256").update(buf).digest("hex"), classification: "public-synthetic",
+  };
+}
+
+async function evidence() {
+  const startedAt = new Date().toISOString();
+  const meta = loadMeta();
+  const { headSHA, dirty, maskedIndex } = checkout();
+  const steps = loadSteps();
+  const artMeta = existsSync(path.join(OUT, "artifact-meta.json"))
+    ? JSON.parse(readFileSync(path.join(OUT, "artifact-meta.json"), "utf8")) : {};
+  const shotPath = path.join(PUB, SHOT);
+  const shot = existsSync(shotPath) ? screenshotArtifact(readFileSync(shotPath)) : null;
+  const reportPath = path.join(OUT, "playwright-report.json");
+  const drive = steps.find((entry) => entry.name === "drive" && entry.runId === meta.runId);
+  const sameAttempt = typeof artMeta.attemptId === "string" && artMeta.attemptId === drive?.attemptId
+    && existsSync(reportPath) && artMeta.reportSHA256 === createHash("sha256").update(readFileSync(reportPath)).digest("hex");
+  const artifacts = shot && sameAttempt && artMeta.runId === meta.runId && artMeta.headSHA === headSHA
+    && shot.sha256 === artMeta.artifact?.sha256 && shot.bytes === artMeta.artifact?.bytes ? [shot] : [];
+
+  const hasAllRequiredSteps = REQUIRED_STEPS.every((reqName) => {
+    const s = steps.find((item) => item.name === reqName);
+    return s && s.status === "passed" && s.runId === meta.runId && s.headSHA === headSHA;
+  });
+  const released = readJson(LEASE_FILE);
+  const allPassed = !dirty && !maskedIndex && validLease(released) && released.runId === meta.runId && released.phase === "released" && !existsSync(STATE_FILE) && meta.headSHA === headSHA && hasAllRequiredSteps && artifacts.length === 1;
+
+  recordStep("evidence", allPassed ? "passed" : "failed", allPassed ? 0 : 1, startedAt, `artifacts=${artifacts.length}`);
+  const manifest = {
+    version: 1,
+    repo: "YannJY02/AttentionOS",
+    runId: meta.runId,
+    headSHA,
+    dirtyWorkingTree: Boolean(dirty),
+    maskedIndexEntries: maskedIndex,
+    startedAt: meta.startedAt,
+    endedAt: new Date().toISOString(),
+    outcome: allPassed ? "passed" : "failed",
+    coverage: ["docs-governance", "typecheck", "vitest", "playwright-e2e-chromium", "live-screenshot"],
+    nonCoverage: ["tauri-rust-native-shell"],
+    steps: loadSteps(),
+    artifacts,
+  };
+  writeAtomic(path.join(PUB, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+  if (!allPassed) {
+    throw new VerifyError("Incomplete or mismatched verification evidence; manifest marked failed", 1);
+  }
+}
+
+async function step(name) {
+  rmSync(path.join(PUB, "manifest.json"), { force: true });
+  const index = REQUIRED_STEPS.indexOf(name);
+  if (name === "doctor") startRun();
+  const meta = loadMeta();
+  if (name === "evidence") return evidence();
+  const prior = loadSteps().filter((entry) => REQUIRED_STEPS.slice(0, index).includes(entry.name) && entry.runId === meta.runId);
+  writeJson(STEPS_FILE, prior);
+  if (index <= REQUIRED_STEPS.indexOf("drive")) clearPublishedBrowserProof();
+  const started = new Date().toISOString();
+  try {
+    if (name === "doctor") await cleanup(false);
+    if (name !== "cleanup") {
+      const actual = checkout();
+      if (actual.maskedIndex) throw new VerifyError("Verify requires a checkout without assume-unchanged or skip-worktree index flags");
+      if (actual.dirty || actual.headSHA !== meta.headSHA) throw new VerifyError("Verify requires a clean, unchanged checkout");
+      if (index && !prior.some((entry) => entry.name === REQUIRED_STEPS[index - 1] && entry.status === "passed")) {
+        throw new VerifyError(`Run ${REQUIRED_STEPS[index - 1]} first`);
+      }
+    }
+    await ({ doctor, launch, drive, cleanup })[name]();
+  } catch (err) {
+    recordStep(name, "failed", err.exitCode || 1, started, err instanceof VerifyError ? err.message : `${name} failed; see local output`);
+    throw err;
+  }
+}
+
+async function main() {
+  const lockFd = acquireLock();
+  try {
+    if (subcmd !== "all") {
+      if (![...REQUIRED_STEPS, "evidence"].includes(subcmd)) throw new VerifyError(`Unknown subcommand: ${subcmd}`, 2);
+      return await step(subcmd);
+    }
+    let error;
+    try {
+      for (const name of ["doctor", "launch", "drive"]) await step(name);
+    } catch (err) {
+      error = err;
+    }
+    for (const name of ["cleanup", "evidence"]) {
+      try { await step(name); } catch (err) { error ??= err; }
+    }
+    if (error) throw error;
+  } finally {
+    // Removing the compatibility marker lets older wx verifiers run after this one.
+    if (existsSync(LOCK_FILE) && statSync(LOCK_FILE).ino === fstatSync(lockFd).ino) rmSync(LOCK_FILE);
+    closeSync(lockFd);
+  }
+}
+
+main().catch((err) => {
+  process.stderr.write(`[verify:attentionos] ${err?.message || err}\n`);
+  process.exit(err?.exitCode || 1);
+});

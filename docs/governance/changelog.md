@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-25
+
+- The verification runner now recovers its own process after interruption and requires a recorded release before publishing a pass.
+
+## 2026-11-24
+
+- Added: isolated Software Factory live verification harness under `.agents/skills/verify/` (`SKILL.md`, `run`, `features/`), `ops/delivery.json`, `ops/review.md`, and `.github/workflows/check.yml` (`ready_for_review` + Chromium E2E evidence upload).
+- Changed: `playwright.config.ts` now honors `VERIFY_BASE_URL` on isolated verification ports while preserving `http://127.0.0.1:1420` for interactive local runs.
+
 ## 2026-05-13
 
 - Changed: project state now records that the experience-alignment closeout was pushed to `origin/main` and returns the next action to `.gitignore` cleanup plus Phase 4 contract scoping.

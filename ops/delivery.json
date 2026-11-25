@@ -1,0 +1,30 @@
+{
+  "repo": "YannJY02/AttentionOS",
+  "internal": [],
+  "admin_merge": [],
+  "check": { "workflow": "check.yml", "job": "check" },
+  "review": {
+    "points": "docs/governance/delivery/review.md",
+    "status": "agent-review",
+    "xhigh": [
+      ".github/**/*",
+      ".agents/skills/verify/**/*",
+      "ops/**/*",
+      "AGENTS.md",
+      "apps/**/*",
+      "packages/**/*",
+      "docs/decisions/**/*",
+      "docs/governance/**/*",
+      "pnpm-lock.yaml"
+    ],
+    "command": [
+      "sf-heterogeneous-reviewer",
+      "--input",
+      "{input}",
+      "--repo",
+      "YannJY02/AttentionOS",
+      "--policy",
+      "strict-cross-family"
+    ]
+  }
+}
