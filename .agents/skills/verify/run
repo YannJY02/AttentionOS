@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,21 +13,17 @@ const OUT = path.resolve(outIdx !== -1 && process.argv[outIdx + 1] ? process.arg
 const PUB = path.join(OUT, "public");
 const STATE_FILE = path.join(OUT, "instance.json");
 const STEPS_FILE = path.join(OUT, "steps.json");
+const META_FILE = path.join(OUT, "run-meta.json");
+const LOCK_FILE = path.join(OUT, ".verify.lock");
+const REQUIRED_STEPS = ["doctor", "launch", "drive", "cleanup"];
 
 mkdirSync(PUB, { recursive: true });
 
-function loadSteps() {
-  try {
-    return existsSync(STEPS_FILE) ? JSON.parse(readFileSync(STEPS_FILE, "utf8")) : [];
-  } catch {
-    return [];
+class VerifyError extends Error {
+  constructor(message, exitCode = 1) {
+    super(message);
+    this.exitCode = exitCode;
   }
-}
-
-function recordStep(name, status, exitCode, startedAt, detail = "") {
-  const steps = loadSteps().filter((s) => s.name !== name);
-  steps.push({ name, status, exitCode, startedAt, endedAt: new Date().toISOString(), detail });
-  writeFileSync(STEPS_FILE, JSON.stringify(steps, null, 2));
 }
 
 function runCmd(cmd, args, envExtra = {}) {
@@ -40,6 +36,75 @@ function runCmd(cmd, args, envExtra = {}) {
   return { code: res.status ?? 1, stdout: res.stdout || "", stderr: res.stderr || "" };
 }
 
+function currentHeadSHA() {
+  return runCmd("git", ["rev-parse", "HEAD"]).stdout.trim();
+}
+
+function loadMeta() {
+  if (existsSync(META_FILE)) {
+    try {
+      return JSON.parse(readFileSync(META_FILE, "utf8"));
+    } catch {}
+  }
+  const meta = {
+    runId: `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}`,
+    headSHA: currentHeadSHA(),
+    startedAt: new Date().toISOString(),
+  };
+  writeFileSync(META_FILE, JSON.stringify(meta, null, 2));
+  return meta;
+}
+
+function acquireLock() {
+  if (existsSync(LOCK_FILE)) {
+    try {
+      const holder = JSON.parse(readFileSync(LOCK_FILE, "utf8"));
+      if (holder.pid && holder.pid !== process.pid) {
+        const ps = runCmd("ps", ["-p", String(holder.pid), "-o", "command="]);
+        if (ps.code === 0 && ps.stdout.includes("verify/run")) {
+          throw new VerifyError(`Output directory ${OUT} is locked by active verify PID ${holder.pid}`, 2);
+        }
+      }
+    } catch (e) {
+      if (e instanceof VerifyError) throw e;
+    }
+  }
+  writeFileSync(LOCK_FILE, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }));
+}
+
+function releaseLock() {
+  try {
+    if (existsSync(LOCK_FILE)) {
+      const holder = JSON.parse(readFileSync(LOCK_FILE, "utf8"));
+      if (holder.pid === process.pid) rmSync(LOCK_FILE, { force: true });
+    }
+  } catch {}
+}
+
+function loadSteps() {
+  try {
+    return existsSync(STEPS_FILE) ? JSON.parse(readFileSync(STEPS_FILE, "utf8")) : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordStep(name, status, exitCode, startedAt, detail = "") {
+  const meta = loadMeta();
+  const steps = loadSteps().filter((s) => s.name !== name);
+  steps.push({
+    name,
+    runId: meta.runId,
+    headSHA: meta.headSHA,
+    status,
+    exitCode,
+    startedAt,
+    endedAt: new Date().toISOString(),
+    detail,
+  });
+  writeFileSync(STEPS_FILE, JSON.stringify(steps, null, 2));
+}
+
 function freePort() {
   return new Promise((resolve, reject) => {
     const srv = net.createServer();
@@ -49,6 +114,20 @@ function freePort() {
       srv.close(() => resolve(port));
     });
     srv.on("error", reject);
+  });
+}
+
+function isPortOpen(port) {
+  return new Promise((resolve) => {
+    const sock = net.createConnection({ host: "127.0.0.1", port }, () => {
+      sock.destroy();
+      resolve(true);
+    });
+    sock.on("error", () => resolve(false));
+    sock.setTimeout(400, () => {
+      sock.destroy();
+      resolve(false);
+    });
   });
 }
 
@@ -64,73 +143,102 @@ async function waitHttp(url, timeoutMs = 25000) {
   return false;
 }
 
+function isOwnedViteProcess(pid, port) {
+  if (!pid || pid <= 0) return false;
+  const ps = runCmd("ps", ["-p", String(pid), "-o", "command="]);
+  if (ps.code !== 0) return false;
+  const cmd = ps.stdout.trim();
+  return (cmd.includes("vite") || cmd.includes("pnpm")) && cmd.includes(String(port));
+}
+
 async function doctor() {
   const startedAt = new Date().toISOString();
+  loadMeta();
   const verifyRes = runCmd("pnpm", ["verify"]);
   writeFileSync(path.join(OUT, "doctor-verify.log"), verifyRes.stdout + "\n" + verifyRes.stderr);
   if (verifyRes.code !== 0) {
     recordStep("doctor", "failed", verifyRes.code, startedAt, "pnpm verify failed");
-    throw new Error(`pnpm verify failed (exit ${verifyRes.code}):\n${verifyRes.stderr || verifyRes.stdout}`);
+    throw new VerifyError(`pnpm verify failed (exit ${verifyRes.code}):\n${verifyRes.stderr || verifyRes.stdout}`, 1);
   }
   const buildRes = runCmd("pnpm", ["build"]);
   writeFileSync(path.join(OUT, "doctor-build.log"), buildRes.stdout + "\n" + buildRes.stderr);
   if (buildRes.code !== 0) {
     recordStep("doctor", "failed", buildRes.code, startedAt, "pnpm build failed");
-    throw new Error(`pnpm build failed (exit ${buildRes.code}):\n${buildRes.stderr || buildRes.stdout}`);
+    throw new VerifyError(`pnpm build failed (exit ${buildRes.code}):\n${buildRes.stderr || buildRes.stdout}`, 1);
   }
   recordStep("doctor", "passed", 0, startedAt, "pnpm verify + pnpm build passed");
 }
 
 async function launch() {
   const startedAt = new Date().toISOString();
+  const meta = loadMeta();
+  if (existsSync(STATE_FILE)) {
+    await cleanup(false);
+  }
   const port = await freePort();
   const baseUrl = `http://127.0.0.1:${port}`;
   const logFile = path.join(OUT, "vite.log");
-  const child = spawn(
-    "pnpm",
-    ["--filter", "@attentionos/desktop", "exec", "vite", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
-    {
-      cwd: ROOT,
-      detached: true,
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-  let logs = "";
-  child.stdout.on("data", (d) => {
-    logs += d.toString();
-    writeFileSync(logFile, logs);
-  });
-  child.stderr.on("data", (d) => {
-    logs += d.toString();
-    writeFileSync(logFile, logs);
-  });
+  const logFd = openSync(logFile, "a");
+  let child;
+  try {
+    child = spawn(
+      "pnpm",
+      ["--filter", "@attentionos/desktop", "exec", "vite", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
+      {
+        cwd: ROOT,
+        detached: true,
+        stdio: ["ignore", logFd, logFd],
+      },
+    );
+  } finally {
+    closeSync(logFd);
+  }
   child.unref();
 
-  writeFileSync(STATE_FILE, JSON.stringify({ pid: child.pid, port, baseUrl, startedAt }, null, 2));
+  writeFileSync(STATE_FILE, JSON.stringify({ runId: meta.runId, pid: child.pid, port, baseUrl, startedAt }, null, 2));
   const ready = await waitHttp(baseUrl, 25000);
   if (!ready) {
-    await cleanup();
+    await cleanup(false);
     recordStep("launch", "failed", 2, startedAt, `Vite failed to come up on ${baseUrl}`);
-    throw new Error(`Vite did not respond on ${baseUrl}`);
+    throw new VerifyError(`Vite did not respond on ${baseUrl}`, 2);
   }
   recordStep("launch", "passed", 0, startedAt, baseUrl);
 }
 
 async function drive() {
   const startedAt = new Date().toISOString();
-  if (!existsSync(STATE_FILE)) throw new Error("No active instance.json; run launch first");
+  const meta = loadMeta();
+  if (!existsSync(STATE_FILE)) throw new VerifyError("No active instance.json; run launch first", 2);
   const { baseUrl } = JSON.parse(readFileSync(STATE_FILE, "utf8"));
+  const pwJsonFile = path.join(OUT, "playwright-report.json");
+  rmSync(pwJsonFile, { force: true });
 
-  const pwRes = runCmd("pnpm", ["exec", "playwright", "test", "--project=chromium"], {
-    VERIFY_BASE_URL: baseUrl,
-  });
+  const pwRes = runCmd(
+    "pnpm",
+    ["exec", "playwright", "test", "--project=chromium", "--forbid-only", "--reporter=json"],
+    {
+      VERIFY_BASE_URL: baseUrl,
+      PLAYWRIGHT_JSON_OUTPUT_NAME: pwJsonFile,
+    },
+  );
   writeFileSync(path.join(OUT, "playwright.log"), pwRes.stdout + "\n" + pwRes.stderr);
   if (pwRes.code !== 0) {
     recordStep("drive", "failed", pwRes.code, startedAt, "playwright suite failed");
-    throw new Error(`Playwright tests failed (exit ${pwRes.code}):\n${pwRes.stdout}\n${pwRes.stderr}`);
+    throw new VerifyError(`Playwright tests failed (exit ${pwRes.code}):\n${pwRes.stderr || pwRes.stdout}`, 1);
+  }
+
+  const reportRaw = existsSync(pwJsonFile) ? readFileSync(pwJsonFile, "utf8") : pwRes.stdout;
+  let pwStats = null;
+  try {
+    pwStats = JSON.parse(reportRaw).stats;
+  } catch {}
+  if (!pwStats || pwStats.unexpected > 0 || pwStats.skipped > 0 || pwStats.expected < 3) {
+    recordStep("drive", "failed", 1, startedAt, `playwright stats invalid: ${JSON.stringify(pwStats)}`);
+    throw new VerifyError(`Playwright required journeys skipped or incomplete: ${JSON.stringify(pwStats)}`, 1);
   }
 
   const shotPath = path.join(PUB, "overview-proof.png");
+  rmSync(shotPath, { force: true });
   const shotScript = `
     import { chromium } from '@playwright/test';
     const browser = await chromium.launch();
@@ -142,37 +250,89 @@ async function drive() {
   const shotRes = runCmd("node", ["--input-type=module", "-e", shotScript]);
   if (shotRes.code !== 0 || !existsSync(shotPath)) {
     recordStep("drive", "failed", 1, startedAt, "screenshot capture failed");
-    throw new Error(`Screenshot capture failed: ${shotRes.stderr}`);
+    throw new VerifyError(`Screenshot capture failed: ${shotRes.stderr}`, 1);
   }
-  recordStep("drive", "passed", 0, startedAt, "e2e passed + overview-proof.png captured");
+  writeFileSync(
+    path.join(OUT, "artifact-meta.json"),
+    JSON.stringify({ runId: meta.runId, headSHA: meta.headSHA, file: "overview-proof.png" }, null, 2),
+  );
+  recordStep("drive", "passed", 0, startedAt, `e2e passed (${pwStats.expected} tests, 0 skipped) + overview-proof.png`);
+}
+
+async function cleanup(record = true) {
+  const startedAt = new Date().toISOString();
+  if (existsSync(STATE_FILE)) {
+    const state = JSON.parse(readFileSync(STATE_FILE, "utf8"));
+    const { pid, port } = state;
+    if (isOwnedViteProcess(pid, port)) {
+      try {
+        process.kill(-pid, "SIGTERM");
+      } catch {
+        try {
+          process.kill(pid, "SIGTERM");
+        } catch {}
+      }
+      const deadline = Date.now() + 6000;
+      while (Date.now() < deadline) {
+        if (!isOwnedViteProcess(pid, port) && !(await isPortOpen(port))) break;
+        await new Promise((r) => setTimeout(r, 150));
+      }
+      if (isOwnedViteProcess(pid, port)) {
+        try {
+          process.kill(-pid, "SIGKILL");
+        } catch {}
+      }
+    }
+    if (port && (await isPortOpen(port)) && isOwnedViteProcess(pid, port)) {
+      if (record) recordStep("cleanup", "failed", 3, startedAt, `port ${port} remained open after SIGTERM/SIGKILL`);
+      throw new VerifyError(`Owned Vite server on port ${port} failed to release socket`, 3);
+    }
+    rmSync(STATE_FILE, { force: true });
+  }
+  if (record) {
+    recordStep("cleanup", "passed", 0, startedAt, "owned server verified stopped & port released");
+  }
 }
 
 async function evidence() {
   const startedAt = new Date().toISOString();
-  const headSHA = runCmd("git", ["rev-parse", "HEAD"]).stdout.trim();
+  const meta = loadMeta();
+  const headSHA = currentHeadSHA();
   const dirty = runCmd("git", ["status", "--porcelain"]).stdout.trim();
   const steps = loadSteps();
+  const artMeta = existsSync(path.join(OUT, "artifact-meta.json"))
+    ? JSON.parse(readFileSync(path.join(OUT, "artifact-meta.json"), "utf8"))
+    : null;
+
   const artifacts = [];
-  for (const name of ["overview-proof.png"]) {
-    const p = path.join(PUB, name);
-    if (existsSync(p)) {
-      const buf = readFileSync(p);
-      artifacts.push({
-        name,
-        bytes: statSync(p).size,
-        sha256: createHash("sha256").update(buf).digest("hex"),
-        classification: "public-synthetic",
-      });
-    }
+  const shotPath = path.join(PUB, "overview-proof.png");
+  if (existsSync(shotPath) && artMeta?.runId === meta.runId && artMeta?.headSHA === headSHA) {
+    const buf = readFileSync(shotPath);
+    artifacts.push({
+      name: "overview-proof.png",
+      path: "public/overview-proof.png",
+      kind: "screenshot",
+      bytes: statSync(shotPath).size,
+      sha256: createHash("sha256").update(buf).digest("hex"),
+      classification: "public-synthetic",
+    });
   }
-  const allPassed = steps.length > 0 && steps.every((s) => s.status === "passed");
-  recordStep("evidence", "passed", 0, startedAt, `artifacts=${artifacts.length}`);
+
+  const hasAllRequiredSteps = REQUIRED_STEPS.every((reqName) => {
+    const s = steps.find((item) => item.name === reqName);
+    return s && s.status === "passed" && s.runId === meta.runId && s.headSHA === headSHA;
+  });
+  const allPassed = meta.headSHA === headSHA && hasAllRequiredSteps && artifacts.length > 0;
+
+  recordStep("evidence", allPassed ? "passed" : "failed", allPassed ? 0 : 1, startedAt, `artifacts=${artifacts.length}`);
   const manifest = {
     version: 1,
     repo: "YannJY02/AttentionOS",
+    runId: meta.runId,
     headSHA,
     dirtyWorkingTree: Boolean(dirty),
-    generatedAt: new Date().toISOString(),
+    startedAt: meta.startedAt,
+    endedAt: new Date().toISOString(),
     outcome: allPassed ? "passed" : "failed",
     coverage: ["docs-governance", "typecheck", "vitest", "playwright-e2e-chromium", "live-screenshot"],
     nonCoverage: ["tauri-rust-native-shell"],
@@ -180,56 +340,54 @@ async function evidence() {
     artifacts,
   };
   writeFileSync(path.join(PUB, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
-}
-
-async function cleanup() {
-  const startedAt = new Date().toISOString();
-  if (existsSync(STATE_FILE)) {
-    try {
-      const { pid } = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-      if (pid) {
-        try {
-          process.kill(-pid, "SIGTERM");
-        } catch {
-          try {
-            process.kill(pid, "SIGTERM");
-          } catch {}
-        }
-      }
-    } catch {}
-    rmSync(STATE_FILE, { force: true });
+  if (!allPassed) {
+    throw new VerifyError("Incomplete or mismatched verification evidence; manifest marked failed", 1);
   }
-  recordStep("cleanup", "passed", 0, startedAt, "owned server terminated; public evidence preserved");
 }
 
 async function main() {
-  if (subcmd === "doctor") await doctor();
-  else if (subcmd === "launch") await launch();
-  else if (subcmd === "drive") await drive();
-  else if (subcmd === "evidence") await evidence();
-  else if (subcmd === "cleanup") await cleanup();
-  else if (subcmd === "all") {
-    rmSync(STEPS_FILE, { force: true });
-    let err = null;
-    try {
-      await doctor();
-      await launch();
-      await drive();
-    } catch (e) {
-      err = e;
-    } finally {
+  acquireLock();
+  try {
+    if (subcmd === "doctor") await doctor();
+    else if (subcmd === "launch") await launch();
+    else if (subcmd === "drive") await drive();
+    else if (subcmd === "evidence") await evidence();
+    else if (subcmd === "cleanup") await cleanup(true);
+    else if (subcmd === "all") {
+      rmSync(STEPS_FILE, { force: true });
+      rmSync(META_FILE, { force: true });
+      rmSync(path.join(OUT, "artifact-meta.json"), { force: true });
+      rmSync(path.join(PUB, "overview-proof.png"), { force: true });
+      loadMeta();
+      let err = null;
       try {
-        await cleanup();
-      } catch {}
-      await evidence();
+        await doctor();
+        await launch();
+        await drive();
+      } catch (e) {
+        err = e;
+      } finally {
+        try {
+          await cleanup(true);
+        } catch (ce) {
+          if (!err) err = ce;
+        }
+        try {
+          await evidence();
+        } catch (ee) {
+          if (!err) err = ee;
+        }
+      }
+      if (err) throw err;
+    } else {
+      throw new VerifyError(`Unknown subcommand: ${subcmd}`, 2);
     }
-    if (err) throw err;
-  } else {
-    throw new Error(`Unknown subcommand: ${subcmd}`);
+  } finally {
+    releaseLock();
   }
 }
 
 main().catch((err) => {
   process.stderr.write(`[verify:attentionos] ${err?.message || err}\n`);
-  process.exit(1);
+  process.exit(err?.exitCode || 1);
 });

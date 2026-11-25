@@ -18,8 +18,7 @@
       "pnpm-lock.yaml"
     ],
     "command": [
-      "/Users/yann.jy/.nvm/versions/node/v25.5.0/bin/node",
-      "/Users/yann.jy/.local/share/ceo-factory/v1/heterogeneous-reviewer.mjs",
+      "sf-heterogeneous-reviewer",
       "--input",
       "{input}",
       "--policy",

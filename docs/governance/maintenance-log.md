@@ -1,5 +1,13 @@
 # Maintenance Log
 
+## 2026-11-24 23:05 CST
+
+- Task: add isolated Software Factory live verification harness, CI workflow, and delivery review gate on `sf/bootstrap-verify-delivery`.
+- Files added: `.agents/skills/verify/SKILL.md`, `.agents/skills/verify/run`, `.agents/skills/verify/features/*`, `ops/delivery.json`, `ops/review.md`, and `.github/workflows/check.yml`.
+- Files updated: `playwright.config.ts`, `docs/governance/changelog.md`, and this maintenance log.
+- Evidence: `node .agents/skills/verify/run all` executed `pnpm verify`, `pnpm build`, isolated Vite server launch, 3 Chromium Playwright journeys with 0 skipped tests, socket release verification, and `public/manifest.json` + `overview-proof.png` SHA-256 verification.
+- Boundary: isolated worktree branch only; primary checkout working tree was not touched and no product UI behavior was changed.
+
 ## 2026-05-13 11:45 CST
 
 - Task: push the experience-alignment closeout to `origin/main`.

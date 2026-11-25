@@ -1,6 +1,6 @@
 # AttentionOS Delivery & Review Gate
 
-The official `agent-autoloop` delivery plugin reads [delivery.json](delivery.json) and these review points from `main`. Review uses the quota-resilient dual-seat heterogeneous panel (`gpt-6.2-astra @xhigh` + cross-family Claude/Gemini seat).
+The official `agent-autoloop` delivery plugin reads [delivery.json](delivery.json) and these review points from `main`. Review uses the quota-resilient dual-seat panel (`panel-v1`: primary `gpt-6.2-astra @xhigh` + cross-family `Claude` / `Gemini` seat with automatic local failover to distinct `gpt-6.1-terra @xhigh` when external CLI credentials or quota are unavailable; pass `--policy strict-cross-family` when cross-provider enforcement is mandatory).
 
 ## 审查要点
 
