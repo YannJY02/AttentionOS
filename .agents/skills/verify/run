@@ -407,9 +407,20 @@ async function drive() {
       reportSHA256: createHash("sha256").update(reportRaw).digest("hex"),
     });
     recordStep("drive", "passed", 0, startedAt, `e2e passed (${count} tests, 0 skipped) + ${SHOT}`, attemptId);
-  } finally {
-    rmSync(attempt, { recursive: true, force: true });
+  } catch (error) {
+    clearPublishedBrowserProof();
+    const hint = `Private diagnostics: ${attemptId}/ under --out`;
+    writeFileSync(path.join(OUT, "playwright.log"), `\n${hint}\n`, { flag: "a" });
+    const reason = error instanceof VerifyError ? error.message : "Browser verification failed";
+    throw new VerifyError(`${reason}. ${hint}`, error.exitCode || 1);
   }
+  rmSync(attempt, { recursive: true, force: true });
+}
+
+function clearPublishedBrowserProof() {
+  rmSync(path.join(OUT, "artifact-meta.json"), { force: true });
+  rmSync(path.join(OUT, "playwright-report.json"), { force: true });
+  rmSync(path.join(PUB, SHOT), { force: true });
 }
 
 function collectBrowserProof(lease, attempt) {
@@ -424,7 +435,9 @@ function collectBrowserProof(lease, attempt) {
       PLAYWRIGHT_JSON_OUTPUT_NAME: pwJsonFile,
     },
   );
-  writeFileSync(path.join(OUT, "playwright.log"), pwRes.stdout + "\n" + pwRes.stderr);
+  const browserLog = pwRes.stdout + "\n" + pwRes.stderr;
+  writeFileSync(path.join(attempt, "playwright.log"), browserLog);
+  writeFileSync(path.join(OUT, "playwright.log"), browserLog);
   if (pwRes.code !== 0) {
     throw new VerifyError("Playwright tests failed; see playwright.log", pwRes.code);
   }
@@ -479,6 +492,7 @@ function collectBrowserProof(lease, attempt) {
   `;
   const shotRes = runCmd("node", ["--input-type=module", "-e", shotScript]);
   if (shotRes.code !== 0 || !existsSync(shotPath) || !ownsListener(lease)) {
+    writeFileSync(path.join(attempt, "screenshot.log"), shotRes.stdout + "\n" + shotRes.stderr);
     throw new VerifyError("Screenshot capture failed", shotRes.code || 1);
   }
   return { reportRaw, shotBytes: readFileSync(shotPath), count: pwStats.expected };
@@ -596,11 +610,7 @@ async function step(name) {
   if (name === "evidence") return evidence();
   const prior = loadSteps().filter((entry) => REQUIRED_STEPS.slice(0, index).includes(entry.name) && entry.runId === meta.runId);
   writeJson(STEPS_FILE, prior);
-  if (index <= REQUIRED_STEPS.indexOf("drive")) {
-    rmSync(path.join(OUT, "artifact-meta.json"), { force: true });
-    rmSync(path.join(OUT, "playwright-report.json"), { force: true });
-    rmSync(path.join(PUB, SHOT), { force: true });
-  }
+  if (index <= REQUIRED_STEPS.indexOf("drive")) clearPublishedBrowserProof();
   const started = new Date().toISOString();
   try {
     if (name === "doctor") await cleanup(false);
