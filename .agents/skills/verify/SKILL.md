@@ -14,11 +14,13 @@ Use `.agents/skills/verify/run` to prove AttentionOS changes end-to-end without 
 .agents/skills/verify/run doctor   --out /tmp/attentionos-verify-01
 .agents/skills/verify/run launch   --out /tmp/attentionos-verify-01
 .agents/skills/verify/run drive    --out /tmp/attentionos-verify-01
-.agents/skills/verify/run evidence --out /tmp/attentionos-verify-01
 .agents/skills/verify/run cleanup  --out /tmp/attentionos-verify-01
+.agents/skills/verify/run evidence --out /tmp/attentionos-verify-01
 ```
 
 ## Lifecycle
+
+Start from a clean checkout. `all` runs the full sequence; for individual steps, `doctor` starts a new run. Repeat `launch` before retrying an interrupted browser journey. Evidence requires the same clean commit at each step, matching file digests, and completed cleanup.
 
 - **Doctor:** Confirms Node >=22, `pnpm`, and runs `pnpm verify` (`docs:check` + `turbo check` + `vitest run`) plus `pnpm build`.
 - **Launch:** Allocates a free loopback port, starts `@attentionos/desktop` Vite server in its own process group (`--strictPort`), and waits until HTTP 200 ready. Never touches an existing `1420` dev server.

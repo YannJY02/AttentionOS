@@ -21,8 +21,10 @@
       "sf-heterogeneous-reviewer",
       "--input",
       "{input}",
+      "--repo",
+      "YannJY02/AttentionOS",
       "--policy",
-      "panel-v1"
+      "strict-cross-family"
     ]
   }
 }
