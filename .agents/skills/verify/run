@@ -125,16 +125,15 @@ function freePort() {
   });
 }
 
-function isPortOpen(port) {
-  return new Promise((resolve) => {
-    const sock = net.createConnection({ host: "127.0.0.1", port }, () => {
-      sock.destroy();
-      resolve(true);
+function canBindPort(port) {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.once("error", (error) => {
+      if (error.code === "EADDRINUSE") resolve(false);
+      else reject(error);
     });
-    sock.on("error", () => resolve(false));
-    sock.setTimeout(400, () => {
-      sock.destroy();
-      resolve(false);
+    probe.listen({ port, host: "127.0.0.1", exclusive: true }, () => {
+      probe.close((error) => error ? reject(error) : resolve(true));
     });
   });
 }
@@ -303,7 +302,7 @@ async function cleanup(record = true) {
       }
       const deadline = Date.now() + 6000;
       while (Date.now() < deadline) {
-        if (!isOwnedViteProcess(pid, port) && !(await isPortOpen(port))) break;
+        if (!isOwnedViteProcess(pid, port) && await canBindPort(port)) break;
         await new Promise((r) => setTimeout(r, 150));
       }
       if (isOwnedViteProcess(pid, port)) {
@@ -312,7 +311,7 @@ async function cleanup(record = true) {
         } catch {}
       }
     }
-if (isOwnedViteProcess(pid, port) || await isPortOpen(port)) {
+if (isOwnedViteProcess(pid, port) || !(await canBindPort(port))) {
       throw new VerifyError(`Port ${port} is still in use or the owned server is still running`, 3);
     }
 
