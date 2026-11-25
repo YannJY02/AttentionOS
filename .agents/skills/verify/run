@@ -110,8 +110,11 @@ function acquireLock() {
       try { holder = JSON.parse(readFileSync(LOCK_FILE, "utf8")); } catch {}
     }
     if (hasPid(holder) && holder.protocol !== 2) {
-      const owner = runCmd("ps", ["-ww", "-p", String(holder.pid), "-o", "command="]);
-      if (owner.code === 0 && owner.stdout.includes(".agents/skills/verify/run")) {
+      const owner = runCmd("ps", ["-p", String(holder.pid), "-o", "lstart="]);
+      const started = Date.parse(owner.stdout.trim());
+      // Old verifiers may be invoked as "node run" or through a symlink. An
+      // existing process predating the marker cannot safely be classified by argv.
+      if (owner.code !== 1 && (owner.code !== 0 || !Number.isFinite(started) || started <= fstatSync(fd).mtimeMs + 1000)) {
         closeSync(fd);
         throw new VerifyError("An earlier verifier is still using this output directory", 2);
       }
