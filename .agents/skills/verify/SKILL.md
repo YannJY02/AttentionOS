@@ -22,7 +22,7 @@ Use `.agents/skills/verify/run` to prove AttentionOS changes end-to-end without 
 
 Start from a clean checkout. `all` runs the full sequence; for individual steps, `doctor` starts a new run. Repeat `launch` before retrying an interrupted browser journey. Evidence requires the same clean commit at each step, matching file digests, and completed cleanup.
 
-- **Doctor:** Confirms Node >=22, `pnpm`, and runs `pnpm verify` (`docs:check` + `turbo check` + `vitest run`) plus `pnpm build`.
+- **Doctor:** Requires Node >=22, `pnpm` and Python 3 for the output lock, and runs `pnpm verify` (`docs:check` + `turbo check` + `vitest run`) plus `pnpm build`.
 - **Launch:** Allocates a free loopback port, starts `@attentionos/desktop` Vite server in its own process group (`--strictPort`), and waits until HTTP 200 ready. Never touches an existing `1420` dev server.
 - **Drive:** Runs Playwright (`VERIFY_BASE_URL=http://127.0.0.1:<port>`) across `e2e/smoke.spec.ts` and `e2e/evolution-learning.spec.ts`, then captures a live screenshot of `/overview` to `<out>/public/overview-proof.png`.
 - **Evidence:** Writes `<out>/public/manifest.json` with exact commit SHA, step exit codes, coverage boundary (`browser-web-surface`; native Tauri shell requires explicit desktop qualification), and SHA-256 artifact hashes.
@@ -30,4 +30,4 @@ Start from a clean checkout. `all` runs the full sequence; for individual steps,
 
 ## Feature Map
 
-See [features/README.md](features/README.md) for mapped user journeys.
+See [the verification index](../../../docs/governance/delivery/features/README.md) for mapped user journeys.

@@ -1,5 +1,9 @@
 # Maintenance Log
 
+## 2026-11-25
+
+- Moved the delivery review and journey documents under `docs/governance/delivery/` and pointed the review configuration to their canonical location.
+
 ## 2026-11-24 23:05 CST
 
 - Task: add isolated Software Factory live verification harness, CI workflow, and delivery review gate on `sf/bootstrap-verify-delivery`.

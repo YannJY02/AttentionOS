@@ -24,7 +24,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: node .agents/skills/verify/run all --out "$RUNNER_TEMP/verify"
+      - id: verify
+        run: node .agents/skills/verify/run all --out "$RUNNER_TEMP/verify"
       - uses: actions/upload-artifact@v4
         with:
           name: attentionos-evidence
@@ -33,3 +34,10 @@ jobs:
             ${{ runner.temp }}/verify/public/overview-proof.png
           retention-days: 7
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure() && steps.verify.outcome == 'failure'
+        with:
+          name: attentionos-failed-check
+          path: ${{ runner.temp }}/verify/public/manifest.json
+          retention-days: 7
+          if-no-files-found: ignore

@@ -4,7 +4,7 @@
   "admin_merge": [],
   "check": { "workflow": "check.yml", "job": "check" },
   "review": {
-    "points": "ops/review.md",
+    "points": "docs/governance/delivery/review.md",
     "status": "agent-review",
     "xhigh": [
       ".github/**/*",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-25
+
+- The verification runner now recovers its own process after interruption and requires a recorded release before publishing a pass.
+
 ## 2026-11-24
 
 - Added: isolated Software Factory live verification harness under `.agents/skills/verify/` (`SKILL.md`, `run`, `features/`), `ops/delivery.json`, `ops/review.md`, and `.github/workflows/check.yml` (`ready_for_review` + Chromium E2E evidence upload).

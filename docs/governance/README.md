@@ -4,6 +4,8 @@ This directory contains non-authoritative documentation governance surfaces.
 
 ## Contents
 
+- [Delivery review](delivery/review.md) and [verified user journeys](delivery/features/README.md).
+
 - `maintenance-log.md` — AI maintenance log and evidence record.
 - `stale-report.md` — current stale/conflict findings.
 - `proposed-updates/` — proposed changes that need owner review.

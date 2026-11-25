@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from "node:child_process";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, ftruncateSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
 import net from "node:net";
 import path from "node:path";
@@ -9,9 +9,11 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const subcmd = process.argv[2] || "all";
 const outIdx = process.argv.indexOf("--out");
-const OUT = path.resolve(outIdx !== -1 && process.argv[outIdx + 1] ? process.argv[outIdx + 1] : `/tmp/attentionos-verify-${process.getuid()}`);
+const treeKey = createHash("sha256").update(ROOT).digest("hex").slice(0, 12);
+const OUT = path.resolve(outIdx !== -1 && process.argv[outIdx + 1] ? process.argv[outIdx + 1] : `/tmp/attentionos-verify-${process.getuid()}-${treeKey}`);
 const PUB = path.join(OUT, "public");
 const STATE_FILE = path.join(OUT, "instance.json");
+const LEASE_FILE = path.join(OUT, "server-lease.json");
 const STEPS_FILE = path.join(OUT, "steps.json");
 const META_FILE = path.join(OUT, "run-meta.json");
 const LOCK_FILE = path.join(OUT, ".verify.lock");
@@ -68,21 +70,32 @@ function startRun() {
 }
 
 function acquireLock() {
-  try {
-    writeFileSync(LOCK_FILE, JSON.stringify({ pid: process.pid }), { flag: "wx", mode: 0o600 });
-  } catch (error) {
-    if (error.code !== "EEXIST") throw error;
-    throw new VerifyError(`Verification output is locked at ${LOCK_FILE}. If the owner exited, use a fresh output directory.`, 2);
+  const fd = openSync(LOCK_FILE, "a+", 0o600);
+  // Both processes share the same open file description. The kernel releases
+  // the lock when the parent exits, including after SIGKILL.
+  const script = [
+    "import fcntl, sys",
+    "try: fcntl.flock(3, fcntl.LOCK_EX | fcntl.LOCK_NB)",
+    "except BlockingIOError: sys.exit(2)",
+  ].join("\n");
+  const result = spawnSync("python3", ["-c", script], { stdio: ["ignore", "ignore", "pipe", fd] });
+  if (result.status !== 0) {
+    closeSync(fd);
+    throw new VerifyError(result.status === 2 ? "Another verifier owns this output directory" : "Python 3 is required to lock the output directory", 2);
   }
+  ftruncateSync(fd, 0);
+  writeSync(fd, JSON.stringify({ pid: process.pid }), 0, "utf8");
+  return fd;
 }
 
-function releaseLock() {
-  try {
-    if (existsSync(LOCK_FILE)) {
-      const holder = JSON.parse(readFileSync(LOCK_FILE, "utf8"));
-      if (holder.pid === process.pid) rmSync(LOCK_FILE, { force: true });
-    }
-  } catch {}
+function writeJson(file, value) {
+  const temp = `${file}.${process.pid}.tmp`;
+  writeFileSync(temp, JSON.stringify(value, null, 2));
+  renameSync(temp, file);
+}
+
+function readJson(file) {
+  return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
 }
 
 function loadSteps() {
@@ -150,28 +163,33 @@ async function waitHttp(url, timeoutMs = 25000) {
   return false;
 }
 
-function isOwnedViteProcess(pid, port) {
-  if (!pid || pid <= 0) return false;
-  const ps = runCmd("ps", ["-p", String(pid), "-o", "command="]);
-  if (ps.code !== 0) return false;
-  const cmd = ps.stdout.trim();
-  return cmd.includes(VITE + " --host 127.0.0.1 --port " + port + " --strictPort");
+function ownedPid(lease) {
+  if (!lease?.token || !Number.isInteger(lease.port)) return null;
+  const expected = `--conditions=sf-verify-${lease.token} ${VITE} --host 127.0.0.1 --port ${lease.port} --strictPort`;
+  if (lease.pid) {
+    const ps = runCmd("ps", ["-p", String(lease.pid), "-o", "command="]);
+    return ps.code === 0 && ps.stdout.trim().endsWith(expected) ? lease.pid : null;
+  }
+  // Recover a process spawned before the parent could persist its pid.
+  const ps = runCmd("ps", ["-ax", "-o", "pid=,command="]);
+  if (ps.code !== 0) throw new VerifyError("Cannot identify the verification server", 3);
+  const match = ps.stdout.split("\n").find((line) => line.trimEnd().endsWith(expected));
+  return match ? Number.parseInt(match.trimStart(), 10) : null;
 }
 
 async function doctor() {
   const startedAt = new Date().toISOString();
   loadMeta();
+  if (Number(process.versions.node.split(".")[0]) < 22) throw new VerifyError("Node 22 or later is required", 2);
   const verifyRes = runCmd("pnpm", ["verify"]);
   writeFileSync(path.join(OUT, "doctor-verify.log"), verifyRes.stdout + "\n" + verifyRes.stderr);
   if (verifyRes.code !== 0) {
-    recordStep("doctor", "failed", verifyRes.code, startedAt, "pnpm verify failed");
-    throw new VerifyError(`pnpm verify failed (exit ${verifyRes.code}):\n${verifyRes.stderr || verifyRes.stdout}`, 1);
+    throw new VerifyError("pnpm verify failed; see doctor-verify.log", verifyRes.code);
   }
   const buildRes = runCmd("pnpm", ["build"]);
   writeFileSync(path.join(OUT, "doctor-build.log"), buildRes.stdout + "\n" + buildRes.stderr);
   if (buildRes.code !== 0) {
-    recordStep("doctor", "failed", buildRes.code, startedAt, "pnpm build failed");
-    throw new VerifyError(`pnpm build failed (exit ${buildRes.code}):\n${buildRes.stderr || buildRes.stdout}`, 1);
+    throw new VerifyError("pnpm build failed; see doctor-build.log", buildRes.code);
   }
   recordStep("doctor", "passed", 0, startedAt, "pnpm verify + pnpm build passed");
 }
@@ -179,18 +197,18 @@ async function doctor() {
 async function launch() {
   const startedAt = new Date().toISOString();
   const meta = loadMeta();
-  if (existsSync(STATE_FILE)) {
-    await cleanup(false);
-  }
+  await cleanup(false);
   const port = await freePort();
   const baseUrl = `http://127.0.0.1:${port}`;
+  const lease = { runId: meta.runId, startedAt, port, baseUrl, token: randomBytes(16).toString("hex"), phase: "starting" };
+  writeJson(LEASE_FILE, lease);
   const logFile = path.join(OUT, "vite.log");
   const logFd = openSync(logFile, "a");
   let child;
   try {
     child = spawn(
       process.execPath,
-      [VITE, "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
+      [`--conditions=sf-verify-${lease.token}`, VITE, "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
       {
         cwd: DESKTOP,
         detached: true,
@@ -202,11 +220,13 @@ async function launch() {
   }
   child.unref();
 
-  writeFileSync(STATE_FILE, JSON.stringify({ runId: meta.runId, pid: child.pid, port, baseUrl, startedAt }, null, 2));
-  const ready = await waitHttp(baseUrl, 25000) && isOwnedViteProcess(child.pid, port);
+  lease.pid = child.pid;
+  lease.phase = "running";
+  writeJson(LEASE_FILE, lease);
+  writeJson(STATE_FILE, lease);
+  const ready = await waitHttp(baseUrl, 25000) && ownedPid(lease) === child.pid;
   if (!ready) {
     await cleanup(false);
-    recordStep("launch", "failed", 2, startedAt, `Vite failed to come up on ${baseUrl}`);
     throw new VerifyError(`Vite did not respond on ${baseUrl}`, 2);
   }
   recordStep("launch", "passed", 0, startedAt, baseUrl);
@@ -216,8 +236,11 @@ async function drive() {
   const startedAt = new Date().toISOString();
   const meta = loadMeta();
   if (!existsSync(STATE_FILE)) throw new VerifyError("No active instance.json; run launch first", 2);
-  const { baseUrl, runId, pid, port } = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-  if (runId !== meta.runId || baseUrl !== `http://127.0.0.1:${port}` || !isOwnedViteProcess(pid, port)) {
+  const state = readJson(STATE_FILE);
+  const lease = readJson(LEASE_FILE);
+  const { baseUrl, runId, pid, port } = state;
+  if (runId !== meta.runId || baseUrl !== `http://127.0.0.1:${port}` || !pid || !lease
+      || lease.token !== state.token || lease.runId !== runId || ownedPid(lease) !== pid) {
     throw new VerifyError("Owned test server no longer matches this run");
   }
   const pwJsonFile = path.join(OUT, "playwright-report.json");
@@ -233,12 +256,11 @@ async function drive() {
   );
   writeFileSync(path.join(OUT, "playwright.log"), pwRes.stdout + "\n" + pwRes.stderr);
   if (pwRes.code !== 0) {
-    recordStep("drive", "failed", pwRes.code, startedAt, "playwright suite failed");
-    throw new VerifyError(`Playwright tests failed (exit ${pwRes.code}):\n${pwRes.stderr || pwRes.stdout}`, 1);
+    throw new VerifyError("Playwright tests failed; see playwright.log", pwRes.code);
   }
 
   const reportRaw = existsSync(pwJsonFile) ? readFileSync(pwJsonFile, "utf8") : pwRes.stdout;
-const report = JSON.parse(reportRaw);
+  const report = JSON.parse(reportRaw);
   const passed = new Set();
   function collect(suites) {
     for (const suite of suites) {
@@ -277,8 +299,7 @@ const report = JSON.parse(reportRaw);
   `;
   const shotRes = runCmd("node", ["--input-type=module", "-e", shotScript]);
   if (shotRes.code !== 0 || !existsSync(shotPath)) {
-    recordStep("drive", "failed", 1, startedAt, "screenshot capture failed");
-    throw new VerifyError(`Screenshot capture failed: ${shotRes.stderr}`, 1);
+    throw new VerifyError("Screenshot capture failed", shotRes.code || 1);
   }
   writeFileSync(
     path.join(OUT, "artifact-meta.json"),
@@ -287,39 +308,53 @@ const report = JSON.parse(reportRaw);
   recordStep("drive", "passed", 0, startedAt, `e2e passed (${pwStats.expected} tests, 0 skipped) + overview-proof.png`);
 }
 
+async function waitForRelease(lease, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  do {
+    if (!ownedPid(lease) && await canBindPort(lease.port)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  } while (Date.now() < deadline);
+  return false;
+}
+
+function signalOwned(lease, signal) {
+  const pid = ownedPid(lease);
+  if (!pid) return;
+  try {
+    process.kill(-pid, signal);
+  } catch (err) {
+    if (err.code !== "ESRCH") throw err;
+    if (ownedPid(lease) === pid) process.kill(pid, signal);
+  }
+}
+
 async function cleanup(record = true) {
   const startedAt = new Date().toISOString();
-  if (existsSync(STATE_FILE)) {
-    const state = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-    const { pid, port } = state;
-    if (isOwnedViteProcess(pid, port)) {
-      try {
-        process.kill(-pid, "SIGTERM");
-      } catch {
-        try {
-          process.kill(pid, "SIGTERM");
-        } catch {}
-      }
-      const deadline = Date.now() + 6000;
-      while (Date.now() < deadline) {
-        if (!isOwnedViteProcess(pid, port) && await canBindPort(port)) break;
-        await new Promise((r) => setTimeout(r, 150));
-      }
-      if (isOwnedViteProcess(pid, port)) {
-        try {
-          process.kill(-pid, "SIGKILL");
-        } catch {}
-      }
+  const lease = readJson(LEASE_FILE);
+  const state = readJson(STATE_FILE);
+  const meta = loadMeta();
+  if (state || (lease && ["starting", "running"].includes(lease.phase))) {
+    const active = lease && ["starting", "running"].includes(lease.phase) ? lease : state;
+    if (!Number.isInteger(active.port) || active.port < 1 || active.port > 65535) throw new VerifyError("Invalid verification port", 3);
+    const intact = lease?.phase === "running" && lease.runId === state?.runId
+      && lease.token === state?.token && lease.pid === state?.pid && lease.port === state?.port;
+    signalOwned(active, "SIGTERM");
+    if (!await waitForRelease(active, 6000)) {
+      signalOwned(active, "SIGKILL");
+      if (!await waitForRelease(active, 1500)) throw new VerifyError(`Port ${active.port} could not be reclaimed`, 3);
     }
-if (isOwnedViteProcess(pid, port) || !(await canBindPort(port))) {
-      throw new VerifyError(`Port ${port} is still in use or the owned server is still running`, 3);
-    }
-
+    writeJson(LEASE_FILE, { ...active, phase: intact ? "released" : "unverified" });
     rmSync(STATE_FILE, { force: true });
+    if (record && (!intact || lease.runId !== meta.runId)) {
+      throw new VerifyError("Recovered a server with incomplete launch evidence. Start a new run.", 3);
+    }
+  } else if (record) {
+    const launched = loadSteps().some((s) => s.name === "launch" && s.runId === meta.runId && s.status === "passed");
+    if (launched && !(lease?.runId === meta.runId && lease.phase === "released")) {
+      throw new VerifyError("Missing server identity or confirmed release for this run", 3);
+    }
   }
-  if (record) {
-    recordStep("cleanup", "passed", 0, startedAt, "owned server verified stopped & port released");
-  }
+  if (record) recordStep("cleanup", "passed", 0, startedAt, "owned server verified stopped and port released");
 }
 
 function screenshotArtifact() {
@@ -348,7 +383,8 @@ async function evidence() {
     const s = steps.find((item) => item.name === reqName);
     return s && s.status === "passed" && s.runId === meta.runId && s.headSHA === headSHA;
   });
-  const allPassed = !dirty && !existsSync(STATE_FILE) && meta.headSHA === headSHA && hasAllRequiredSteps && artifacts.length === 1;
+  const released = readJson(LEASE_FILE);
+  const allPassed = !dirty && released?.runId === meta.runId && released.phase === "released" && !existsSync(STATE_FILE) && meta.headSHA === headSHA && hasAllRequiredSteps && artifacts.length === 1;
 
   recordStep("evidence", allPassed ? "passed" : "failed", allPassed ? 0 : 1, startedAt, `artifacts=${artifacts.length}`);
   const manifest = {
@@ -395,13 +431,13 @@ async function step(name) {
     }
     await ({ doctor, launch, drive, cleanup })[name]();
   } catch (err) {
-    recordStep(name, "failed", err.exitCode || 1, started, `${name} failed; see local output`);
+    recordStep(name, "failed", err.exitCode || 1, started, err instanceof VerifyError ? err.message : `${name} failed; see local output`);
     throw err;
   }
 }
 
 async function main() {
-  acquireLock();
+  const lockFd = acquireLock();
   try {
     if (subcmd !== "all") {
       if (![...REQUIRED_STEPS, "evidence"].includes(subcmd)) throw new VerifyError(`Unknown subcommand: ${subcmd}`, 2);
@@ -418,7 +454,7 @@ async function main() {
     }
     if (error) throw error;
   } finally {
-    releaseLock();
+    closeSync(lockFd);
   }
 }
 
