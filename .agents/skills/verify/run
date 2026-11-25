@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from "node:child_process";
-import { closeSync, existsSync, ftruncateSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { closeSync, existsSync, fstatSync, ftruncateSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
 import net from "node:net";
 import path from "node:path";
@@ -70,7 +70,18 @@ function startRun() {
 }
 
 function acquireLock() {
-  const fd = openSync(LOCK_FILE, "a+", 0o600);
+  let fd;
+  let created = true;
+  try {
+    fd = openSync(LOCK_FILE, "wx+", 0o600);
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    created = false;
+    try { fd = openSync(LOCK_FILE, "r+"); } catch (err) {
+      if (err.code === "ENOENT") return acquireLock();
+      throw err;
+    }
+  }
   // Both processes share the same open file description. The kernel releases
   // the lock when the parent exits, including after SIGKILL.
   const script = [
@@ -83,8 +94,36 @@ function acquireLock() {
     closeSync(fd);
     throw new VerifyError(result.status === 2 ? "Another verifier owns this output directory" : "Python 3 is required to lock the output directory", 2);
   }
+  if (!created) {
+    let holder;
+    try { holder = JSON.parse(readFileSync(LOCK_FILE, "utf8")); } catch {}
+    const hasPid = (entry) => Number.isSafeInteger(entry?.pid) && entry.pid > 0;
+    // The legacy wx owner has no kernel lock. Its published PID (or its still
+    // open file while publishing) must be respected. A dead partial marker is
+    // safe to reuse only after confirming that this process is its sole holder.
+    if (!hasPid(holder)) {
+      const open = runCmd("lsof", ["-nP", "-t", LOCK_FILE]);
+      if (open.code !== 0 || open.stdout.trim().split(/\s+/).some((pid) => Number(pid) !== process.pid)) {
+        closeSync(fd);
+        throw new VerifyError("Another verifier is publishing its lock", 2);
+      }
+      try { holder = JSON.parse(readFileSync(LOCK_FILE, "utf8")); } catch {}
+    }
+    if (hasPid(holder) && holder.protocol !== 2) {
+      const owner = runCmd("ps", ["-ww", "-p", String(holder.pid), "-o", "command="]);
+      if (owner.code === 0 && owner.stdout.includes(".agents/skills/verify/run")) {
+        closeSync(fd);
+        throw new VerifyError("An earlier verifier is still using this output directory", 2);
+      }
+    }
+    const current = existsSync(LOCK_FILE) ? statSync(LOCK_FILE) : null;
+    if (!current || current.ino !== fstatSync(fd).ino) {
+      closeSync(fd);
+      return acquireLock();
+    }
+  }
   ftruncateSync(fd, 0);
-  writeSync(fd, JSON.stringify({ pid: process.pid }), 0, "utf8");
+  writeSync(fd, JSON.stringify({ pid: process.pid, protocol: 2 }), 0, "utf8");
   return fd;
 }
 
@@ -163,18 +202,66 @@ async function waitHttp(url, timeoutMs = 25000) {
   return false;
 }
 
+function validPort(port) {
+  return Number.isSafeInteger(port) && port > 0 && port <= 65535;
+}
+
+function serverUrl(port) {
+  return `http://127.0.0.1:${port}`;
+}
+
+function viteArgs(port, token) {
+  const args = [VITE, "--host", "127.0.0.1", "--port", String(port), "--strictPort"];
+  return token ? [`--conditions=sf-verify-${token}`, ...args] : args;
+}
+
+function validLease(lease) {
+  return lease && typeof lease.runId === "string" && lease.runId.length > 0
+    && /^[a-f0-9]{32}$/.test(lease.token || "") && validPort(lease.port)
+    && lease.baseUrl === serverUrl(lease.port) && Number.isSafeInteger(lease.pid) && lease.pid > 0;
+}
+
+function matchesInstance(lease, state) {
+  return validLease(lease) && validLease(state) && state.phase === "running"
+    && ["runId", "token", "pid", "port", "baseUrl", "startedAt"].every((key) => lease[key] === state[key]);
+}
+
+function legacyPid(state) {
+  if (!state || !Number.isSafeInteger(state.pid) || state.pid <= 0 || !validPort(state.port)
+      || state.baseUrl !== serverUrl(state.port) || !existsSync(path.join(OUT, "vite.log"))) return null;
+  const pid = String(state.pid);
+  const ps = runCmd("ps", ["-ww", "-p", pid, "-o", "uid=,pgid=,command="]);
+  const match = ps.stdout.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/);
+  if (!match || Number(match[1]) !== process.getuid() || Number(match[2]) !== state.pid
+      || !match[3].endsWith(viteArgs(state.port).join(" "))) return null;
+  // The command line and PID alone cannot distinguish a user's developer server.
+  const files = runCmd("lsof", ["-nP", "-a", "-p", pid, "-d", "cwd,1,2", "-Ffn"]);
+  if (files.code !== 0) return null;
+  const paths = new Map();
+  let fd;
+  for (const line of files.stdout.split("\n")) {
+    if (line.startsWith("f")) fd = line.slice(1);
+    if (line.startsWith("n")) paths.set(fd, line.slice(1));
+  }
+  const named = (fd, wanted) => {
+    const candidate = paths.get(fd);
+    return candidate && existsSync(candidate) && realpathSync(candidate) === realpathSync(wanted);
+  };
+  if (!named("cwd", DESKTOP) || !named("1", path.join(OUT, "vite.log")) || !named("2", path.join(OUT, "vite.log"))) return null;
+  const listener = runCmd("lsof", ["-nP", "-a", "-p", pid, `-iTCP@127.0.0.1:${state.port}`, "-sTCP:LISTEN", "-Fp"]);
+  return listener.code === 0 && listener.stdout.trim() === `p${pid}` ? state.pid : null;
+}
+
 function ownedPid(lease) {
-  if (!lease?.token || !Number.isInteger(lease.port)) return null;
-  const expected = `--conditions=sf-verify-${lease.token} ${VITE} --host 127.0.0.1 --port ${lease.port} --strictPort`;
+  if (!/^[a-f0-9]{32}$/.test(lease?.token || "") || !validPort(lease.port)) return null;
+  const expected = viteArgs(lease.port, lease.token).join(" ");
   if (lease.pid) {
-    const ps = runCmd("ps", ["-p", String(lease.pid), "-o", "command="]);
+    const ps = runCmd("ps", ["-ww", "-p", String(lease.pid), "-o", "command="]);
     return ps.code === 0 && ps.stdout.trim().endsWith(expected) ? lease.pid : null;
   }
-  // Recover a process spawned before the parent could persist its pid.
-  const ps = runCmd("ps", ["-ax", "-o", "pid=,command="]);
-  if (ps.code !== 0) throw new VerifyError("Cannot identify the verification server", 3);
-  const match = ps.stdout.split("\n").find((line) => line.trimEnd().endsWith(expected));
-  return match ? Number.parseInt(match.trimStart(), 10) : null;
+  const ps = runCmd("pgrep", ["-f", `sf-verify-${lease.token}`]);
+  if (ps.code !== 0 && ps.code !== 1) throw new VerifyError("Cannot identify the verification server", 3);
+  return ps.stdout.trim().split(/\s+/).map(Number).find((pid) => pid > 0 && ownedPid({ ...lease, pid })) || null;
 }
 
 async function doctor() {
@@ -199,7 +286,7 @@ async function launch() {
   const meta = loadMeta();
   await cleanup(false);
   const port = await freePort();
-  const baseUrl = `http://127.0.0.1:${port}`;
+  const baseUrl = serverUrl(port);
   const lease = { runId: meta.runId, startedAt, port, baseUrl, token: randomBytes(16).toString("hex"), phase: "starting" };
   writeJson(LEASE_FILE, lease);
   const logFile = path.join(OUT, "vite.log");
@@ -208,7 +295,7 @@ async function launch() {
   try {
     child = spawn(
       process.execPath,
-      [`--conditions=sf-verify-${lease.token}`, VITE, "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
+      viteArgs(port, lease.token),
       {
         cwd: DESKTOP,
         detached: true,
@@ -238,11 +325,10 @@ async function drive() {
   if (!existsSync(STATE_FILE)) throw new VerifyError("No active instance.json; run launch first", 2);
   const state = readJson(STATE_FILE);
   const lease = readJson(LEASE_FILE);
-  const { baseUrl, runId, pid, port } = state;
-  if (runId !== meta.runId || baseUrl !== `http://127.0.0.1:${port}` || !pid || !lease
-      || lease.token !== state.token || lease.runId !== runId || ownedPid(lease) !== pid) {
+  if (!matchesInstance(lease, state) || lease.phase !== "running" || lease.runId !== meta.runId || ownedPid(lease) !== lease.pid) {
     throw new VerifyError("Owned test server no longer matches this run");
   }
+  const baseUrl = serverUrl(lease.port);
   const pwJsonFile = path.join(OUT, "playwright-report.json");
   rmSync(pwJsonFile, { force: true });
 
@@ -308,23 +394,23 @@ async function drive() {
   recordStep("drive", "passed", 0, startedAt, `e2e passed (${pwStats.expected} tests, 0 skipped) + overview-proof.png`);
 }
 
-async function waitForRelease(lease, timeoutMs) {
+async function waitForRelease(lease, timeoutMs, identify = ownedPid) {
   const deadline = Date.now() + timeoutMs;
   do {
-    if (!ownedPid(lease) && await canBindPort(lease.port)) return true;
+    if (!identify(lease) && await canBindPort(lease.port)) return true;
     await new Promise((resolve) => setTimeout(resolve, 100));
   } while (Date.now() < deadline);
   return false;
 }
 
-function signalOwned(lease, signal) {
-  const pid = ownedPid(lease);
+function signalOwned(lease, signal, identify = ownedPid) {
+  const pid = identify(lease);
   if (!pid) return;
   try {
     process.kill(-pid, signal);
   } catch (err) {
     if (err.code !== "ESRCH") throw err;
-    if (ownedPid(lease) === pid) process.kill(pid, signal);
+    if (identify(lease) === pid) process.kill(pid, signal);
   }
 }
 
@@ -333,15 +419,20 @@ async function cleanup(record = true) {
   const lease = readJson(LEASE_FILE);
   const state = readJson(STATE_FILE);
   const meta = loadMeta();
-  if (state || (lease && ["starting", "running"].includes(lease.phase))) {
-    const active = lease && ["starting", "running"].includes(lease.phase) ? lease : state;
-    if (!Number.isInteger(active.port) || active.port < 1 || active.port > 65535) throw new VerifyError("Invalid verification port", 3);
-    const intact = lease?.phase === "running" && lease.runId === state?.runId
-      && lease.token === state?.token && lease.pid === state?.pid && lease.port === state?.port;
-    signalOwned(active, "SIGTERM");
-    if (!await waitForRelease(active, 6000)) {
-      signalOwned(active, "SIGKILL");
-      if (!await waitForRelease(active, 1500)) throw new VerifyError(`Port ${active.port} could not be reclaimed`, 3);
+  if (lease?.phase === "released" && validLease(lease)) {
+    if (state && !matchesInstance(lease, state)) throw new VerifyError("State conflicts with the recorded server release", 3);
+    if (record && lease.runId !== meta.runId) throw new VerifyError("Release belongs to a different verification run", 3);
+    if (state) rmSync(STATE_FILE, { force: true });
+  } else if (state || (lease && ["starting", "running"].includes(lease.phase))) {
+    const active = lease || state;
+    if (!validPort(active.port)) throw new VerifyError("Invalid verification port", 3);
+    const legacy = !lease && state && !("token" in state);
+    const identify = legacy ? legacyPid : ownedPid;
+    const intact = lease?.phase === "running" && matchesInstance(lease, state);
+    signalOwned(active, "SIGTERM", identify);
+    if (!await waitForRelease(active, 6000, identify)) {
+      signalOwned(active, "SIGKILL", identify);
+      if (!await waitForRelease(active, 1500, identify)) throw new VerifyError(`Port ${active.port} could not be reclaimed`, 3);
     }
     writeJson(LEASE_FILE, { ...active, phase: intact ? "released" : "unverified" });
     rmSync(STATE_FILE, { force: true });
@@ -350,9 +441,7 @@ async function cleanup(record = true) {
     }
   } else if (record) {
     const launched = loadSteps().some((s) => s.name === "launch" && s.runId === meta.runId && s.status === "passed");
-    if (launched && !(lease?.runId === meta.runId && lease.phase === "released")) {
-      throw new VerifyError("Missing server identity or confirmed release for this run", 3);
-    }
+    if (launched) throw new VerifyError("Missing server identity or confirmed release for this run", 3);
   }
   if (record) recordStep("cleanup", "passed", 0, startedAt, "owned server verified stopped and port released");
 }
@@ -384,7 +473,7 @@ async function evidence() {
     return s && s.status === "passed" && s.runId === meta.runId && s.headSHA === headSHA;
   });
   const released = readJson(LEASE_FILE);
-  const allPassed = !dirty && released?.runId === meta.runId && released.phase === "released" && !existsSync(STATE_FILE) && meta.headSHA === headSHA && hasAllRequiredSteps && artifacts.length === 1;
+  const allPassed = !dirty && validLease(released) && released.runId === meta.runId && released.phase === "released" && !existsSync(STATE_FILE) && meta.headSHA === headSHA && hasAllRequiredSteps && artifacts.length === 1;
 
   recordStep("evidence", allPassed ? "passed" : "failed", allPassed ? 0 : 1, startedAt, `artifacts=${artifacts.length}`);
   const manifest = {
@@ -454,6 +543,8 @@ async function main() {
     }
     if (error) throw error;
   } finally {
+    // Removing the compatibility marker lets older wx verifiers run after this one.
+    if (existsSync(LOCK_FILE) && statSync(LOCK_FILE).ino === fstatSync(lockFd).ino) rmSync(LOCK_FILE);
     closeSync(lockFd);
   }
 }
