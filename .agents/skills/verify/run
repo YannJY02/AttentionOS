@@ -375,10 +375,7 @@ async function evidence() {
 async function step(name) {
   rmSync(path.join(PUB, "manifest.json"), { force: true });
   const index = REQUIRED_STEPS.indexOf(name);
-  if (name === "doctor") {
-    await cleanup(false);
-    startRun();
-  }
+  if (name === "doctor") startRun();
   const meta = loadMeta();
   if (name === "evidence") return evidence();
   const prior = loadSteps().filter((entry) => REQUIRED_STEPS.slice(0, index).includes(entry.name) && entry.runId === meta.runId);
@@ -389,6 +386,7 @@ async function step(name) {
   }
   const started = new Date().toISOString();
   try {
+    if (name === "doctor") await cleanup(false);
     if (name !== "cleanup") {
       const actual = checkout();
       if (actual.dirty || actual.headSHA !== meta.headSHA) throw new VerifyError("Verify requires a clean, unchanged checkout");
