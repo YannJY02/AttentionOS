@@ -249,7 +249,8 @@ function legacyPid(state) {
   };
   if (!named("cwd", DESKTOP) || !named("1", path.join(OUT, "vite.log")) || !named("2", path.join(OUT, "vite.log"))) return null;
   const listener = runCmd("lsof", ["-nP", "-a", "-p", pid, `-iTCP@127.0.0.1:${state.port}`, "-sTCP:LISTEN", "-Fp"]);
-  return listener.code === 0 && listener.stdout.trim() === `p${pid}` ? state.pid : null;
+  const owners = listener.stdout.split("\n").filter((line) => line.startsWith("p"));
+  return listener.code === 0 && owners.length === 1 && owners[0] === `p${pid}` ? state.pid : null;
 }
 
 function ownedPid(lease) {
